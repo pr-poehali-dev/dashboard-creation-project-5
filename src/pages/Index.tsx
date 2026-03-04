@@ -84,6 +84,7 @@ export default function Dashboard() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredCell, setHoveredCell] = useState<{city: string; col: string; val: number} | null>(null);
+  const [showAllCities, setShowAllCities] = useState(false);
 
   useEffect(() => {
     fetch(API_URL)
@@ -352,13 +353,29 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Stacked horizontal bar: 1 город = 1 полоса, причины внутри */}
+          {/* Stacked horizontal bar */}
           <div className="glass rounded-2xl p-6 animate-fade-in-up delay-700">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-display font-bold text-white text-lg">Топ-5 городов по причинам</h3>
-                <p className="text-white/40 text-xs mt-0.5">1 полоса = 1 город, цвета = причины</p>
+                <h3 className="font-display font-bold text-white text-lg">
+                  {showAllCities ? "Все города" : "Топ-5 городов"}
+                </h3>
+                <p className="text-white/40 text-xs mt-0.5">1 полоса = 1 город · цвета = причины расторжений</p>
               </div>
+              {!loading && rows.length > 5 && (
+                <button
+                  onClick={() => setShowAllCities(v => !v)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200"
+                  style={{
+                    background: showAllCities ? "rgba(124,92,255,0.2)" : "rgba(255,255,255,0.06)",
+                    color: showAllCities ? "#a78bfa" : "rgba(255,255,255,0.5)",
+                    border: showAllCities ? "1px solid rgba(124,92,255,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <Icon name={showAllCities ? "ChevronUp" : "ChevronDown"} size={14} />
+                  {showAllCities ? "Свернуть" : `Показать все (${rows.length})`}
+                </button>
+              )}
             </div>
             {loading ? (
               <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
@@ -367,39 +384,55 @@ export default function Dashboard() {
                 <Icon name="BarChart2" size={28} />
                 <p className="text-xs">Нет данных. Заполните таблицу в настройках.</p>
               </div>
-            ) : (
-              <>
-                <ResponsiveContainer width="100%" height={topCities.length * 52 + 10}>
-                  <BarChart
-                    layout="vertical"
-                    data={topCities.map(r => {
-                      const obj: Record<string, string | number> = { name: r.city as string };
-                      COLUMNS.forEach(c => { obj[c.key] = Number(r[c.key]) || 0; });
-                      return obj;
-                    })}
-                    margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
-                    barSize={28}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} horizontal={false} />
-                    <XAxis type="number" tick={{ fill: axisColor, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <YAxis type="category" dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} width={90} />
-                    <Tooltip content={<CustomTooltip />} />
+            ) : (() => {
+              const sortedAll = [...rows].sort((a, b) => rowTotal(b) - rowTotal(a));
+              const displayed = showAllCities ? sortedAll : sortedAll.slice(0, 5);
+              const barHeight = 32;
+              const barGap = 12;
+              const chartHeight = displayed.length * (barHeight + barGap) + 10;
+              return (
+                <>
+                  <ResponsiveContainer width="100%" height={chartHeight}>
+                    <BarChart
+                      layout="vertical"
+                      data={displayed.map(r => {
+                        const obj: Record<string, string | number> = { name: r.city as string };
+                        COLUMNS.forEach(c => { obj[c.key] = Number(r[c.key]) || 0; });
+                        return obj;
+                      })}
+                      margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+                      barSize={barHeight}
+                      barCategoryGap={barGap}
+                    >
+                      <XAxis type="number" tick={{ fill: axisColor, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <YAxis type="category" dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} width={100} />
+                      <Tooltip
+                        cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                        content={<CustomTooltip />}
+                      />
+                      {COLUMNS.map((c, i) => (
+                        <Bar
+                          key={c.key}
+                          dataKey={c.key}
+                          name={c.label}
+                          stackId="a"
+                          fill={PIE_COLORS[i % PIE_COLORS.length]}
+                          radius={i === COLUMNS.length - 1 ? [0, 6, 6, 0] : i === 0 ? [6, 0, 0, 6] : [0, 0, 0, 0]}
+                        />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 mt-5 pt-4 border-t border-white/6">
                     {COLUMNS.map((c, i) => (
-                      <Bar key={c.key} dataKey={c.key} name={c.label} stackId="a" fill={PIE_COLORS[i % PIE_COLORS.length]}
-                        radius={i === COLUMNS.length - 1 ? [0, 4, 4, 0] : [0, 0, 0, 0]} />
+                      <span key={c.key} className="flex items-center gap-2 text-xs text-white/45">
+                        <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        {c.short}
+                      </span>
                     ))}
-                  </BarChart>
-                </ResponsiveContainer>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4">
-                  {COLUMNS.map((c, i) => (
-                    <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/50">
-                      <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      {c.short}
-                    </span>
-                  ))}
-                </div>
-              </>
-            )}
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
 
