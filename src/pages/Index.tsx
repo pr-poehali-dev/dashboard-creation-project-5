@@ -352,101 +352,58 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Heatmap: все города × все причины */}
+          {/* Grouped Bar: топ-5 городов по причинам */}
           <div className="glass rounded-2xl p-6 animate-fade-in-up delay-700">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="font-display font-bold text-white text-lg">Города × Причины</h3>
-                <p className="text-white/40 text-xs mt-0.5">Тепловая карта — все города и все причины расторжений</p>
+                <h3 className="font-display font-bold text-white text-lg">Топ-5 городов по причинам</h3>
+                <p className="text-white/40 text-xs mt-0.5">Сравнение причин расторжений между городами</p>
               </div>
+              {!loading && topCities[0] && (
+                <div className="glass rounded-xl px-3 py-1.5 text-sm font-bold text-gradient-pink">
+                  {topCities[0].city as string}
+                </div>
+              )}
             </div>
             {loading ? (
-              <div className="h-[200px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+              <div className="h-[260px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
             ) : rows.length === 0 ? (
-              <div className="h-[200px] flex flex-col items-center justify-center gap-2 text-white/20">
-                <Icon name="LayoutGrid" size={28} />
+              <div className="h-[260px] flex flex-col items-center justify-center gap-2 text-white/20">
+                <Icon name="BarChart2" size={28} />
                 <p className="text-xs">Нет данных. Заполните таблицу в настройках.</p>
               </div>
-            ) : (() => {
-              const sortedRows = [...rows].sort((a, b) => rowTotal(b) - rowTotal(a));
-              const maxVal = Math.max(...sortedRows.flatMap(r => COLUMNS.map(c => Number(r[c.key]) || 0)), 1);
-              return (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
-                    <colgroup>
-                      <col style={{ width: 110 }} />
-                      {COLUMNS.map(c => <col key={c.key} />)}
-                    </colgroup>
-                    <thead>
-                      <tr>
-                        <th />
-                        {COLUMNS.map((c, ci) => (
-                          <th key={c.key} className="pb-3 px-0.5 text-center align-bottom">
-                            <div
-                              className="text-xs font-medium leading-tight mx-auto"
-                              style={{ color: PIE_COLORS[ci % PIE_COLORS.length], writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: 72, display: 'flex', alignItems: 'center' }}
-                            >
-                              {c.short}
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedRows.map((r) => (
-                        <tr key={r.city as string} className="group">
-                          <td className="pr-3 py-0.5 text-xs text-white/60 font-medium truncate" title={r.city as string}>
-                            {r.city as string}
-                          </td>
-                          {COLUMNS.map((c, ci) => {
-                            const val = Number(r[c.key]) || 0;
-                            const intensity = val / maxVal;
-                            const color = PIE_COLORS[ci % PIE_COLORS.length];
-                            const isHovered = hoveredCell?.city === r.city && hoveredCell?.col === c.key;
-                            return (
-                              <td key={c.key} className="px-0.5 py-0.5">
-                                <div
-                                  className="rounded-md flex items-center justify-center cursor-default transition-all duration-150 relative"
-                                  style={{
-                                    height: 28,
-                                    background: intensity > 0
-                                      ? `${color}${Math.round(intensity * 220 + 20).toString(16).padStart(2, '0')}`
-                                      : isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)',
-                                    outline: isHovered ? `2px solid ${color}` : 'none',
-                                    outlineOffset: 1,
-                                  }}
-                                  onMouseEnter={() => setHoveredCell({ city: r.city as string, col: c.key, val })}
-                                  onMouseLeave={() => setHoveredCell(null)}
-                                >
-                                  {isHovered && (
-                                    <div className="absolute z-20 bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-lg text-xs text-white font-semibold whitespace-nowrap pointer-events-none"
-                                      style={{ background: color, boxShadow: `0 4px 16px ${color}66` }}>
-                                      {c.label}: {val}
-                                    </div>
-                                  )}
-                                  <span className="text-xs font-semibold" style={{ color: intensity > 0.45 ? '#fff' : intensity > 0 ? color : 'rgba(255,255,255,0.15)' }}>
-                                    {val > 0 ? val : ''}
-                                  </span>
-                                </div>
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="flex items-center gap-3 mt-5">
-                    <span className="text-white/25 text-xs">Меньше</span>
-                    <div className="flex gap-0.5">
-                      {[0.08, 0.2, 0.4, 0.6, 0.8, 1].map((v, i) => (
-                        <div key={i} className="w-5 h-3 rounded-sm" style={{ background: `${PIE_COLORS[0]}${Math.round(v * 220 + 20).toString(16).padStart(2, '0')}` }} />
-                      ))}
-                    </div>
-                    <span className="text-white/25 text-xs">Больше</span>
-                  </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart
+                    data={COLUMNS.map(c => {
+                      const obj: Record<string, string | number> = { name: c.short };
+                      topCities.forEach(r => { obj[r.city as string] = Number(r[c.key]) || 0; });
+                      return obj;
+                    })}
+                    margin={{ top: 5, right: 5, left: -20, bottom: 40 }}
+                    barCategoryGap="25%"
+                    barGap={2}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }} axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
+                    <YAxis tick={{ fill: axisColor, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    {topCities.map((r, i) => (
+                      <Bar key={r.city as string} dataKey={r.city as string} fill={PIE_COLORS[i % PIE_COLORS.length]} radius={[3, 3, 0, 0]} maxBarSize={18} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-1">
+                  {topCities.map((r, i) => (
+                    <span key={r.city as string} className="flex items-center gap-1.5 text-xs text-white/50">
+                      <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      {r.city as string}
+                    </span>
+                  ))}
                 </div>
-              );
-            })()}
+              </>
+            )}
           </div>
         </div>
 
