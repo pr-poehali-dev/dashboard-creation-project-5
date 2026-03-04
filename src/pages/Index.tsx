@@ -113,7 +113,7 @@ export default function Dashboard() {
     return obj;
   });
 
-  const avgPerCity = rows.length > 0 ? Math.round(grandTotal / rows.length) : 0;
+  const refundTotal = colTotal("refund_completed");
 
   const kpiCards = [
     {
@@ -147,14 +147,14 @@ export default function Dashboard() {
       sub: top2 ? `${top2.total} случаев` : "",
     },
     {
-      label: "Среднее на город",
-      value: avgPerCity.toLocaleString("ru-RU"),
+      label: "Возврат за пройденные",
+      value: refundTotal.toLocaleString("ru-RU"),
       suffix: "",
-      icon: "BarChart2",
+      icon: "RotateCcw",
       gradient: "gradient-green",
       textGradient: "text-gradient-green",
       glow: "rgba(0,212,106,0.35)",
-      sub: "расторжений",
+      sub: "случаев",
     },
   ];
 
