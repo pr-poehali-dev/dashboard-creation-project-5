@@ -352,53 +352,49 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Grouped Bar: топ-5 городов по причинам */}
+          {/* Stacked horizontal bar: 1 город = 1 полоса, причины внутри */}
           <div className="glass rounded-2xl p-6 animate-fade-in-up delay-700">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-display font-bold text-white text-lg">Топ-5 городов по причинам</h3>
-                <p className="text-white/40 text-xs mt-0.5">Сравнение причин расторжений между городами</p>
+                <p className="text-white/40 text-xs mt-0.5">1 полоса = 1 город, цвета = причины</p>
               </div>
-              {!loading && topCities[0] && (
-                <div className="glass rounded-xl px-3 py-1.5 text-sm font-bold text-gradient-pink">
-                  {topCities[0].city as string}
-                </div>
-              )}
             </div>
             {loading ? (
-              <div className="h-[260px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+              <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
             ) : rows.length === 0 ? (
-              <div className="h-[260px] flex flex-col items-center justify-center gap-2 text-white/20">
+              <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-white/20">
                 <Icon name="BarChart2" size={28} />
                 <p className="text-xs">Нет данных. Заполните таблицу в настройках.</p>
               </div>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={topCities.length * 52 + 10}>
                   <BarChart
-                    data={COLUMNS.map(c => {
-                      const obj: Record<string, string | number> = { name: c.short };
-                      topCities.forEach(r => { obj[r.city as string] = Number(r[c.key]) || 0; });
+                    layout="vertical"
+                    data={topCities.map(r => {
+                      const obj: Record<string, string | number> = { name: r.city as string };
+                      COLUMNS.forEach(c => { obj[c.key] = Number(r[c.key]) || 0; });
                       return obj;
                     })}
-                    margin={{ top: 5, right: 5, left: -20, bottom: 40 }}
-                    barCategoryGap="25%"
-                    barGap={2}
+                    margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                    barSize={28}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
-                    <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }} axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                    <YAxis tick={{ fill: axisColor, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} horizontal={false} />
+                    <XAxis type="number" tick={{ fill: axisColor, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} width={90} />
                     <Tooltip content={<CustomTooltip />} />
-                    {topCities.map((r, i) => (
-                      <Bar key={r.city as string} dataKey={r.city as string} fill={PIE_COLORS[i % PIE_COLORS.length]} radius={[3, 3, 0, 0]} maxBarSize={18} />
+                    {COLUMNS.map((c, i) => (
+                      <Bar key={c.key} dataKey={c.key} name={c.label} stackId="a" fill={PIE_COLORS[i % PIE_COLORS.length]}
+                        radius={i === COLUMNS.length - 1 ? [0, 4, 4, 0] : [0, 0, 0, 0]} />
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
-                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-1">
-                  {topCities.map((r, i) => (
-                    <span key={r.city as string} className="flex items-center gap-1.5 text-xs text-white/50">
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4">
+                  {COLUMNS.map((c, i) => (
+                    <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/50">
                       <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      {r.city as string}
+                      {c.short}
                     </span>
                   ))}
                 </div>
