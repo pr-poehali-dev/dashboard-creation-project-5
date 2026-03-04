@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { DASHBOARDS } from "@/config/dashboards";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
@@ -182,7 +183,17 @@ export default function Dashboard() {
             <h1 className="font-display text-3xl sm:text-4xl font-black text-white tracking-tight mb-1">
               Аналитика расторжений
             </h1>
-            <p className="text-white/40 text-sm">Данные из таблицы причин расторжений</p>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              {DASHBOARDS.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => navigate(`/dashboard/${d.id}`)}
+                  className="text-xs px-3 py-1.5 rounded-full glass glass-hover text-white/60 hover:text-white transition-all duration-200"
+                >
+                  {d.title}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="glass rounded-full px-4 py-2 flex items-center gap-2 text-sm text-white/60">
