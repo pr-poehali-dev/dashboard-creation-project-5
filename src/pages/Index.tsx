@@ -373,23 +373,65 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={280}>
-                  <RadarChart data={radarData} margin={{ top: 10, right: 20, left: 20, bottom: 10 }}>
-                    <PolarGrid stroke={isLight ? "rgba(20,10,40,0.1)" : "rgba(255,255,255,0.08)"} />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: axisColor, fontSize: 10 }} />
-                    <PolarRadiusAxis tick={false} axisLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    {topCities.map((r, i) => (
-                      <Radar key={r.city as string} name={r.city as string}
-                        dataKey={r.city as string}
-                        stroke={PIE_COLORS[i % PIE_COLORS.length]}
-                        fill={PIE_COLORS[i % PIE_COLORS.length]}
-                        fillOpacity={0.12}
-                        strokeWidth={2} />
-                    ))}
-                    <Legend wrapperStyle={{ fontSize: 11, color: axisColor, paddingTop: 8 }} />
-                  </RadarChart>
-                </ResponsiveContainer>
+                {(() => {
+                  const maxVal = Math.max(...topCities.flatMap(r => COLUMNS.map(c => Number(r[c.key]) || 0)), 1);
+                  return (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr>
+                            <th className="text-left pb-2 pr-3 text-white/30 font-normal w-28 min-w-[7rem]">Город</th>
+                            {COLUMNS.map(c => (
+                              <th key={c.key} className="pb-2 px-1 text-white/40 font-normal text-center leading-tight" style={{ minWidth: 52 }}>
+                                {c.short}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topCities.map((r, ri) => (
+                            <tr key={r.city as string}>
+                              <td className="py-1 pr-3 text-white/70 font-medium truncate max-w-[7rem]" title={r.city as string}>
+                                {r.city as string}
+                              </td>
+                              {COLUMNS.map((c, ci) => {
+                                const val = Number(r[c.key]) || 0;
+                                const intensity = val / maxVal;
+                                const color = PIE_COLORS[ci % PIE_COLORS.length];
+                                return (
+                                  <td key={c.key} className="py-1 px-1 text-center">
+                                    <div
+                                      className="rounded-lg flex items-center justify-center font-semibold transition-all"
+                                      style={{
+                                        background: intensity > 0 ? `${color}${Math.round(intensity * 200 + 20).toString(16).padStart(2, '0')}` : 'transparent',
+                                        color: intensity > 0.5 ? '#fff' : intensity > 0 ? color : 'rgba(255,255,255,0.15)',
+                                        height: 36,
+                                        fontSize: 12,
+                                      }}
+                                      title={`${r.city} · ${c.label}: ${val}`}
+                                    >
+                                      {val > 0 ? val : '—'}
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="flex items-center gap-2 mt-4 text-white/30 text-xs">
+                        <span>0</span>
+                        <div className="flex h-2 rounded-full overflow-hidden" style={{ width: 100 }}>
+                          {[0.1,0.3,0.5,0.7,0.9,1].map((v, i) => (
+                            <div key={i} style={{ flex: 1, background: `${PIE_COLORS[0]}${Math.round(v * 200 + 20).toString(16).padStart(2, '0')}` }} />
+                          ))}
+                        </div>
+                        <span>{maxVal}</span>
+                        <span className="ml-1 text-white/20">— интенсивность</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </div>
