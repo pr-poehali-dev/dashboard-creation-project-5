@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
-import GenericTable from "@/components/GenericTable";
+import DashboardView from "@/components/DashboardView";
 import DashboardManager from "@/components/DashboardManager";
 import { useDashboards } from "@/hooks/useDashboards";
 
@@ -49,13 +49,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in-up">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/")}
+            <button onClick={() => navigate("/")}
               className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
-              title="Назад"
-            >
+              title="Назад">
               <Icon name="ArrowLeft" size={18} />
             </button>
             <div>
@@ -64,47 +63,38 @@ export default function DashboardPage() {
               </h1>
               <div className="flex flex-wrap items-center gap-2">
                 {dashboards.map(d => (
-                  <button
-                    key={d.id}
+                  <button key={d.id}
                     onClick={() => navigate(`/dashboard/${d.slug}`)}
                     className={`text-xs px-3 py-1 rounded-full transition-all duration-200 ${
                       d.slug === id
                         ? "gradient-violet text-white font-semibold"
                         : "glass glass-hover text-white/50"
-                    }`}
-                  >
+                    }`}>
                     {d.title}
                   </button>
                 ))}
-                <button
-                  onClick={() => setShowManager(true)}
-                  className="text-xs px-3 py-1 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all duration-200 flex items-center gap-1"
-                >
+                <button onClick={() => setShowManager(true)}
+                  className="text-xs px-3 py-1 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all duration-200 flex items-center gap-1">
                   <Icon name="Plus" size={11} /> Дашборд
                 </button>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={toggle}
+            <button onClick={toggle}
               className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
-              title={isLight ? "Тёмная тема" : "Светлая тема"}
-            >
+              title={isLight ? "Тёмная тема" : "Светлая тема"}>
               <Icon name={isLight ? "Moon" : "Sun"} size={18} />
             </button>
-            <button
-              onClick={() => navigate("/settings")}
-              className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
-            >
+            <button onClick={() => navigate("/settings")}
+              className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60">
               <Icon name="Settings" size={18} />
             </button>
           </div>
         </div>
 
-        <GenericTable
+        <DashboardView
           title={dashboard.title}
-          subtitle="Кликните на ячейку для редактирования"
           apiUrl={dashboard.api_url}
           columns={dashboard.columns}
         />
