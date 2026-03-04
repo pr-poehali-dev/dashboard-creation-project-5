@@ -289,14 +289,14 @@ export default function DashboardView({ apiUrl, columns, title }: Props) {
           )}
         </div>
 
-        {/* Города горизонтально */}
+        {/* Города — stacked bar по причинам */}
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="font-display font-bold text-white text-lg">
                 {showAllCities ? "Все города" : "Топ-5 городов"}
               </h3>
-              <p className="text-white/40 text-xs mt-0.5">По суммарному значению</p>
+              <p className="text-white/40 text-xs mt-0.5">1 полоса = 1 город · цвета = причины</p>
             </div>
             {!loading && rows.length > 5 && (
               <button onClick={() => setShowAllCities(v => !v)}
@@ -307,34 +307,61 @@ export default function DashboardView({ apiUrl, columns, title }: Props) {
                   border: showAllCities ? "1px solid rgba(124,92,255,0.4)" : "1px solid rgba(255,255,255,0.08)",
                 }}>
                 <Icon name={showAllCities ? "ChevronUp" : "ChevronDown"} size={14} />
-                {showAllCities ? "Свернуть" : `Все (${rows.length})`}
+                {showAllCities ? "Свернуть" : `Показать все (${rows.length})`}
               </button>
             )}
           </div>
           {loading ? (
-            <div className="h-[200px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
-          ) : (
-            <div className="space-y-2 overflow-y-auto max-h-[260px]">
-              {[...cityBarData].sort((a, b) => b.total - a.total)
-                .slice(0, showAllCities ? undefined : 5)
-                .map((city, i) => {
-                  const max = cityBarData.reduce((m, c) => Math.max(m, c.total), 1);
-                  const pct = max > 0 ? (city.total / max) * 100 : 0;
-                  return (
-                    <div key={city.name}>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-white/70">{city.name}</span>
-                        <span className="font-bold" style={{ color: PIE_COLORS[i % PIE_COLORS.length] }}>{city.total}</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%`, background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      </div>
-                    </div>
-                  );
-                })}
+            <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+          ) : rows.length === 0 ? (
+            <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-white/20">
+              <Icon name="BarChart2" size={28} />
+              <p className="text-xs">Нет данных</p>
             </div>
-          )}
+          ) : (() => {
+            const sortedRows = [...rows].sort((a, b) => rowTotal(b) - rowTotal(a));
+            const displayed = showAllCities ? sortedRows : sortedRows.slice(0, 5);
+            const maxVal = Math.max(...displayed.map(r => rowTotal(r)), 1);
+            return (
+              <>
+                <div className="space-y-3">
+                  {displayed.map(row => {
+                    const total = rowTotal(row);
+                    return (
+                      <div key={row.id}>
+                        <div className="flex justify-between text-xs mb-1.5">
+                          <span className="text-white/70 font-medium">{row.city}</span>
+                          <span className="text-white/50">{total}</span>
+                        </div>
+                        <div className="h-5 rounded-lg bg-white/5 overflow-hidden flex"
+                          style={{ width: "100%" }}>
+                          {columns.map((col, ci) => {
+                            const val = Number(row[col.key]) || 0;
+                            const pct = total > 0 ? (val / maxVal) * 100 : 0;
+                            if (pct === 0) return null;
+                            return (
+                              <div key={col.key} title={`${col.label}: ${val}`}
+                                className="h-full transition-all duration-500"
+                                style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }} />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/6">
+                  {columns.map((c, i) => (
+                    <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/45">
+                      <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0"
+                        style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      {c.label}
+                    </span>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
