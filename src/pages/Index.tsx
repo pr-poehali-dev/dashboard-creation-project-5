@@ -374,60 +374,44 @@ export default function Dashboard() {
             ) : (
               <>
                 {(() => {
-                  const maxVal = Math.max(...topCities.flatMap(r => COLUMNS.map(c => Number(r[c.key]) || 0)), 1);
+                  const maxTotal = Math.max(...topCities.map(r => rowTotal(r)), 1);
                   return (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs border-collapse">
-                        <thead>
-                          <tr>
-                            <th className="text-left pb-2 pr-3 text-white/30 font-normal w-28 min-w-[7rem]">Город</th>
-                            {COLUMNS.map(c => (
-                              <th key={c.key} className="pb-2 px-1 text-white/40 font-normal text-center leading-tight" style={{ minWidth: 52 }}>
-                                {c.short}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {topCities.map((r, ri) => (
-                            <tr key={r.city as string}>
-                              <td className="py-1 pr-3 text-white/70 font-medium truncate max-w-[7rem]" title={r.city as string}>
-                                {r.city as string}
-                              </td>
+                    <div className="flex flex-col gap-3">
+                      {topCities.map(r => {
+                        const total = rowTotal(r);
+                        return (
+                          <div key={r.city as string} className="flex items-center gap-3">
+                            <div className="text-white/60 text-xs font-medium truncate" style={{ minWidth: 90, maxWidth: 90 }} title={r.city as string}>
+                              {r.city as string}
+                            </div>
+                            <div className="flex-1 flex rounded-lg overflow-hidden h-8 bg-white/5">
                               {COLUMNS.map((c, ci) => {
                                 const val = Number(r[c.key]) || 0;
-                                const intensity = val / maxVal;
-                                const color = PIE_COLORS[ci % PIE_COLORS.length];
+                                if (!val) return null;
+                                const pct = (val / maxTotal) * 100;
                                 return (
-                                  <td key={c.key} className="py-1 px-1 text-center">
-                                    <div
-                                      className="rounded-lg flex items-center justify-center font-semibold transition-all"
-                                      style={{
-                                        background: intensity > 0 ? `${color}${Math.round(intensity * 200 + 20).toString(16).padStart(2, '0')}` : 'transparent',
-                                        color: intensity > 0.5 ? '#fff' : intensity > 0 ? color : 'rgba(255,255,255,0.15)',
-                                        height: 36,
-                                        fontSize: 12,
-                                      }}
-                                      title={`${r.city} · ${c.label}: ${val}`}
-                                    >
-                                      {val > 0 ? val : '—'}
-                                    </div>
-                                  </td>
+                                  <div
+                                    key={c.key}
+                                    style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length], minWidth: val > 0 ? 2 : 0 }}
+                                    title={`${c.label}: ${val}`}
+                                    className="flex items-center justify-center transition-all"
+                                  >
+                                    {pct > 6 && <span className="text-white text-xs font-semibold drop-shadow">{val}</span>}
+                                  </div>
                                 );
                               })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <div className="flex items-center gap-2 mt-4 text-white/30 text-xs">
-                        <span>0</span>
-                        <div className="flex h-2 rounded-full overflow-hidden" style={{ width: 100 }}>
-                          {[0.1,0.3,0.5,0.7,0.9,1].map((v, i) => (
-                            <div key={i} style={{ flex: 1, background: `${PIE_COLORS[0]}${Math.round(v * 200 + 20).toString(16).padStart(2, '0')}` }} />
-                          ))}
-                        </div>
-                        <span>{maxVal}</span>
-                        <span className="ml-1 text-white/20">— интенсивность</span>
+                            </div>
+                            <div className="text-white/40 text-xs w-8 text-right">{total}</div>
+                          </div>
+                        );
+                      })}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2">
+                        {COLUMNS.map((c, i) => (
+                          <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/40">
+                            <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                            {c.short}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   );
