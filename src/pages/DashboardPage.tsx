@@ -94,6 +94,7 @@ export default function DashboardPage() {
         </div>
 
         <DashboardView
+          key={dashboard.slug}
           title={dashboard.title}
           apiUrl={dashboard.api_url}
           columns={dashboard.columns}

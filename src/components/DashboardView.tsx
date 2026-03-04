@@ -70,6 +70,7 @@ export default function DashboardView({ apiUrl, columns, title }: Props) {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const axisColor = isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)";
+  const gradId = `gradViolet-${apiUrl.slice(-8)}`;
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -208,7 +209,7 @@ export default function DashboardView({ apiUrl, columns, title }: Props) {
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id={`gradViolet-${title}`} x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#7C5CFF" stopOpacity={0.4} />
                     <stop offset="100%" stopColor="#7C5CFF" stopOpacity={0} />
                   </linearGradient>
@@ -219,7 +220,7 @@ export default function DashboardView({ apiUrl, columns, title }: Props) {
                 <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="total" name="Итого"
-                  stroke="#7C5CFF" strokeWidth={2.5} fill={`url(#gradViolet-${title})`}
+                  stroke="#7C5CFF" strokeWidth={2.5} fill={`url(#${gradId})`}
                   dot={false} activeDot={{ r: 5, fill: "#7C5CFF", stroke: "white", strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
