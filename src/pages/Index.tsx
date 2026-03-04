@@ -24,8 +24,8 @@ const COLUMNS: { key: string; label: string; short: string }[] = [
 ];
 
 const PIE_COLORS = [
-  "#7C5CFF", "#00E5CC", "#FF3CAC", "#FF7A00",
-  "#00D46A", "#0096FF", "#FFD600", "#FF4C61", "#B16CEA",
+  "#6C3FFF", "#00FFDD", "#FF007A", "#FF6B00",
+  "#00E064", "#0077FF", "#FFD000", "#FF2244", "#CC00FF",
 ];
 
 interface Row {
