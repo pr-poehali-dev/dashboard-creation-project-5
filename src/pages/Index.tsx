@@ -4,6 +4,7 @@ import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
@@ -107,9 +108,9 @@ export default function Dashboard() {
 
   const cityBarData = rows.map(r => ({ name: r.city as string, total: rowTotal(r) }));
 
-  const lineData = topCities.map(r => {
-    const obj: Record<string, string | number> = { name: r.city as string };
-    COLUMNS.forEach(c => { obj[c.short] = Number(r[c.key]) || 0; });
+  const radarData = COLUMNS.map(c => {
+    const obj: Record<string, string | number> = { subject: c.short };
+    topCities.forEach(r => { obj[r.city as string] = Number(r[c.key]) || 0; });
     return obj;
   });
 
@@ -372,35 +373,23 @@ export default function Dashboard() {
               </div>
             ) : (
               <>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={lineData} margin={{ top: 5, right: 5, left: -20, bottom: 30 }}>
-                    <defs>
-                      <linearGradient id="linePink" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#FF3CAC" />
-                        <stop offset="100%" stopColor="#FF7A00" />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
-                    <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }}
-                      axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                    <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} domain={["auto", "auto"]} />
+                <ResponsiveContainer width="100%" height={280}>
+                  <RadarChart data={radarData} margin={{ top: 10, right: 20, left: 20, bottom: 10 }}>
+                    <PolarGrid stroke={isLight ? "rgba(20,10,40,0.1)" : "rgba(255,255,255,0.08)"} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: axisColor, fontSize: 10 }} />
+                    <PolarRadiusAxis tick={false} axisLine={false} />
                     <Tooltip content={<CustomTooltip />} />
-                    {COLUMNS.map((c, i) => (
-                      <Line key={c.key} type="monotone" dataKey={c.short}
-                        stroke={PIE_COLORS[i]} strokeWidth={2.5}
-                        dot={{ fill: PIE_COLORS[i], r: 3, strokeWidth: 0 }}
-                        activeDot={{ r: 6, fill: PIE_COLORS[i], stroke: "white", strokeWidth: 2 }} />
+                    {topCities.map((r, i) => (
+                      <Radar key={r.city as string} name={r.city as string}
+                        dataKey={r.city as string}
+                        stroke={PIE_COLORS[i % PIE_COLORS.length]}
+                        fill={PIE_COLORS[i % PIE_COLORS.length]}
+                        fillOpacity={0.12}
+                        strokeWidth={2} />
                     ))}
-                  </LineChart>
+                    <Legend wrapperStyle={{ fontSize: 11, color: axisColor, paddingTop: 8 }} />
+                  </RadarChart>
                 </ResponsiveContainer>
-                <div className="flex flex-wrap gap-3 mt-2">
-                  {COLUMNS.map((c, i) => (
-                    <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/40">
-                      <span className="w-3 h-0.5 rounded-full inline-block" style={{ background: PIE_COLORS[i] }} />
-                      {c.short}
-                    </span>
-                  ))}
-                </div>
               </>
             )}
           </div>
