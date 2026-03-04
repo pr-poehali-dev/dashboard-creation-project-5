@@ -128,7 +128,7 @@ export default function Dashboard() {
     },
     {
       label: "Главная причина",
-      value: top1?.short ?? "—",
+      value: top1?.label ?? "—",
       suffix: "",
       icon: "AlertTriangle",
       gradient: "gradient-pink",
@@ -138,7 +138,7 @@ export default function Dashboard() {
     },
     {
       label: "2-я по частоте",
-      value: top2?.short ?? "—",
+      value: top2?.label ?? "—",
       suffix: "",
       icon: "AlertCircle",
       gradient: "gradient-cyan",
