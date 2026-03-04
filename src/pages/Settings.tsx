@@ -1,0 +1,157 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Icon from "@/components/ui/icon";
+import TerminationsTable from "@/components/TerminationsTable";
+
+const PASSWORD = "Lazarev-Analitika032=1";
+const SESSION_KEY = "settings_auth";
+
+export default function Settings() {
+  const navigate = useNavigate();
+  const [authed, setAuthed] = useState(false);
+  const [input, setInput] = useState("");
+  const [error, setError] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [shaking, setShaking] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input === PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, "1");
+      setAuthed(true);
+      setError(false);
+    } else {
+      setError(true);
+      setShaking(true);
+      setTimeout(() => setShaking(false), 500);
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    navigate("/");
+  };
+
+  if (!authed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: "linear-gradient(135deg, #0A0812 0%, #0D0F1C 50%, #080B18 100%)" }}>
+        {/* Ambient blobs */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-20 animate-float"
+            style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)" }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full opacity-15 animate-float delay-400"
+            style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)" }} />
+        </div>
+
+        <div className={`relative z-10 w-full max-w-sm animate-fade-in-up ${shaking ? "animate-shake" : ""}`}>
+          <div className="glass rounded-3xl p-8">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-14 h-14 gradient-violet rounded-2xl flex items-center justify-center"
+                style={{ boxShadow: "0 8px 32px rgba(124,92,255,0.4)" }}>
+                <Icon name="Lock" size={24} className="text-white" />
+              </div>
+            </div>
+
+            <h1 className="font-display font-black text-2xl text-white text-center mb-1">Настройки</h1>
+            <p className="text-white/40 text-sm text-center mb-8">Введите пароль для доступа</p>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="relative">
+                <input
+                  type={showPass ? "text" : "password"}
+                  value={input}
+                  onChange={e => { setInput(e.target.value); setError(false); }}
+                  placeholder="Пароль"
+                  autoFocus
+                  className={`w-full glass rounded-xl px-4 py-3 pr-11 text-white text-sm outline-none transition-all duration-200
+                    placeholder:text-white/25
+                    ${error
+                      ? "border border-red-500/60 bg-red-500/5"
+                      : "border border-transparent focus:border-violet-500/50 focus:bg-violet-500/5"
+                    }`}
+                />
+                <button type="button" tabIndex={-1}
+                  onClick={() => setShowPass(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
+                  <Icon name={showPass ? "EyeOff" : "Eye"} size={16} />
+                </button>
+              </div>
+
+              {error && (
+                <p className="text-red-400 text-xs text-center animate-fade-in-up">
+                  Неверный пароль. Попробуйте ещё раз.
+                </p>
+              )}
+
+              <button type="submit"
+                className="w-full gradient-violet text-white font-semibold py-3 rounded-xl text-sm transition-all duration-200 hover:opacity-90 active:scale-95"
+                style={{ boxShadow: "0 4px 24px rgba(124,92,255,0.4)" }}>
+                Войти
+              </button>
+
+              <button type="button" onClick={() => navigate("/")}
+                className="w-full text-white/30 hover:text-white/60 text-sm py-2 transition-colors">
+                ← Вернуться назад
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-5px); }
+            80% { transform: translateX(5px); }
+          }
+          .animate-shake { animation: shake 0.4s ease-in-out; }
+        `}</style>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen"
+      style={{ background: "linear-gradient(135deg, #0A0812 0%, #0D0F1C 50%, #080B18 100%)" }}>
+      {/* Ambient blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-20 animate-float"
+          style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)" }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15 animate-float delay-400"
+          style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)" }} />
+      </div>
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8 animate-fade-in-up">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/")}
+              className="glass glass-hover w-10 h-10 rounded-full flex items-center justify-center text-white/60">
+              <Icon name="ArrowLeft" size={18} />
+            </button>
+            <div>
+              <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-0.5">
+                Настройки
+              </h1>
+              <p className="text-white/40 text-sm">Редактирование таблицы причин расторжений</p>
+            </div>
+          </div>
+          <button onClick={handleLogout}
+            className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/50 hover:text-red-400 transition-colors">
+            <Icon name="LogOut" size={16} />
+            Выйти
+          </button>
+        </div>
+
+        <TerminationsTable />
+      </div>
+    </div>
+  );
+}

@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import Icon from "@/components/ui/icon";
-import TerminationsTable from "@/components/TerminationsTable";
+
 
 const PERIODS = ["7 дней", "30 дней", "90 дней", "Год"];
 const CATEGORIES = ["Все", "Продажи", "Трафик", "Конверсия"];
@@ -84,6 +85,7 @@ const CustomTooltip = ({ active, payload, label }: TTooltip) => {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [period, setPeriod] = useState("30 дней");
   const [category, setCategory] = useState("Все");
   const [data, setData] = useState(() => generateData("30 дней"));
@@ -127,7 +129,8 @@ export default function Dashboard() {
             <button className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60">
               <Icon name="Bell" size={18} />
             </button>
-            <button className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60">
+            <button onClick={() => navigate("/settings")}
+              className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60">
               <Icon name="Settings" size={18} />
             </button>
           </div>
@@ -310,11 +313,6 @@ export default function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
-
-        {/* Terminations Table */}
-        <div className="mt-4">
-          <TerminationsTable />
         </div>
 
         {/* Footer */}
