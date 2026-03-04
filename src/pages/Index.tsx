@@ -5,6 +5,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import Icon from "@/components/ui/icon";
+import TerminationsTable from "@/components/TerminationsTable";
 
 const PERIODS = ["7 дней", "30 дней", "90 дней", "Год"];
 const CATEGORIES = ["Все", "Продажи", "Трафик", "Конверсия"];
@@ -309,6 +310,11 @@ export default function Dashboard() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </div>
+
+        {/* Terminations Table */}
+        <div className="mt-4">
+          <TerminationsTable />
         </div>
 
         {/* Footer */}
