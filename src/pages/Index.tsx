@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { DASHBOARDS } from "@/config/dashboards";
+import { useDashboards } from "@/hooks/useDashboards";
+import DashboardManager from "@/components/DashboardManager";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
@@ -86,6 +87,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [hoveredCell, setHoveredCell] = useState<{city: string; col: string; val: number} | null>(null);
   const [showAllCities, setShowAllCities] = useState(false);
+  const [showManager, setShowManager] = useState(false);
+  const { dashboards: dbDashboards } = useDashboards();
 
   useEffect(() => {
     fetch(API_URL)
@@ -165,6 +168,7 @@ export default function Dashboard() {
   const axisColor = isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)";
 
   return (
+    <>
     <div className="min-h-screen" style={{ background: "var(--page-bg)" }}>
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -184,15 +188,21 @@ export default function Dashboard() {
               Аналитика расторжений
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
-              {DASHBOARDS.map(d => (
+              {dbDashboards.map(d => (
                 <button
                   key={d.id}
-                  onClick={() => navigate(`/dashboard/${d.id}`)}
+                  onClick={() => navigate(`/dashboard/${d.slug}`)}
                   className="text-xs px-3 py-1.5 rounded-full glass glass-hover text-white/60 hover:text-white transition-all duration-200"
                 >
                   {d.title}
                 </button>
               ))}
+              <button
+                onClick={() => setShowManager(true)}
+                className="text-xs px-3 py-1.5 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all duration-200 flex items-center gap-1.5"
+              >
+                <Icon name="Plus" size={12} /> Дашборд
+              </button>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -560,5 +570,7 @@ export default function Dashboard() {
         </p>
       </div>
     </div>
+    {showManager && <DashboardManager onClose={() => setShowManager(false)} />}
+    </>
   );
 }

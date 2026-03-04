@@ -1,16 +1,31 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
 import GenericTable from "@/components/GenericTable";
-import { DASHBOARDS } from "@/config/dashboards";
+import DashboardManager from "@/components/DashboardManager";
+import { useDashboards } from "@/hooks/useDashboards";
 
 export default function DashboardPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const isLight = theme === "light";
+  const [showManager, setShowManager] = useState(false);
+  const { dashboards, loading } = useDashboards();
 
-  const dashboard = DASHBOARDS.find(d => d.id === id);
+  const dashboard = dashboards.find(d => d.slug === id);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--page-bg)" }}>
+        <div className="flex items-center gap-3 text-white/40">
+          <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-violet-500 animate-spin" />
+          Загрузка...
+        </div>
+      </div>
+    );
+  }
 
   if (!dashboard) {
     return (
@@ -24,6 +39,7 @@ export default function DashboardPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen" style={{ background: "var(--page-bg)" }}>
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full animate-float"
@@ -46,13 +62,13 @@ export default function DashboardPage() {
               <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-1">
                 {dashboard.title}
               </h1>
-              <div className="flex items-center gap-2">
-                {DASHBOARDS.map(d => (
+              <div className="flex flex-wrap items-center gap-2">
+                {dashboards.map(d => (
                   <button
                     key={d.id}
-                    onClick={() => navigate(`/dashboard/${d.id}`)}
+                    onClick={() => navigate(`/dashboard/${d.slug}`)}
                     className={`text-xs px-3 py-1 rounded-full transition-all duration-200 ${
-                      d.id === id
+                      d.slug === id
                         ? "gradient-violet text-white font-semibold"
                         : "glass glass-hover text-white/50"
                     }`}
@@ -60,6 +76,12 @@ export default function DashboardPage() {
                     {d.title}
                   </button>
                 ))}
+                <button
+                  onClick={() => setShowManager(true)}
+                  className="text-xs px-3 py-1 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all duration-200 flex items-center gap-1"
+                >
+                  <Icon name="Plus" size={11} /> Дашборд
+                </button>
               </div>
             </div>
           </div>
@@ -83,10 +105,12 @@ export default function DashboardPage() {
         <GenericTable
           title={dashboard.title}
           subtitle="Кликните на ячейку для редактирования"
-          apiUrl={dashboard.apiUrl}
+          apiUrl={dashboard.api_url}
           columns={dashboard.columns}
         />
       </div>
     </div>
+    {showManager && <DashboardManager onClose={() => setShowManager(false)} />}
+    </>
   );
 }
