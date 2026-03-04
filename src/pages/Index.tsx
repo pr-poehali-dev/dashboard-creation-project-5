@@ -392,21 +392,23 @@ export default function Dashboard() {
         {/* Charts Row 3: линейные */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
 
-          {/* Line: каждая причина по городам */}
+          {/* Line 1: все причины по городам */}
           <div className="glass rounded-2xl p-6 animate-fade-in-up delay-700">
-            <div className="mb-5">
-              <h3 className="font-display font-bold text-white text-lg">Причины по городам</h3>
-              <p className="text-white/40 text-xs mt-0.5">Линейный профиль каждой причины</p>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-display font-bold text-white text-lg">Причины по городам</h3>
+                <p className="text-white/40 text-xs mt-0.5">Линейный профиль каждой причины</p>
+              </div>
             </div>
             {loading ? (
-              <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+              <div className="h-[200px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
             ) : cityBarData.length === 0 ? (
-              <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-white/20">
+              <div className="h-[200px] flex flex-col items-center justify-center gap-2 text-white/20">
                 <Icon name="TrendingUp" size={28} />
-                <p className="text-xs">Нет данных</p>
+                <p className="text-xs">Нет данных. Заполните таблицу в настройках.</p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={200}>
                 <LineChart
                   data={filteredRows.map(r => {
                     const obj: Record<string, string | number> = { name: r.city as string };
@@ -414,37 +416,35 @@ export default function Dashboard() {
                     return obj;
                   })}
                   margin={{ top: 5, right: 5, left: -20, bottom: 40 }}>
+                  <defs>
+                    {COLUMNS.map((c, i) => (
+                      <linearGradient key={c.key} id={`lineGrad${i}`} x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor={PIE_COLORS[i]} />
+                        <stop offset="100%" stopColor={PIE_COLORS[(i + 1) % PIE_COLORS.length]} />
+                      </linearGradient>
+                    ))}
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
+                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 9 }}
                     axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                  <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} domain={["auto", "auto"]} />
                   <Tooltip content={<CustomTooltip />} />
                   {COLUMNS.map((c, i) => (
                     <Line key={c.key} type="monotone" dataKey={c.short}
-                      stroke={PIE_COLORS[i]} strokeWidth={1.8}
-                      dot={false} activeDot={{ r: 4, stroke: "white", strokeWidth: 1.5 }} />
+                      stroke={`url(#lineGrad${i})`} strokeWidth={2.5}
+                      dot={{ fill: PIE_COLORS[i], r: 3, strokeWidth: 0 }}
+                      activeDot={{ r: 6, fill: PIE_COLORS[i], stroke: "white", strokeWidth: 2 }} />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
             )}
           </div>
 
-          {/* Line: топ-5 причин — детально */}
+          {/* Line 2: топ-5 причин с легендой */}
           <div className="glass rounded-2xl p-6 animate-fade-in-up delay-800">
-            <div className="mb-5">
-              <h3 className="font-display font-bold text-white text-lg">Топ-5 причин по городам</h3>
-              <p className="text-white/40 text-xs mt-0.5">Наиболее частые причины расторжений</p>
-            </div>
-            {loading ? (
-              <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
-            ) : cityBarData.length === 0 ? (
-              <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-white/20">
-                <Icon name="TrendingUp" size={28} />
-                <p className="text-xs">Нет данных</p>
-              </div>
-            ) : (() => {
+            {(() => {
               const top5 = COLUMNS
-                .map((c, i) => ({ col: c, total: filteredRows.reduce((s, r) => s + (Number(r[c.key]) || 0), 0), color: PIE_COLORS[i] }))
+                .map((c, i) => ({ col: c, total: filteredRows.reduce((s, r) => s + (Number(r[c.key]) || 0), 0), color: PIE_COLORS[i], idx: i }))
                 .sort((a, b) => b.total - a.total)
                 .slice(0, 5);
               const lineData = filteredRows.map(r => {
@@ -453,24 +453,57 @@ export default function Dashboard() {
                 return obj;
               });
               return (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={lineData} margin={{ top: 5, right: 5, left: -20, bottom: 40 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }}
-                      axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                    <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend
-                      wrapperStyle={{ paddingTop: 8, fontSize: 10, color: "rgba(255,255,255,0.5)" }}
-                      iconType="circle" iconSize={7} />
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h3 className="font-display font-bold text-white text-lg">Топ-5 причин по городам</h3>
+                      <p className="text-white/40 text-xs mt-0.5">Наиболее частые причины расторжений</p>
+                    </div>
+                    <div className="glass rounded-xl px-3 py-1.5 text-sm font-bold text-gradient-violet">
+                      {top5[0]?.col.short ?? "—"}
+                    </div>
+                  </div>
+                  {loading ? (
+                    <div className="h-[200px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+                  ) : cityBarData.length === 0 ? (
+                    <div className="h-[200px] flex flex-col items-center justify-center gap-2 text-white/20">
+                      <Icon name="TrendingUp" size={28} />
+                      <p className="text-xs">Нет данных</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={lineData} margin={{ top: 5, right: 5, left: -20, bottom: 40 }}>
+                        <defs>
+                          {top5.map(({ col, idx }) => (
+                            <linearGradient key={col.key} id={`top5Grad${idx}`} x1="0" y1="0" x2="1" y2="0">
+                              <stop offset="0%" stopColor={PIE_COLORS[idx]} />
+                              <stop offset="100%" stopColor={PIE_COLORS[(idx + 2) % PIE_COLORS.length]} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                        <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 9 }}
+                          axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
+                        <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} domain={["auto", "auto"]} />
+                        <Tooltip content={<CustomTooltip />} />
+                        {top5.map(({ col, color, idx }) => (
+                          <Line key={col.key} type="monotone" dataKey={col.short}
+                            stroke={`url(#top5Grad${idx})`} strokeWidth={2.5}
+                            dot={{ fill: color, r: 3, strokeWidth: 0 }}
+                            activeDot={{ r: 6, fill: color, stroke: "white", strokeWidth: 2 }} />
+                        ))}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                  <div className="flex flex-wrap gap-3 mt-3">
                     {top5.map(({ col, color }) => (
-                      <Line key={col.key} type="monotone" dataKey={col.short}
-                        stroke={color} strokeWidth={2.2}
-                        dot={{ r: 3, fill: color, strokeWidth: 0 }}
-                        activeDot={{ r: 5, stroke: "white", strokeWidth: 1.5 }} />
+                      <span key={col.key} className="flex items-center gap-1.5 text-xs text-white/50">
+                        <span className="w-3 h-0.5 rounded-full inline-block" style={{ background: color }} />
+                        {col.short}
+                      </span>
                     ))}
-                  </LineChart>
-                </ResponsiveContainer>
+                  </div>
+                </>
               );
             })()}
           </div>
