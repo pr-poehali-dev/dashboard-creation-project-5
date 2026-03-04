@@ -438,9 +438,9 @@ export default function Dashboard() {
                     </th>
                     {COLUMNS.map((col, i) => (
                       <th key={col.key}
-                        className="px-3 py-3 text-center text-xs font-medium whitespace-nowrap"
-                        style={{ minWidth: 84, color: PIE_COLORS[i] }}>
-                        {col.short}
+                        className="px-3 py-3 text-center text-xs font-medium leading-tight"
+                        style={{ minWidth: 100, maxWidth: 130, color: PIE_COLORS[i] }}>
+                        {col.label}
                       </th>
                     ))}
                     <th className="px-4 py-3 text-white/60 font-bold text-xs text-center whitespace-nowrap">
