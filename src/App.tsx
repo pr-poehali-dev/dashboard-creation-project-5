@@ -9,11 +9,13 @@ import Settings from "./pages/Settings";
 import DashboardPage from "./pages/DashboardPage";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./context/ThemeContext";
+import { DashboardsProvider } from "./context/DashboardsContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <ThemeProvider>
+    <DashboardsProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -29,6 +31,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+  </DashboardsProvider>
   </ThemeProvider>
 );
 
