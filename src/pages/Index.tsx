@@ -406,6 +406,113 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Table */}
+        <div className="glass rounded-2xl overflow-hidden animate-fade-in-up delay-800 mt-4">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+            <div>
+              <h3 className="font-display font-bold text-white text-lg">Причины расторжений по городам</h3>
+              <p className="text-white/40 text-xs mt-0.5">Полная таблица данных</p>
+            </div>
+            <span className="glass rounded-xl px-3 py-1.5 text-xs text-white/50 font-semibold">
+              {rows.length} городов · {grandTotal.toLocaleString("ru-RU")} всего
+            </span>
+          </div>
+          {loading ? (
+            <div className="flex items-center justify-center gap-3 text-white/30 py-12 text-sm">
+              <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-violet-500 animate-spin" />
+              Загрузка...
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 text-white/20 py-12">
+              <Icon name="Table" size={28} />
+              <p className="text-xs">Нет данных. Заполните таблицу в настройках.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/8">
+                    <th className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                      style={{ background: "var(--sticky-cell-bg)", minWidth: 130 }}>
+                      Город
+                    </th>
+                    {COLUMNS.map((col, i) => (
+                      <th key={col.key}
+                        className="px-3 py-3 text-center text-xs font-medium whitespace-nowrap"
+                        style={{ minWidth: 84, color: PIE_COLORS[i] }}>
+                        {col.short}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-white/60 font-bold text-xs text-center whitespace-nowrap">
+                      Итого
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, ri) => {
+                    const total = COLUMNS.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
+                    const maxVal = Math.max(...COLUMNS.map(c => Number(row[c.key]) || 0));
+                    return (
+                      <tr key={row.id}
+                        className="border-b border-white/5 transition-colors hover:bg-white/3"
+                        style={{ animationDelay: `${ri * 0.02}s` }}>
+                        <td className="px-4 py-2.5 text-white/80 font-semibold text-xs whitespace-nowrap sticky left-0 z-10"
+                          style={{ background: "var(--sticky-cell-bg)" }}>
+                          {row.city as string}
+                        </td>
+                        {COLUMNS.map((col, i) => {
+                          const val = Number(row[col.key]) || 0;
+                          const intensity = maxVal > 0 ? val / maxVal : 0;
+                          return (
+                            <td key={col.key} className="px-2 py-2 text-center relative">
+                              {val > 0 && (
+                                <span
+                                  className="absolute inset-1 rounded-md pointer-events-none"
+                                  style={{ background: PIE_COLORS[i], opacity: intensity * 0.18 }}
+                                />
+                              )}
+                              <span className="relative text-xs font-medium"
+                                style={{ color: val > 0 ? PIE_COLORS[i] : "var(--text-faint)" }}>
+                                {val > 0 ? val : "—"}
+                              </span>
+                            </td>
+                          );
+                        })}
+                        <td className="px-4 py-2.5 text-center">
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${total > 0 ? "text-gradient-violet" : "text-white/20"}`}>
+                            {total}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-white/10">
+                    <td className="px-4 py-3 text-white/60 font-bold text-xs sticky left-0 z-10"
+                      style={{ background: "var(--sticky-cell-bg)" }}>
+                      ИТОГО
+                    </td>
+                    {COLUMNS.map((col, i) => {
+                      const total = rows.reduce((s, r) => s + (Number(r[col.key]) || 0), 0);
+                      return (
+                        <td key={col.key} className="px-2 py-3 text-center">
+                          <span className="text-xs font-bold" style={{ color: total > 0 ? PIE_COLORS[i] : "var(--text-faint)" }}>
+                            {total > 0 ? total : "—"}
+                          </span>
+                        </td>
+                      );
+                    })}
+                    <td className="px-4 py-3 text-center">
+                      <span className="text-sm font-black text-gradient-pink">{grandTotal}</span>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* Footer */}
         <p className="mt-6 text-center text-white/20 text-xs animate-fade-in-up delay-800">
           {rows.length} городов · {grandTotal.toLocaleString("ru-RU")} расторжений · Данные из базы
