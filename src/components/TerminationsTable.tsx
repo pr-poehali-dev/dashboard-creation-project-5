@@ -114,7 +114,7 @@ export default function TerminationsTable() {
           <thead>
             <tr className="border-b border-white/8">
               <th className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                style={{ background: "rgba(13,11,24,0.95)", minWidth: 140 }}>
+                style={{ background: "var(--sticky-cell-bg)", minWidth: 140 }}>
                 Город / Причина
               </th>
               {COLUMNS.map(col => (
@@ -135,7 +135,7 @@ export default function TerminationsTable() {
                 className="border-b border-white/5 transition-colors hover:bg-white/3"
                 style={{ animationDelay: `${ri * 0.03}s` }}>
                 <td className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                  style={{ background: "rgba(13,11,24,0.95)" }}>
+                  style={{ background: "var(--sticky-cell-bg)" }}>
                   {row.city}
                 </td>
                 {COLUMNS.map(col => (
@@ -166,7 +166,7 @@ export default function TerminationsTable() {
           <tfoot>
             <tr className="border-t-2 border-white/10">
               <td className="px-4 py-3 text-white/70 font-bold text-xs sticky left-0 z-10"
-                style={{ background: "rgba(13,11,24,0.95)" }}>
+                style={{ background: "var(--sticky-cell-bg)" }}>
                 ИТОГО
               </td>
               {COLUMNS.map(col => (

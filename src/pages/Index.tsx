@@ -6,6 +6,7 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 import Icon from "@/components/ui/icon";
+import { useTheme } from "@/context/ThemeContext";
 
 const API_URL = "https://functions.poehali.dev/f8817ea5-4b71-410d-8ce1-257b80d75df0";
 
@@ -77,6 +78,8 @@ const CustomTooltip = ({ active, payload, label }: TTooltip) => {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
+  const isLight = theme === "light";
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -155,16 +158,18 @@ export default function Dashboard() {
     },
   ];
 
+  const axisColor = isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)";
+
   return (
-    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #0A0812 0%, #0D0F1C 50%, #080B18 100%)" }}>
+    <div className="min-h-screen" style={{ background: "var(--page-bg)" }}>
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-20 animate-float"
-          style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)" }} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15 animate-float delay-400"
-          style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)" }} />
-        <div className="absolute top-[40%] right-[20%] w-[350px] h-[350px] rounded-full opacity-10 animate-float delay-200"
-          style={{ background: "radial-gradient(circle, #00E5CC 0%, transparent 70%)", filter: "blur(80px)" }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full animate-float"
+          style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity)" }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full animate-float delay-400"
+          style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity-2)" }} />
+        <div className="absolute top-[40%] right-[20%] w-[350px] h-[350px] rounded-full animate-float delay-200"
+          style={{ background: "radial-gradient(circle, #00E5CC 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity-3)" }} />
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
@@ -181,6 +186,11 @@ export default function Dashboard() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               {loading ? "Загрузка..." : "Данные актуальны"}
             </div>
+            <button onClick={toggle}
+              className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
+              title={isLight ? "Тёмная тема" : "Светлая тема"}>
+              <Icon name={isLight ? "Moon" : "Sun"} size={18} />
+            </button>
             <button className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60">
               <Icon name="Bell" size={18} />
             </button>
@@ -247,10 +257,10 @@ export default function Dashboard() {
                       <stop offset="100%" stopColor="#7C5CFF" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 10 }}
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
                     axisLine={false} tickLine={false} angle={-20} textAnchor="end" interval={0} height={36} />
-                  <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="total" name="Расторжений"
                     stroke="#7C5CFF" strokeWidth={2.5} fill="url(#gradViolet)"
@@ -281,8 +291,9 @@ export default function Dashboard() {
                       ))}
                     </Pie>
                     <Tooltip
-                      contentStyle={{ background: "rgba(14,12,26,0.97)", border: "1px solid rgba(124,92,255,0.3)", borderRadius: 12 }}
-                      labelStyle={{ color: "white" }} itemStyle={{ color: "rgba(255,255,255,0.7)" }} />
+                      contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid rgba(124,92,255,0.3)", borderRadius: 12 }}
+                      labelStyle={{ color: isLight ? "rgba(20,10,40,0.9)" : "white" }}
+                      itemStyle={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.7)" }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="grid grid-cols-1 gap-1.5 mt-1 max-h-[120px] overflow-y-auto">
@@ -324,10 +335,10 @@ export default function Dashboard() {
                       <stop offset="100%" stopColor="#B16CEA" />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 9 }}
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }}
                     axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                  <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="value" name="Расторжений" radius={[4, 4, 0, 0]}>
                     {sorted.map((_, i) => (
@@ -369,10 +380,10 @@ export default function Dashboard() {
                         <stop offset="100%" stopColor="#FF7A00" />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 9 }}
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+                    <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }}
                       axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                    <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} domain={["auto", "auto"]} />
+                    <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} domain={["auto", "auto"]} />
                     <Tooltip content={<CustomTooltip />} />
                     {COLUMNS.map((c, i) => (
                       <Line key={c.key} type="monotone" dataKey={c.short}

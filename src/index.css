@@ -40,6 +40,70 @@
     --pink: #ff3cac;
     --orange: #ff7a00;
     --green: #00d46a;
+
+    /* Theme tokens */
+    --page-bg: linear-gradient(135deg, #0a0812 0%, #0d0f1c 50%, #080b18 100%);
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover-bg: rgba(255, 255, 255, 0.07);
+    --glass-hover-border: rgba(255, 255, 255, 0.14);
+    --text-primary: rgba(255, 255, 255, 1);
+    --text-secondary: rgba(255, 255, 255, 0.5);
+    --text-muted: rgba(255, 255, 255, 0.35);
+    --text-faint: rgba(255, 255, 255, 0.2);
+    --blob-opacity: 0.2;
+    --blob-opacity-2: 0.15;
+    --blob-opacity-3: 0.1;
+    --scrollbar-track: rgba(255, 255, 255, 0.02);
+    --tooltip-bg: rgba(20, 18, 35, 0.95);
+    --sticky-cell-bg: rgba(13, 11, 24, 0.95);
+  }
+
+  .light {
+    --background: 220 20% 97%;
+    --foreground: 240 20% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 20% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 20% 10%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 240 20% 10%;
+
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 180 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 85%;
+    --input: 220 15% 85%;
+    --ring: 262 83% 58%;
+
+    /* Theme tokens */
+    --page-bg: linear-gradient(135deg, #f0eeff 0%, #eef2ff 50%, #f5f0ff 100%);
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(124, 92, 255, 0.15);
+    --glass-hover-bg: rgba(255, 255, 255, 0.9);
+    --glass-hover-border: rgba(124, 92, 255, 0.3);
+    --text-primary: rgba(20, 10, 40, 1);
+    --text-secondary: rgba(20, 10, 40, 0.55);
+    --text-muted: rgba(20, 10, 40, 0.4);
+    --text-faint: rgba(20, 10, 40, 0.25);
+    --blob-opacity: 0.12;
+    --blob-opacity-2: 0.08;
+    --blob-opacity-3: 0.06;
+    --scrollbar-track: rgba(0, 0, 0, 0.04);
+    --tooltip-bg: rgba(255, 255, 255, 0.97);
+    --sticky-cell-bg: rgba(245, 243, 255, 0.97);
   }
 }
 
@@ -165,19 +229,19 @@
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
 }
 
 .glass-hover {
   transition: all 0.3s ease;
 }
 .glass-hover:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--glass-hover-bg);
+  border-color: var(--glass-hover-border);
   transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .gradient-violet {
@@ -229,7 +293,7 @@
 }
 
 .chart-tooltip {
-  background: rgba(20, 18, 35, 0.95) !important;
+  background: var(--tooltip-bg) !important;
   border: 1px solid rgba(124, 92, 255, 0.3) !important;
   border-radius: 12px !important;
   backdrop-filter: blur(12px);
@@ -240,7 +304,7 @@
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(124, 92, 255, 0.3);
@@ -248,4 +312,68 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(124, 92, 255, 0.5);
+}
+
+/* Light theme text overrides */
+.light .text-white {
+  color: var(--text-primary) !important;
+}
+.light .text-white\/80 {
+  color: rgba(20, 10, 40, 0.8) !important;
+}
+.light .text-white\/70 {
+  color: rgba(20, 10, 40, 0.7) !important;
+}
+.light .text-white\/60 {
+  color: rgba(20, 10, 40, 0.6) !important;
+}
+.light .text-white\/50 {
+  color: rgba(20, 10, 40, 0.55) !important;
+}
+.light .text-white\/40 {
+  color: rgba(20, 10, 40, 0.45) !important;
+}
+.light .text-white\/35 {
+  color: rgba(20, 10, 40, 0.4) !important;
+}
+.light .text-white\/30 {
+  color: rgba(20, 10, 40, 0.35) !important;
+}
+.light .text-white\/20 {
+  color: rgba(20, 10, 40, 0.25) !important;
+}
+.light .border-white\/8 {
+  border-color: rgba(20, 10, 40, 0.08) !important;
+}
+.light .border-white\/5 {
+  border-color: rgba(20, 10, 40, 0.06) !important;
+}
+.light .border-white\/10 {
+  border-color: rgba(20, 10, 40, 0.1) !important;
+}
+.light .bg-white\/5 {
+  background-color: rgba(20, 10, 40, 0.04) !important;
+}
+.light .bg-white\/8 {
+  background-color: rgba(20, 10, 40, 0.06) !important;
+}
+.light .bg-white\/3 {
+  background-color: rgba(20, 10, 40, 0.03) !important;
+}
+.light .hover\:bg-white\/3:hover {
+  background-color: rgba(20, 10, 40, 0.04) !important;
+}
+.light .chart-tooltip {
+  background: var(--tooltip-bg) !important;
+  border: 1px solid rgba(124, 92, 255, 0.25) !important;
+  color: rgba(20, 10, 40, 0.9) !important;
+}
+.light .chart-tooltip .text-white\/50 {
+  color: rgba(20, 10, 40, 0.5) !important;
+}
+.light .chart-tooltip .text-white\/70 {
+  color: rgba(20, 10, 40, 0.7) !important;
+}
+.light .chart-tooltip .text-white {
+  color: rgba(20, 10, 40, 0.95) !important;
 }

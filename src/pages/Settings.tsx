@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import TerminationsTable from "@/components/TerminationsTable";
+import { useTheme } from "@/context/ThemeContext";
 
 const PASSWORD = "Lazarev-Analitika032=1";
 const SESSION_KEY = "settings_auth";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
@@ -39,14 +41,20 @@ export default function Settings() {
   if (!authed) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4"
-        style={{ background: "linear-gradient(135deg, #0A0812 0%, #0D0F1C 50%, #080B18 100%)" }}>
+        style={{ background: "var(--page-bg)" }}>
         {/* Ambient blobs */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-20 animate-float"
-            style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)" }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full opacity-15 animate-float delay-400"
-            style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)" }} />
+          <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full animate-float"
+            style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity)" }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full animate-float delay-400"
+            style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity-2)" }} />
         </div>
+        {/* Theme toggle on login screen */}
+        <button onClick={toggle}
+          className="glass glass-hover fixed top-4 right-4 z-20 rounded-full w-10 h-10 flex items-center justify-center text-white/60"
+          title={theme === "light" ? "Тёмная тема" : "Светлая тема"}>
+          <Icon name={theme === "light" ? "Moon" : "Sun"} size={18} />
+        </button>
 
         <div className={`relative z-10 w-full max-w-sm animate-fade-in-up ${shaking ? "animate-shake" : ""}`}>
           <div className="glass rounded-3xl p-8">
@@ -118,14 +126,13 @@ export default function Settings() {
   }
 
   return (
-    <div className="min-h-screen"
-      style={{ background: "linear-gradient(135deg, #0A0812 0%, #0D0F1C 50%, #080B18 100%)" }}>
+    <div className="min-h-screen" style={{ background: "var(--page-bg)" }}>
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-20 animate-float"
-          style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)" }} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15 animate-float delay-400"
-          style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)" }} />
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full animate-float"
+          style={{ background: "radial-gradient(circle, #7C5CFF 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity)" }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full animate-float delay-400"
+          style={{ background: "radial-gradient(circle, #FF3CAC 0%, transparent 70%)", filter: "blur(80px)", opacity: "var(--blob-opacity-2)" }} />
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
@@ -143,11 +150,18 @@ export default function Settings() {
               <p className="text-white/40 text-sm">Редактирование таблицы причин расторжений</p>
             </div>
           </div>
-          <button onClick={handleLogout}
-            className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/50 hover:text-red-400 transition-colors">
-            <Icon name="LogOut" size={16} />
-            Выйти
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={toggle}
+              className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
+              title={theme === "light" ? "Тёмная тема" : "Светлая тема"}>
+              <Icon name={theme === "light" ? "Moon" : "Sun"} size={18} />
+            </button>
+            <button onClick={handleLogout}
+              className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/50 hover:text-red-400 transition-colors">
+              <Icon name="LogOut" size={16} />
+              Выйти
+            </button>
+          </div>
         </div>
 
         <TerminationsTable />
