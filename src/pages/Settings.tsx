@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import TerminationsTable from "@/components/TerminationsTable";
+import GenericTable from "@/components/GenericTable";
 import { useTheme } from "@/context/ThemeContext";
+import { useDashboards } from "@/hooks/useDashboards";
 
 const PASSWORD = "Lazarev-Analitika032=1";
 const SESSION_KEY = "settings_auth";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggle } = useTheme();
+  const { dashboards } = useDashboards();
+  const slug = (location.state as { slug?: string } | null)?.slug;
+  const dashboard = dashboards.find(d => d.slug === slug) ?? dashboards[0];
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
@@ -147,7 +152,9 @@ export default function Settings() {
               <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-0.5">
                 Настройки
               </h1>
-              <p className="text-white/40 text-sm">Редактирование таблицы причин расторжений</p>
+              <p className="text-white/40 text-sm">
+                {dashboard ? `Редактирование таблицы: ${dashboard.title}` : "Настройки таблиц"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -164,7 +171,18 @@ export default function Settings() {
           </div>
         </div>
 
-        <TerminationsTable />
+        {dashboard ? (
+          <GenericTable
+            title={dashboard.title}
+            subtitle="Кликните на ячейку для редактирования"
+            apiUrl={dashboard.api_url}
+            columns={dashboard.columns}
+          />
+        ) : (
+          <div className="glass rounded-2xl p-8 text-white/30 text-center text-sm">
+            Дашборд не найден
+          </div>
+        )}
       </div>
     </div>
   );

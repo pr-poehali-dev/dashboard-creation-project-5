@@ -86,7 +86,7 @@ export default function DashboardPage() {
               title={isLight ? "Тёмная тема" : "Светлая тема"}>
               <Icon name={isLight ? "Moon" : "Sun"} size={18} />
             </button>
-            <button onClick={() => navigate("/settings")}
+            <button onClick={() => navigate("/settings", { state: { slug: id } })}
               className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60">
               <Icon name="Settings" size={18} />
             </button>
