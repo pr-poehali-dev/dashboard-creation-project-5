@@ -74,6 +74,7 @@ export default function Dashboard() {
             title={first.title}
             apiUrl={first.api_url}
             columns={first.columns}
+            dashboardId={first.id}
           />
         ) : (
           <div className="flex flex-col items-center justify-center py-32 gap-4 text-white/30">

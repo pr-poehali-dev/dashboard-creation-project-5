@@ -1,0 +1,20 @@
+{
+  "tests": [
+    {
+      "name": "Get data for dashboard",
+      "method": "GET",
+      "path": "/?dashboard_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing dashboard_id",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

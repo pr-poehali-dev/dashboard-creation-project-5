@@ -98,6 +98,7 @@ export default function DashboardPage() {
           title={dashboard.title}
           apiUrl={dashboard.api_url}
           columns={dashboard.columns}
+          dashboardId={dashboard.id}
         />
       </div>
     </div>

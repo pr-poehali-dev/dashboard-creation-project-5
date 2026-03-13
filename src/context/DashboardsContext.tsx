@@ -5,7 +5,7 @@ interface DashboardsContextValue {
   dashboards: DashboardConfig[];
   loading: boolean;
   reload: () => void;
-  create: (payload: Omit<DashboardConfig, "id">) => Promise<DashboardConfig>;
+  create: (payload: Omit<DashboardConfig, "id"> & { rows?: Record<string, string | number>[] }) => Promise<DashboardConfig>;
   update: (id: number, payload: Partial<Omit<DashboardConfig, "id">>) => Promise<DashboardConfig>;
   remove: (id: number) => Promise<void>;
 }
@@ -26,7 +26,7 @@ export function DashboardsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const create = async (payload: Omit<DashboardConfig, "id">) => {
+  const create = async (payload: Omit<DashboardConfig, "id"> & { rows?: Record<string, string | number>[] }) => {
     const res = await fetch(MANAGE_DASHBOARDS_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

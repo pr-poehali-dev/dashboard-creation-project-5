@@ -16,7 +16,7 @@ def get_conn():
 
 
 def handler(event: dict, context) -> dict:
-    """CRUD для дашбордов: список, создание, обновление, удаление."""
+    """CRUD для дашбордов: список, создание с данными, обновление, удаление."""
 
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
@@ -29,7 +29,6 @@ def handler(event: dict, context) -> dict:
     cur = conn.cursor()
 
     try:
-        # GET — список всех или один по id
         if method == "GET":
             if dash_id:
                 cur.execute(
@@ -57,17 +56,31 @@ def handler(event: dict, context) -> dict:
 
         body = json.loads(event.get("body") or "{}")
 
-        # POST — создать новый дашборд
         if method == "POST":
             title = body["title"]
             slug = body["slug"]
             api_url = body.get("api_url", "")
             columns = body.get("columns", [])
+            initial_rows = body.get("rows", [])
+
             cur.execute(
                 f"INSERT INTO {SCHEMA}.dashboards (title, slug, api_url, columns) VALUES (%s, %s, %s, %s) RETURNING id, title, slug, api_url, columns, created_at",
                 (title, slug, api_url, json.dumps(columns)),
             )
             row = cur.fetchone()
+            new_id = row[0]
+
+            col_keys = [c["key"] for c in columns]
+            for r in initial_rows:
+                city = r.get("city", "")
+                if not city.strip():
+                    continue
+                data = {k: int(r.get(k, 0)) for k in col_keys}
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.dashboard_rows (dashboard_id, city, data) VALUES (%s, %s, %s)",
+                    (new_id, city, json.dumps(data)),
+                )
+
             conn.commit()
             return {
                 "statusCode": 201,
@@ -75,7 +88,6 @@ def handler(event: dict, context) -> dict:
                 "body": json.dumps(_row_to_dict(row)),
             }
 
-        # PUT — обновить дашборд
         if method == "PUT":
             title = body.get("title")
             slug = body.get("slug")
@@ -101,8 +113,8 @@ def handler(event: dict, context) -> dict:
                 "body": json.dumps(_row_to_dict(row)),
             }
 
-        # DELETE — удалить дашборд
         if method == "DELETE":
+            cur.execute(f"DELETE FROM {SCHEMA}.dashboard_rows WHERE dashboard_id = %s", (dash_id,))
             cur.execute(f"DELETE FROM {SCHEMA}.dashboards WHERE id = %s RETURNING id", (dash_id,))
             row = cur.fetchone()
             conn.commit()
