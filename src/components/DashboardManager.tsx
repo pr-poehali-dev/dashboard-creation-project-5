@@ -27,24 +27,26 @@ export default function DashboardManager({ onClose }: Props) {
   const [editing, setEditing] = useState<DashboardConfig | null>(null);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [columns, setColumns] = useState<ColumnDef[]>([{ key: "", label: "" }]);
+  const [columns, setColumns] = useState<ColumnDef[]>([{ key: "col1", label: "Причина 1" }]);
   const [rows, setRows] = useState<TableRow[]>([{ city: "" }]);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [newColName, setNewColName] = useState("");
 
   const openCreate = () => {
     setTitle("");
     setSlug("");
-    setColumns([{ key: "", label: "" }]);
-    setRows([{ city: "" }]);
+    setColumns([{ key: "col1", label: "Причина 1" }]);
+    setRows([{ city: "", col1: 0 }]);
     setEditing(null);
+    setNewColName("");
     setMode("create");
   };
 
   const openEdit = (d: DashboardConfig) => {
     setTitle(d.title);
     setSlug(d.slug);
-    setColumns(d.columns.length ? d.columns : [{ key: "", label: "" }]);
+    setColumns(d.columns.length ? d.columns : [{ key: "col1", label: "Причина 1" }]);
     setRows([{ city: "" }]);
     setEditing(d);
     setMode("edit");
@@ -55,26 +57,34 @@ export default function DashboardManager({ onClose }: Props) {
     if (!slug) setSlug(slugify(val));
   };
 
-  const addColumn = () => setColumns(c => [...c, { key: "", label: "" }]);
-  const removeColumn = (i: number) => {
-    setColumns(c => c.filter((_, idx) => idx !== i));
-    setRows(r => r.map(row => {
-      const copy = { ...row };
-      const removed = columns[i]?.key;
-      if (removed && removed in copy) {
-        const { [removed]: _, ...rest } = copy as Record<string, string | number>;
-        return rest as TableRow;
-      }
-      return copy;
-    }));
+  const addColumn = () => {
+    const name = newColName.trim();
+    if (!name) return;
+    const key = slugify(name) || `col${columns.length + 1}`;
+    if (columns.some(c => c.key === key)) return;
+    setColumns(c => [...c, { key, label: name }]);
+    setRows(r => r.map(row => ({ ...row, [key]: 0 })));
+    setNewColName("");
   };
-  const setColLabel = (i: number, val: string) => {
+
+  const removeColumn = (i: number) => {
+    const removed = columns[i]?.key;
+    setColumns(c => c.filter((_, idx) => idx !== i));
+    if (removed) {
+      setRows(r => r.map(row => {
+        const { [removed]: _, ...rest } = row as Record<string, string | number>;
+        return rest as TableRow;
+      }));
+    }
+  };
+
+  const renameColumn = (i: number, val: string) => {
     setColumns(prev => {
       const next = [...prev];
       const oldKey = next[i].key;
-      const newKey = slugify(val);
-      next[i] = { label: val, key: newKey || oldKey };
-      if (oldKey && newKey && oldKey !== newKey) {
+      const newKey = slugify(val) || oldKey;
+      next[i] = { label: val, key: newKey };
+      if (oldKey !== newKey) {
         setRows(r => r.map(row => {
           const copy = { ...row };
           if (oldKey in copy) {
@@ -89,7 +99,11 @@ export default function DashboardManager({ onClose }: Props) {
     });
   };
 
-  const addRow = () => setRows(r => [...r, { city: "" }]);
+  const addRow = () => {
+    const newRow: TableRow = { city: "" };
+    columns.forEach(c => { newRow[c.key] = 0; });
+    setRows(r => [...r, newRow]);
+  };
   const removeRow = (i: number) => setRows(r => r.filter((_, idx) => idx !== i));
   const setCellValue = (rowIdx: number, key: string, val: string) => {
     setRows(r => r.map((row, i) => i === rowIdx ? { ...row, [key]: key === "city" ? val : (val === "" ? 0 : parseInt(val, 10) || 0) } : row));
@@ -102,12 +116,11 @@ export default function DashboardManager({ onClose }: Props) {
     setSaving(true);
     try {
       if (mode === "create") {
-        const dataUrl = `${DASHBOARD_DATA_URL}`;
         const validRows = rows.filter(r => (r.city as string).trim());
         await create({
           title,
           slug,
-          api_url: dataUrl,
+          api_url: DASHBOARD_DATA_URL,
           columns: validColumns,
           rows: validRows,
         } as Omit<DashboardConfig, "id"> & { rows: TableRow[] });
@@ -129,7 +142,7 @@ export default function DashboardManager({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
-      <div className="glass rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-fade-in-up" style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.6)" }}>
+      <div className="glass rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col animate-fade-in-up" style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.6)" }}>
 
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -204,53 +217,58 @@ export default function DashboardManager({ onClose }: Props) {
 
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-white/50 text-xs">Колонки (причины / категории)</label>
-                  <button onClick={addColumn} className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors">
-                    <Icon name="Plus" size={13} /> Добавить колонку
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {columns.map((col, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <input
-                        value={col.label}
-                        onChange={e => setColLabel(i, e.target.value)}
-                        placeholder="Название колонки"
-                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm outline-none focus:border-violet-500/60 transition-all placeholder:text-white/20"
-                      />
-                      {columns.length > 1 && (
-                        <button onClick={() => removeColumn(i)} className="text-white/20 hover:text-red-400 transition-colors p-1">
-                          <Icon name="X" size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {mode === "create" && validColumns.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="text-white/50 text-xs">Данные таблицы</label>
-                    <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors">
-                      <Icon name="Plus" size={13} /> Добавить строку
-                    </button>
+                  <label className="text-white/50 text-xs">Таблица данных</label>
+                  <div className="flex items-center gap-2">
+                    {mode === "create" && (
+                      <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                        <Icon name="Plus" size={13} /> Строка
+                      </button>
+                    )}
                   </div>
-                  <div className="overflow-x-auto rounded-xl border border-white/10">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="bg-white/5">
-                          <th className="text-left text-white/50 text-xs font-medium px-3 py-2 min-w-[140px]">Город</th>
-                          {validColumns.map(col => (
-                            <th key={col.key} className="text-left text-white/50 text-xs font-medium px-3 py-2 min-w-[100px]">{col.label}</th>
-                          ))}
-                          <th className="w-8"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row, ri) => (
+                </div>
+
+                <div className="overflow-x-auto rounded-xl border border-white/10">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-white/5">
+                        <th className="text-left text-white/50 text-xs font-medium px-3 py-2.5 min-w-[140px] sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
+                          Город
+                        </th>
+                        {columns.map((col, ci) => (
+                          <th key={col.key} className="text-center text-xs font-medium px-2 py-1.5 min-w-[110px] relative group">
+                            <div className="flex items-center gap-1">
+                              <input
+                                value={col.label}
+                                onChange={e => renameColumn(ci, e.target.value)}
+                                className="w-full bg-transparent text-white/60 text-xs text-center outline-none border border-transparent hover:border-white/10 focus:border-violet-500/60 rounded-lg px-1 py-1 transition-all"
+                              />
+                              {columns.length > 1 && (
+                                <button onClick={() => removeColumn(ci)} className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all flex-shrink-0">
+                                  <Icon name="X" size={12} />
+                                </button>
+                              )}
+                            </div>
+                          </th>
+                        ))}
+                        <th className="px-2 py-2.5 min-w-[120px]">
+                          <div className="flex items-center gap-1">
+                            <input
+                              value={newColName}
+                              onChange={e => setNewColName(e.target.value)}
+                              onKeyDown={e => { if (e.key === "Enter") addColumn(); }}
+                              placeholder="+ колонка"
+                              className="w-full bg-transparent text-white/30 text-xs text-center outline-none border border-dashed border-white/10 hover:border-white/20 focus:border-violet-500/60 rounded-lg px-1 py-1 transition-all placeholder:text-white/15"
+                            />
+                          </div>
+                        </th>
+                        {mode === "create" && <th className="w-8"></th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mode === "create" ? (
+                        rows.map((row, ri) => (
                           <tr key={ri} className="border-t border-white/5 hover:bg-white/3">
-                            <td className="px-1 py-1">
+                            <td className="px-1 py-1 sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
                               <input
                                 value={row.city as string}
                                 onChange={e => setCellValue(ri, "city", e.target.value)}
@@ -265,10 +283,11 @@ export default function DashboardManager({ onClose }: Props) {
                                   min={0}
                                   value={row[col.key] ?? 0}
                                   onChange={e => setCellValue(ri, col.key, e.target.value)}
-                                  className="w-full bg-transparent border border-transparent hover:border-white/10 focus:border-violet-500/60 rounded-lg px-2 py-1.5 text-white text-sm outline-none transition-all text-center"
+                                  className="w-full bg-transparent border border-transparent hover:border-white/10 focus:border-violet-500/60 rounded-lg px-2 py-1.5 text-white text-sm outline-none transition-all text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                               </td>
                             ))}
+                            <td></td>
                             <td className="px-1 py-1">
                               {rows.length > 1 && (
                                 <button onClick={() => removeRow(ri)} className="text-white/15 hover:text-red-400 transition-colors p-1">
@@ -277,12 +296,21 @@ export default function DashboardManager({ onClose }: Props) {
                               )}
                             </td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={columns.length + 2} className="px-4 py-6 text-center text-white/30 text-xs">
+                            Данные таблицы редактируются в самом дашборде
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+                {mode === "create" && (
+                  <p className="text-white/20 text-xs mt-2">Нажмите Enter в поле «+ колонка» чтобы добавить столбец. Можно редактировать названия колонок прямо в шапке.</p>
+                )}
+              </div>
             </div>
           )}
         </div>
