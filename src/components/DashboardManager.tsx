@@ -127,13 +127,13 @@ export default function DashboardManager({ onClose }: Props) {
           title,
           slug,
           api_url: DASHBOARD_DATA_URL,
-          columns: validColumns,
+          columns: columns.filter(c => c.key),
           rows: validRows,
         } as Omit<DashboardConfig, "id"> & { rows: TableRow[] });
         onClose();
         navigate(`/dashboard/${slug}`);
       } else if (editing) {
-        await update(editing.id, { title, slug, columns: validColumns });
+        await update(editing.id, { title, slug, columns: columns.filter(c => c.key) });
         setMode("list");
       }
     } finally {
@@ -354,7 +354,7 @@ export default function DashboardManager({ onClose }: Props) {
           ) : (
             <>
               <button onClick={() => setMode("list")} className="text-white/40 hover:text-white/60 text-sm transition-colors">Отмена</button>
-              <button onClick={handleSave} disabled={saving || !title.trim() || validColumns.length === 0}
+              <button onClick={handleSave} disabled={saving || !title.trim() || columns.length === 0}
                 className="gradient-violet text-white rounded-xl px-5 py-2.5 text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-40"
                 style={{ boxShadow: "0 4px 20px rgba(124,92,255,0.4)" }}>
                 {saving ? (
