@@ -18,7 +18,8 @@ interface TableRow {
 }
 
 function slugify(s: string) {
-  return s.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const result = s.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  return result || `dashboard-${Date.now()}`;
 }
 
 export default function DashboardManager({ onClose }: Props) {
