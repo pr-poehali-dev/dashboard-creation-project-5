@@ -231,7 +231,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
                 <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
-                  axisLine={false} tickLine={false} angle={-20} textAnchor="end" interval={0} height={36} />
+                  axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} height={60} />
                 <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
                 <Tooltip content={<CustomTooltip />} />
