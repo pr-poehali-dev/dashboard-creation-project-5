@@ -222,7 +222,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
             <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
           ) : (
             <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+              <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#7C5CFF" stopOpacity={0.4} />
@@ -232,7 +232,8 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
                 <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
                   axisLine={false} tickLine={false} angle={-20} textAnchor="end" interval={0} height={36} />
-                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="total" name="Итого"
                   stroke="#7C5CFF" strokeWidth={2.5} fill={`url(#${gradId})`}
