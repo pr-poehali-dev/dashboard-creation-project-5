@@ -450,35 +450,31 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                   </td>
                 </tr>
               ))}
-            </tbody>
-            {isUniversalApi && !readonly && (
-              <tbody>
+              {isUniversalApi && !readonly && (
                 <tr className="border-b border-white/5">
                   <td className="px-2 py-1.5 sticky left-0 z-10" style={{ background: "var(--sticky-cell-bg)" }}>
-                    <div className="flex items-center gap-1">
-                      <input
-                        value={newCity}
-                        onChange={e => setNewCity(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter" && newCity.trim()) {
-                            const tempId = -(Date.now());
-                            const newRow: Row = { id: tempId, city: newCity.trim() };
-                            columns.forEach(c => { newRow[c.key] = 0; });
-                            setRows(prev => [...prev, newRow]);
-                            setNewCity("");
-                            setDirty(true);
-                            setSaved(false);
-                          }
-                        }}
-                        placeholder="+ Новый город"
-                        className="w-full bg-transparent text-white/40 text-xs rounded-lg py-1.5 px-2 outline-none border border-dashed border-white/10 hover:border-white/20 focus:border-violet-500/60 transition-all placeholder:text-white/20"
-                      />
-                    </div>
+                    <input
+                      value={newCity}
+                      onChange={e => setNewCity(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && newCity.trim()) {
+                          const tempId = -(Date.now());
+                          const newRow: Row = { id: tempId, city: newCity.trim() };
+                          columns.forEach(c => { newRow[c.key] = 0; });
+                          setRows(prev => [...prev, newRow]);
+                          setNewCity("");
+                          setDirty(true);
+                          setSaved(false);
+                        }
+                      }}
+                      placeholder="+ Новый город"
+                      className="w-full bg-transparent text-white/40 text-xs rounded-lg py-1.5 px-2 outline-none border border-dashed border-white/10 hover:border-white/20 focus:border-violet-500/60 transition-all placeholder:text-white/20"
+                    />
                   </td>
                   <td colSpan={columns.length + 1}></td>
                 </tr>
-              </tbody>
-            )}
+              )}
+            </tbody>
             <tfoot>
               <tr className="border-t-2 border-white/10">
                 <td className="px-4 py-3 text-white/70 font-bold text-xs sticky left-0 z-10"
