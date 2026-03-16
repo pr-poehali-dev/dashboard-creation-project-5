@@ -167,7 +167,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                     onChange={e => setNewColName(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addColumn(); }}
                     placeholder="+ столбец"
-                    className="w-full bg-transparent text-white text-xs text-center outline-none border border-dashed border-white/50 hover:border-white/80 focus:border-violet-500/60 rounded-lg px-2 py-1.5 transition-all placeholder:text-white/70"
+                    className="w-full bg-white text-gray-800 text-xs text-center outline-none border border-white rounded-lg px-2 py-1.5 transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
                   />
                 </th>
               )}
@@ -220,7 +220,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                     onChange={e => setNewCity(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addCity(); }}
                     placeholder="+ Новый город"
-                    className="w-full bg-transparent text-white text-xs rounded-lg py-1.5 px-2 outline-none border border-dashed border-white/50 hover:border-white/80 focus:border-violet-500/60 transition-all placeholder:text-white/70"
+                    className="w-full bg-white text-gray-800 text-xs rounded-lg py-1.5 px-2 outline-none border border-white transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
                   />
                 </td>
                 <td colSpan={columns.length + 2} />
