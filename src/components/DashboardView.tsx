@@ -160,7 +160,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       gradient: "gradient-pink",
       textGradient: "text-gradient-pink",
       glow: "rgba(255,60,172,0.35)",
-      sub: top1 ? `${top1.total} случаев` : "",
+      sub: top1 ? `${top1.total.toLocaleString("ru-RU")} случаев` : "",
     },
     {
       label: "2-я по частоте",
@@ -169,7 +169,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       gradient: "gradient-cyan",
       textGradient: "text-gradient-cyan",
       glow: "rgba(0,229,204,0.35)",
-      sub: top2 ? `${top2.total} случаев` : "",
+      sub: top2 ? `${top2.total.toLocaleString("ru-RU")} случаев` : "",
     },
     {
       label: "Городов с данными",
