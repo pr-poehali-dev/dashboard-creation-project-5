@@ -58,6 +58,11 @@ export default function DashboardPage() {
               <Icon name="ArrowLeft" size={18} />
             </button>
             <div>
+              <img
+                src="https://cdn.poehali.dev/projects/4ade81fe-7dfe-4328-81a3-9fe38e0d8baa/bucket/3d383b24-7864-41cd-9864-ea05cc49ff51.png"
+                alt="Dream Team"
+                className="h-10 mb-3 object-contain"
+              />
               <h1 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-1">
                 {dashboard.title}
               </h1>
