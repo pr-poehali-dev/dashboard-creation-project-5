@@ -4,6 +4,7 @@ import Icon from "@/components/ui/icon";
 import { useDashboards } from "@/hooks/useDashboards";
 import { DASHBOARD_DATA_URL } from "@/config/dashboards";
 import type { DashboardConfig, ColumnDef } from "@/config/dashboards";
+import GenericTable from "@/components/GenericTable";
 
 interface Props {
   onClose: () => void;
@@ -215,15 +216,22 @@ export default function DashboardManager({ onClose }: Props) {
                 />
               </div>
 
-              <div>
+              {mode === "edit" && editing && (
+                <GenericTable
+                  title={editing.title}
+                  subtitle="Кликните на ячейку для редактирования"
+                  apiUrl={editing.api_url}
+                  columns={editing.columns}
+                />
+              )}
+
+              {mode === "create" && <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-white/50 text-xs">Таблица данных</label>
                   <div className="flex items-center gap-2">
-                    {mode === "create" && (
-                      <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
-                        <Icon name="Plus" size={13} /> Строка
-                      </button>
-                    )}
+                    <button onClick={addRow} className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
+                      <Icon name="Plus" size={13} /> Строка
+                    </button>
                   </div>
                 </div>
 
@@ -265,8 +273,7 @@ export default function DashboardManager({ onClose }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {mode === "create" ? (
-                        rows.map((row, ri) => (
+                      {rows.map((row, ri) => (
                           <tr key={ri} className="border-t border-white/5 hover:bg-white/3">
                             <td className="px-1 py-1 sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
                               <input
@@ -296,21 +303,12 @@ export default function DashboardManager({ onClose }: Props) {
                               )}
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={columns.length + 2} className="px-4 py-6 text-center text-white/30 text-xs">
-                            Данные таблицы редактируются в самом дашборде
-                          </td>
-                        </tr>
-                      )}
+                        ))}
                     </tbody>
                   </table>
                 </div>
-                {mode === "create" && (
-                  <p className="text-white/20 text-xs mt-2">Нажмите Enter в поле «+ колонка» чтобы добавить столбец. Можно редактировать названия колонок прямо в шапке.</p>
-                )}
-              </div>
+                <p className="text-white/20 text-xs mt-2">Нажмите Enter в поле «+ колонка» чтобы добавить столбец. Можно редактировать названия колонок прямо в шапке.</p>
+              </div>}
             </div>
           )}
         </div>
