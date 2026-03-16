@@ -160,12 +160,6 @@ export default function Settings() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowManager(true)}
-              className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/60 hover:text-white transition-colors"
-              title="Новый дашборд">
-              <Icon name="Plus" size={15} />
-              <span className="hidden sm:inline">Новый дашборд</span>
-            </button>
             <button onClick={toggle}
               className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
               title={theme === "light" ? "Тёмная тема" : "Светлая тема"}>
@@ -179,8 +173,14 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="glass rounded-2xl p-8 text-white/40 text-center text-sm">
-          Для редактирования данных нажмите «Изменить» напротив нужного дашборда в окне «Новый дашборд»
+        <div className="glass rounded-2xl p-8 flex flex-col items-center gap-4">
+          <p className="text-white/40 text-sm text-center">Выберите дашборд для редактирования данных</p>
+          <button onClick={() => setShowManager(true)}
+            className="gradient-violet text-white rounded-xl px-6 py-3 text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+            style={{ boxShadow: "0 4px 20px rgba(124,92,255,0.4)" }}>
+            <Icon name="LayoutDashboard" size={16} />
+            Управление дашбордами
+          </button>
         </div>
       </div>
     </div>
