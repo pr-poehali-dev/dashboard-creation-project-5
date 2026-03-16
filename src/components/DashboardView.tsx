@@ -347,8 +347,8 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                     return (
                       <div key={row.id}>
                         <div className="flex justify-between text-xs mb-1.5">
-                          <span className="text-white/70 font-medium">{row.city}</span>
-                          <span className="text-white/50">{total.toLocaleString("ru-RU")}</span>
+                          <span className="font-medium" style={{ color: "var(--text-primary)" }}>{row.city}</span>
+                          <span style={{ color: "var(--text-secondary)" }}>{total.toLocaleString("ru-RU")}</span>
                         </div>
                         <div className="h-5 rounded-lg bg-white/5 overflow-hidden flex"
                           style={{ width: "100%" }}>
@@ -369,7 +369,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/6">
                   {columns.map((c, i) => (
-                    <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/45">
+                    <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
                       <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0"
                         style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                       {c.label}
