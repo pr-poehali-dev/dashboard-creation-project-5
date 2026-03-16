@@ -162,9 +162,10 @@ export default function Settings() {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowManager(true)}
-              className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/60 hover:text-white transition-colors">
+              className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/60 hover:text-white transition-colors"
+              title="Новый дашборд">
               <Icon name="Plus" size={15} />
-              Новый дашборд
+              <span className="hidden sm:inline">Новый дашборд</span>
             </button>
             <button onClick={toggle}
               className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
