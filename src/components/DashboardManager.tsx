@@ -43,7 +43,8 @@ export default function DashboardManager({ onClose }: Props) {
     setColumns([{ key: "col1", label: "Причина 1" }]);
     setRows([{ city: "", col1: 0 }]);
     setEditing(null);
-    setNewColName("");
+    setEditingColIdx(null);
+    setEditingRowIdx(null);
     setMode("create");
   };
 
