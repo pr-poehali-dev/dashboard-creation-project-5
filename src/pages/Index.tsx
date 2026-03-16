@@ -31,6 +31,11 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-fade-in-up">
           <div>
+            <img
+              src="https://cdn.poehali.dev/projects/4ade81fe-7dfe-4328-81a3-9fe38e0d8baa/bucket/3d383b24-7864-41cd-9864-ea05cc49ff51.png"
+              alt="Dream Team"
+              className="h-10 mb-3 object-contain"
+            />
             <h1 className="font-display text-3xl sm:text-4xl font-black text-white tracking-tight mb-1">
               {first?.title ?? "Дашборды"}
             </h1>
