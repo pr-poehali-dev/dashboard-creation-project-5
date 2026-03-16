@@ -289,13 +289,14 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
           {loading ? (
             <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={340}>
               <BarChart data={sorted.map(c => ({ name: c.label, value: c.total, color: c.color }))}
-                margin={{ top: 5, right: 5, left: -20, bottom: 55 }} barSize={22}>
+                margin={{ top: 5, right: 5, left: 10, bottom: 70 }} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }}
                   axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
-                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" name="Итого" radius={[4, 4, 0, 0]}>
                   {sorted.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
