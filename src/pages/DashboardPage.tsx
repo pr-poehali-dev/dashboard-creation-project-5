@@ -73,10 +73,6 @@ export default function DashboardPage() {
                     {d.title}
                   </button>
                 ))}
-                <button onClick={() => setShowManager(true)}
-                  className="text-xs px-3 py-1 rounded-full border border-dashed border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all duration-200 flex items-center gap-1">
-                  <Icon name="Plus" size={11} /> Дашборд
-                </button>
               </div>
             </div>
           </div>

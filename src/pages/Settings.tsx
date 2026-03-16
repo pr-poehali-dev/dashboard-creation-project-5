@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import GenericTable from "@/components/GenericTable";
+import DashboardManager from "@/components/DashboardManager";
 import { useTheme } from "@/context/ThemeContext";
 import { useDashboards } from "@/hooks/useDashboards";
 
@@ -20,6 +21,7 @@ export default function Settings() {
   const [error, setError] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [showManager, setShowManager] = useState(false);
 
   useEffect(() => {
     if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
@@ -131,6 +133,7 @@ export default function Settings() {
   }
 
   return (
+    <>
     <div className="min-h-screen" style={{ background: "var(--page-bg)" }}>
       {/* Ambient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -158,6 +161,11 @@ export default function Settings() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={() => setShowManager(true)}
+              className="glass glass-hover flex items-center gap-2 px-4 py-2 rounded-xl text-sm text-white/60 hover:text-white transition-colors">
+              <Icon name="Plus" size={15} />
+              Новый дашборд
+            </button>
             <button onClick={toggle}
               className="glass glass-hover rounded-full w-10 h-10 flex items-center justify-center text-white/60"
               title={theme === "light" ? "Тёмная тема" : "Светлая тема"}>
@@ -185,5 +193,7 @@ export default function Settings() {
         )}
       </div>
     </div>
+    {showManager && <DashboardManager onClose={() => setShowManager(false)} />}
+    </>
   );
 }
