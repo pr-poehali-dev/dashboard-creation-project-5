@@ -327,6 +327,8 @@ export default function DashboardManager({ onClose }: Props) {
                 <Icon name="Plus" size={15} /> Новый дашборд
               </button>
             </>
+          ) : mode === "edit" ? (
+            <button onClick={() => setMode("list")} className="text-white/40 hover:text-white/60 text-sm transition-colors">← Назад</button>
           ) : (
             <>
               <button onClick={() => setMode("list")} className="text-white/40 hover:text-white/60 text-sm transition-colors">Отмена</button>
@@ -338,7 +340,7 @@ export default function DashboardManager({ onClose }: Props) {
                 ) : (
                   <Icon name="Check" size={15} />
                 )}
-                {mode === "create" ? "Создать" : "Сохранить"}
+                Создать
               </button>
             </>
           )}
