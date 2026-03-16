@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/icon";
-import GenericTable from "@/components/GenericTable";
 import DashboardManager from "@/components/DashboardManager";
 import { useTheme } from "@/context/ThemeContext";
 import { useDashboards } from "@/hooks/useDashboards";
@@ -180,18 +179,9 @@ export default function Settings() {
           </div>
         </div>
 
-        {dashboard ? (
-          <GenericTable
-            title={dashboard.title}
-            subtitle="Кликните на ячейку для редактирования"
-            apiUrl={dashboard.api_url}
-            columns={dashboard.columns}
-          />
-        ) : (
-          <div className="glass rounded-2xl p-8 text-white/30 text-center text-sm">
-            Дашборд не найден
-          </div>
-        )}
+        <div className="glass rounded-2xl p-8 text-white/40 text-center text-sm">
+          Для редактирования данных нажмите «Изменить» напротив нужного дашборда в окне «Новый дашборд»
+        </div>
       </div>
     </div>
     {showManager && <DashboardManager onClose={() => setShowManager(false)} />}
