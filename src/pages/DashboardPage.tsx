@@ -95,6 +95,7 @@ export default function DashboardPage() {
           apiUrl={dashboard.api_url}
           columns={dashboard.columns}
           dashboardId={dashboard.id}
+          readonly
         />
       </div>
     </div>

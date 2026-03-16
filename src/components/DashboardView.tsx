@@ -66,9 +66,10 @@ interface Props {
   columns: ColumnDef[];
   title: string;
   dashboardId?: number;
+  readonly?: boolean;
 }
 
-export default function DashboardView({ apiUrl, columns, title, dashboardId }: Props) {
+export default function DashboardView({ apiUrl, columns, title, dashboardId, readonly = false }: Props) {
   const { theme } = useTheme();
   const isLight = theme === "light";
   const axisColor = isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)";
@@ -384,16 +385,18 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId }: P
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
           <div>
             <h3 className="font-display font-bold text-white text-lg">{title}</h3>
-            <p className="text-white/40 text-xs mt-0.5">Кликните на ячейку для редактирования</p>
+            {!readonly && <p className="text-white/40 text-xs mt-0.5">Кликните на ячейку для редактирования</p>}
           </div>
-          <button onClick={handleSave} disabled={saving || !dirty}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
-              ${dirty ? "gradient-violet text-white shadow-lg cursor-pointer hover:opacity-90" : "bg-white/5 text-white/30 cursor-not-allowed"}`}
-            style={dirty ? { boxShadow: "0 4px 20px rgba(124,92,255,0.4)" } : {}}>
-            {saving ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-              : saved ? <Icon name="Check" size={16} /> : <Icon name="Save" size={16} />}
-            {saving ? "Сохранение..." : saved ? "Сохранено" : "Сохранить"}
-          </button>
+          {!readonly && (
+            <button onClick={handleSave} disabled={saving || !dirty}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
+                ${dirty ? "gradient-violet text-white shadow-lg cursor-pointer hover:opacity-90" : "bg-white/5 text-white/30 cursor-not-allowed"}`}
+              style={dirty ? { boxShadow: "0 4px 20px rgba(124,92,255,0.4)" } : {}}>
+              {saving ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                : saved ? <Icon name="Check" size={16} /> : <Icon name="Save" size={16} />}
+              {saving ? "Сохранение..." : saved ? "Сохранено" : "Сохранить"}
+            </button>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -422,14 +425,20 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId }: P
                   </td>
                   {columns.map(col => (
                     <td key={col.key} className="px-2 py-1.5 text-center">
-                      <input type="number" min={0}
-                        value={row[col.key] === 0 ? "" : String(row[col.key])}
-                        placeholder="0"
-                        onChange={e => handleChange(row.id, col.key, e.target.value)}
-                        className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
-                          bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
-                          [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        style={{ minWidth: 52 }} />
+                      {readonly ? (
+                        <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
+                          {Number(row[col.key]) || 0}
+                        </span>
+                      ) : (
+                        <input type="number" min={0}
+                          value={row[col.key] === 0 ? "" : String(row[col.key])}
+                          placeholder="0"
+                          onChange={e => handleChange(row.id, col.key, e.target.value)}
+                          className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
+                            bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
+                            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          style={{ minWidth: 52 }} />
+                      )}
                     </td>
                   ))}
                   <td className="px-4 py-2.5 text-center">
@@ -440,7 +449,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId }: P
                 </tr>
               ))}
             </tbody>
-            {isUniversalApi && (
+            {isUniversalApi && !readonly && (
               <tbody>
                 <tr className="border-b border-white/5">
                   <td className="px-2 py-1.5 sticky left-0 z-10" style={{ background: "var(--sticky-cell-bg)" }}>
