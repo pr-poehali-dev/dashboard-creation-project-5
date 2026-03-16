@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Icon from "@/components/ui/icon";
 import type { ColumnDef } from "@/config/dashboards";
 
@@ -28,8 +28,12 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [newCity, setNewCity] = useState("");
-  const [newColName, setNewColName] = useState("");
+
+  // inline editing: index of new row / new col
+  const [newRowIdx, setNewRowIdx] = useState<number | null>(null);
+  const [newColIdx, setNewColIdx] = useState<number | null>(null);
+  const newRowRef = useRef<HTMLInputElement>(null);
+  const newColRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setColumns(initialColumns);
@@ -70,28 +74,52 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
     }
   };
 
+  // Добавить пустую строку и сразу фокус на неё
   const addCity = () => {
-    if (!newCity.trim()) return;
-    const newRow: Row = { id: 0, city: newCity.trim() };
+    const newRow: Row = { id: 0, city: "" };
     columns.forEach(c => { newRow[c.key] = 0; });
-    setRows(prev => [...prev, newRow]);
-    setNewCity("");
+    setRows(prev => {
+      const next = [...prev, newRow];
+      setNewRowIdx(next.length - 1);
+      return next;
+    });
     setDirty(true);
     setSaved(false);
+    setTimeout(() => newRowRef.current?.focus(), 50);
   };
 
-  const addColumn = async () => {
-    const name = newColName.trim();
-    if (!name) return;
-    const key = slugify(name) || `col${columns.length + 1}`;
-    if (columns.some(c => c.key === key)) return;
-    const newCols = [...columns, { key, label: name }];
+  const commitCity = (idx: number, val: string) => {
+    setRows(prev => prev.map((r, i) => i === idx ? { ...r, city: val } : r));
+    setNewRowIdx(null);
+  };
+
+  // Добавить пустой столбец и сразу фокус на него
+  const addColumn = () => {
+    const key = `col${Date.now()}`;
+    const newCols = [...columns, { key, label: "" }];
     setColumns(newCols);
     setRows(prev => prev.map(r => ({ ...r, [key]: 0 })));
-    setNewColName("");
+    setNewColIdx(newCols.length - 1);
     setDirty(true);
     setSaved(false);
-    if (onColumnsChange) await onColumnsChange(newCols);
+    setTimeout(() => newColRef.current?.focus(), 50);
+  };
+
+  const commitColumn = async (idx: number, val: string) => {
+    const label = val.trim();
+    const key = slugify(label) || `col${idx}`;
+    const updatedCols = columns.map((c, i) => i === idx ? { key, label } : c);
+    // rename key in rows too if key changed
+    const oldKey = columns[idx]?.key;
+    setColumns(updatedCols);
+    if (oldKey && oldKey !== key) {
+      setRows(prev => prev.map(r => {
+        const { [oldKey]: v, ...rest } = r as Record<string, string | number>;
+        return { ...rest, [key]: v ?? 0 } as Row;
+      }));
+    }
+    setNewColIdx(null);
+    if (onColumnsChange) await onColumnsChange(updatedCols);
   };
 
   const colTotal = (col: string | ColumnDef) => {
@@ -120,25 +148,39 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
           <h3 className="font-display font-bold text-white text-lg">{title}</h3>
           {subtitle && <p className="text-white/40 text-xs mt-0.5">{subtitle}</p>}
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving || !dirty}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
-            ${dirty
-              ? "gradient-violet text-white shadow-lg cursor-pointer hover:opacity-90"
-              : "bg-white/5 text-white/30 cursor-not-allowed"
-            }`}
-          style={dirty ? { boxShadow: "0 4px 20px rgba(124,92,255,0.4)" } : {}}
-        >
-          {saving ? (
-            <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-          ) : saved ? (
-            <Icon name="Check" size={16} />
-          ) : (
-            <Icon name="Save" size={16} />
+        <div className="flex items-center gap-2">
+          {editable && (
+            <>
+              <button onClick={addColumn}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+                <Icon name="Plus" size={13} /> Столбец
+              </button>
+              <button onClick={addCity}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+                <Icon name="Plus" size={13} /> Строка
+              </button>
+            </>
           )}
-          {saving ? "Сохранение..." : saved ? "Сохранено" : "Сохранить"}
-        </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !dirty}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
+              ${dirty
+                ? "gradient-violet text-white shadow-lg cursor-pointer hover:opacity-90"
+                : "bg-white/5 text-white/30 cursor-not-allowed"
+              }`}
+            style={dirty ? { boxShadow: "0 4px 20px rgba(124,92,255,0.4)" } : {}}
+          >
+            {saving ? (
+              <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            ) : saved ? (
+              <Icon name="Check" size={16} />
+            ) : (
+              <Icon name="Save" size={16} />
+            )}
+            {saving ? "Сохранение..." : saved ? "Сохранено" : "Сохранить"}
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -151,26 +193,24 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
               >
                 Город / Причина
               </th>
-              {columns.map(col => (
+              {columns.map((col, ci) => (
                 <th
                   key={col.key}
                   className="px-3 py-3 text-white/50 font-medium text-xs text-center leading-tight"
                   style={{ minWidth: 90, maxWidth: 120 }}
                 >
-                  {col.label}
+                  {newColIdx === ci ? (
+                    <input
+                      ref={newColRef}
+                      defaultValue=""
+                      placeholder="Название..."
+                      onBlur={e => commitColumn(ci, e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") commitColumn(ci, e.currentTarget.value); }}
+                      className="w-full bg-white text-gray-800 text-xs text-center outline-none rounded-lg px-2 py-1 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
+                    />
+                  ) : col.label}
                 </th>
               ))}
-              {editable && (
-                <th className="px-2 py-2" style={{ minWidth: 120 }}>
-                  <input
-                    value={newColName}
-                    onChange={e => setNewColName(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") addColumn(); }}
-                    placeholder="+ столбец"
-                    className="w-full bg-white text-gray-800 text-xs text-center outline-none border border-white rounded-lg px-2 py-1.5 transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
-                  />
-                </th>
-              )}
               <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap">
                 ИТОГО
               </th>
@@ -186,7 +226,16 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                   className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
                   style={{ background: "var(--sticky-cell-bg)" }}
                 >
-                  {row.city}
+                  {newRowIdx === ri ? (
+                    <input
+                      ref={newRowRef}
+                      defaultValue=""
+                      placeholder="Название города..."
+                      onBlur={e => commitCity(ri, e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") commitCity(ri, e.currentTarget.value); }}
+                      className="w-full bg-white text-gray-800 text-xs rounded-lg py-1 px-2 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
+                    />
+                  ) : row.city}
                 </td>
                 {columns.map(col => (
                   <td key={col.key} className="px-2 py-1.5 text-center">
@@ -204,7 +253,6 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                     />
                   </td>
                 ))}
-                {editable && <td />}
                 <td className="px-4 py-2.5 text-center">
                   <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
                     {rowTotal(row)}
@@ -212,20 +260,6 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                 </td>
               </tr>
             ))}
-            {editable && (
-              <tr className="border-b border-white/5">
-                <td className="px-2 py-1.5 sticky left-0 z-10" style={{ background: "var(--sticky-cell-bg)" }}>
-                  <input
-                    value={newCity}
-                    onChange={e => setNewCity(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter") addCity(); }}
-                    placeholder="+ Новый город"
-                    className="w-full bg-white text-gray-800 text-xs rounded-lg py-1.5 px-2 outline-none border border-white transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
-                  />
-                </td>
-                <td colSpan={columns.length + 2} />
-              </tr>
-            )}
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-white/10">
@@ -242,7 +276,6 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                   </span>
                 </td>
               ))}
-              {editable && <td />}
               <td className="px-4 py-3 text-center">
                 <span className="text-sm font-black text-gradient-pink">{grandTotal}</span>
               </td>
