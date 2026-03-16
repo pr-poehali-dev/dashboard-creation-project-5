@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import DashboardManager from "@/components/DashboardManager";
@@ -6,7 +6,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { useDashboards } from "@/hooks/useDashboards";
 
 const PASSWORD = "Lazarev-Analitika032=1";
-const SESSION_KEY = "settings_auth";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -22,14 +21,9 @@ export default function Settings() {
   const [shaking, setShaking] = useState(false);
   const [showManager, setShowManager] = useState(false);
 
-  useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
-  }, []);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input === PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, "1");
       setAuthed(true);
       setError(false);
     } else {
@@ -40,7 +34,6 @@ export default function Settings() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(SESSION_KEY);
     navigate("/");
   };
 
