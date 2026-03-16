@@ -265,7 +265,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                 ))}
                 <td className="px-4 py-2.5 text-center">
                   <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
-                    {rowTotal(row)}
+                    {rowTotal(row).toLocaleString("ru-RU")}
                   </span>
                 </td>
               </tr>
@@ -282,12 +282,12 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
               {columns.map(col => (
                 <td key={col.key} className="px-2 py-3 text-center">
                   <span className={`text-xs font-bold ${colTotal(col) > 0 ? "text-gradient-cyan" : "text-white/30"}`}>
-                    {colTotal(col)}
+                    {colTotal(col).toLocaleString("ru-RU")}
                   </span>
                 </td>
               ))}
               <td className="px-4 py-3 text-center">
-                <span className="text-sm font-black text-gradient-pink">{grandTotal}</span>
+                <span className="text-sm font-black text-gradient-pink">{grandTotal.toLocaleString("ru-RU")}</span>
               </td>
             </tr>
           </tfoot>
