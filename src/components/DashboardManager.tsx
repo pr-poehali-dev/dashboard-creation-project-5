@@ -222,6 +222,10 @@ export default function DashboardManager({ onClose }: Props) {
                   subtitle="Кликните на ячейку для редактирования"
                   apiUrl={`${editing.api_url}?dashboard_id=${editing.id}`}
                   columns={editing.columns}
+                  editable
+                  onColumnsChange={async (cols) => {
+                    await update(editing.id, { columns: cols });
+                  }}
                 />
               )}
 

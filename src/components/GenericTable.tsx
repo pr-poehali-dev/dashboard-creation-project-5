@@ -13,14 +13,27 @@ interface GenericTableProps {
   subtitle?: string;
   apiUrl: string;
   columns: ColumnDef[];
+  editable?: boolean;
+  onColumnsChange?: (cols: ColumnDef[]) => Promise<void>;
 }
 
-export default function GenericTable({ title, subtitle, apiUrl, columns }: GenericTableProps) {
+function slugify(s: string) {
+  return s.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
+export default function GenericTable({ title, subtitle, apiUrl, columns: initialColumns, editable = false, onColumnsChange }: GenericTableProps) {
   const [rows, setRows] = useState<Row[]>([]);
+  const [columns, setColumns] = useState<ColumnDef[]>(initialColumns);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [newCity, setNewCity] = useState("");
+  const [newColName, setNewColName] = useState("");
+
+  useEffect(() => {
+    setColumns(initialColumns);
+  }, [initialColumns.map(c => c.key).join(",")]);
 
   useEffect(() => {
     setLoading(true);
@@ -28,7 +41,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
       .then(r => r.json())
       .then(data => {
         const parsed = typeof data === "string" ? JSON.parse(data) : data;
-        setRows(parsed);
+        setRows(Array.isArray(parsed) ? parsed : []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -55,6 +68,30 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
     } finally {
       setSaving(false);
     }
+  };
+
+  const addCity = () => {
+    if (!newCity.trim()) return;
+    const newRow: Row = { id: 0, city: newCity.trim() };
+    columns.forEach(c => { newRow[c.key] = 0; });
+    setRows(prev => [...prev, newRow]);
+    setNewCity("");
+    setDirty(true);
+    setSaved(false);
+  };
+
+  const addColumn = async () => {
+    const name = newColName.trim();
+    if (!name) return;
+    const key = slugify(name) || `col${columns.length + 1}`;
+    if (columns.some(c => c.key === key)) return;
+    const newCols = [...columns, { key, label: name }];
+    setColumns(newCols);
+    setRows(prev => prev.map(r => ({ ...r, [key]: 0 })));
+    setNewColName("");
+    setDirty(true);
+    setSaved(false);
+    if (onColumnsChange) await onColumnsChange(newCols);
   };
 
   const colTotal = (col: string | ColumnDef) => {
@@ -123,6 +160,17 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
                   {col.label}
                 </th>
               ))}
+              {editable && (
+                <th className="px-2 py-2" style={{ minWidth: 120 }}>
+                  <input
+                    value={newColName}
+                    onChange={e => setNewColName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addColumn(); }}
+                    placeholder="+ столбец"
+                    className="w-full bg-transparent text-white/30 text-xs text-center outline-none border border-dashed border-white/15 hover:border-white/30 focus:border-violet-500/60 rounded-lg px-2 py-1.5 transition-all placeholder:text-white/20"
+                  />
+                </th>
+              )}
               <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap">
                 ИТОГО
               </th>
@@ -131,9 +179,8 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
           <tbody>
             {rows.map((row, ri) => (
               <tr
-                key={row.id}
+                key={row.id || ri}
                 className="border-b border-white/5 transition-colors hover:bg-white/3"
-                style={{ animationDelay: `${ri * 0.03}s` }}
               >
                 <td
                   className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
@@ -148,7 +195,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
                       min={0}
                       value={row[col.key] === 0 ? "" : String(row[col.key])}
                       placeholder="0"
-                      onChange={e => handleChange(row.id, col.key, e.target.value)}
+                      onChange={e => handleChange(row.id || ri, col.key, e.target.value)}
                       className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
                         bg-transparent border border-transparent
                         hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
@@ -157,6 +204,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
                     />
                   </td>
                 ))}
+                {editable && <td />}
                 <td className="px-4 py-2.5 text-center">
                   <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
                     {rowTotal(row)}
@@ -164,6 +212,20 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
                 </td>
               </tr>
             ))}
+            {editable && (
+              <tr className="border-b border-white/5">
+                <td className="px-2 py-1.5 sticky left-0 z-10" style={{ background: "var(--sticky-cell-bg)" }}>
+                  <input
+                    value={newCity}
+                    onChange={e => setNewCity(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addCity(); }}
+                    placeholder="+ Новый город"
+                    className="w-full bg-transparent text-white/40 text-xs rounded-lg py-1.5 px-2 outline-none border border-dashed border-white/10 hover:border-white/20 focus:border-violet-500/60 transition-all placeholder:text-white/20"
+                  />
+                </td>
+                <td colSpan={columns.length + 2} />
+              </tr>
+            )}
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-white/10">
@@ -180,6 +242,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
                   </span>
                 </td>
               ))}
+              {editable && <td />}
               <td className="px-4 py-3 text-center">
                 <span className="text-sm font-black text-gradient-pink">{grandTotal}</span>
               </td>
