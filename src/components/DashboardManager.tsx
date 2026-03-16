@@ -220,7 +220,7 @@ export default function DashboardManager({ onClose }: Props) {
                 <GenericTable
                   title={editing.title}
                   subtitle="Кликните на ячейку для редактирования"
-                  apiUrl={editing.api_url}
+                  apiUrl={`${editing.api_url}?dashboard_id=${editing.id}`}
                   columns={editing.columns}
                 />
               )}

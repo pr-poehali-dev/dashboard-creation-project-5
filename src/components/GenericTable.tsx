@@ -57,8 +57,10 @@ export default function GenericTable({ title, subtitle, apiUrl, columns }: Gener
     }
   };
 
-  const colTotal = (col: string) =>
-    rows.reduce((sum, r) => sum + (Number(r[col]) || 0), 0);
+  const colTotal = (col: string | ColumnDef) => {
+    const key = typeof col === "string" ? col : col.key;
+    return rows.reduce((sum, r) => sum + (Number(r[key]) || 0), 0);
+  };
 
   const rowTotal = (row: Row) =>
     columns.reduce((sum, c) => sum + (Number(row[c.key]) || 0), 0);
