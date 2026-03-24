@@ -157,43 +157,56 @@ export default function VyrabotkaAllView({
           </div>
           <div className="flex flex-col items-center gap-5">
             <div className="relative w-full">
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <defs>
                     {pieDataFact.map((entry, i) => (
-                      <filter key={`glow-${i}`} id={`pieGlow${i}`}>
-                        <feGaussianBlur stdDeviation="4" result="blur" />
-                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                      </filter>
+                      <linearGradient key={`pieGrad-${i}`} id={`pieGrad${i}`} x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                        <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+                      </linearGradient>
                     ))}
+                    <filter id="neonGlow">
+                      <feGaussianBlur stdDeviation="6" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
                   </defs>
-                  <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={60} outerRadius={100}
-                    dataKey="value" nameKey="name" paddingAngle={3} strokeWidth={2}
-                    animationBegin={0} animationDuration={1000}>
+                  <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={55} outerRadius={105}
+                    dataKey="value" nameKey="name" paddingAngle={4} strokeWidth={0}
+                    animationBegin={0} animationDuration={1200}
+                    style={{ filter: "url(#neonGlow)" }}>
                     {pieDataFact.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} stroke={entry.color} strokeOpacity={0.3}
-                        style={{ filter: `drop-shadow(0 0 8px ${entry.color}66)` }} />
+                      <Cell key={i} fill={`url(#pieGrad${i})`}
+                        stroke={entry.color} strokeWidth={1.5} strokeOpacity={0.6} />
+                    ))}
+                  </Pie>
+                  <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={108} outerRadius={112}
+                    dataKey="value" nameKey="name" paddingAngle={4} strokeWidth={0}
+                    animationBegin={200} animationDuration={1000}>
+                    {pieDataFact.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} fillOpacity={0.25} />
                     ))}
                   </Pie>
                   <Tooltip content={<PieTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center">
-                  <p className="text-white/40 text-[10px]">Всего</p>
-                  <p className="text-white font-bold text-sm">{fmtMoney(pieDataFact.reduce((s, d) => s + d.value, 0))}</p>
+                <div className="text-center" style={{ textShadow: "0 0 20px rgba(124,92,255,0.4)" }}>
+                  <p className="text-white/50 text-[10px] uppercase tracking-wider">Всего</p>
+                  <p className="text-white font-bold text-lg">{fmtMoney(pieDataFact.reduce((s, d) => s + d.value, 0))}</p>
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-xs w-full">
+            <div className="grid grid-cols-2 gap-x-5 gap-y-2.5 text-xs w-full">
               {pieDataFact.map((d) => {
                 const total = pieDataFact.reduce((s, p) => s + p.value, 0);
                 const share = total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
                 return (
-                  <div key={d.name} className="flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-[3px] shrink-0" style={{ background: d.color, boxShadow: `0 0 8px ${d.color}55` }} />
-                    <span className="text-white/60 truncate flex-1">{d.name}</span>
-                    <span className="text-white/40 font-medium shrink-0">{share}%</span>
+                  <div key={d.name} className="flex items-center gap-2 group">
+                    <span className="w-3 h-3 rounded-[3px] shrink-0 transition-shadow group-hover:scale-110"
+                      style={{ background: d.color, boxShadow: `0 0 10px ${d.color}88, 0 0 20px ${d.color}33` }} />
+                    <span className="text-white/60 truncate flex-1 group-hover:text-white/80 transition-colors">{d.name}</span>
+                    <span className="font-semibold shrink-0" style={{ color: d.color }}>{share}%</span>
                   </div>
                 );
               })}
