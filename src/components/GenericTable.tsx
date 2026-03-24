@@ -38,13 +38,28 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
     setColumns(initialColumns);
   }, [initialColumns.map(c => c.key).join(",")]);
 
+  const MONTH_ORDER: Record<string, number> = {
+    "янв": 1, "фев": 2, "мар": 3, "апр": 4, "май": 5, "июн": 6,
+    "июл": 7, "авг": 8, "сен": 9, "окт": 10, "ноя": 11, "дек": 12,
+  };
+
   useEffect(() => {
     setLoading(true);
     fetch(apiUrl)
       .then(r => r.json())
       .then(data => {
         const parsed = typeof data === "string" ? JSON.parse(data) : data;
-        setRows(Array.isArray(parsed) ? parsed : []);
+        const arr: Row[] = Array.isArray(parsed) ? parsed : [];
+        const hasGroups = arr.some(r => r.city && String(r.city).includes(" — "));
+        if (hasGroups) {
+          arr.sort((a, b) => {
+            const [cityA, monthA] = String(a.city).split(" — ");
+            const [cityB, monthB] = String(b.city).split(" — ");
+            if (cityA !== cityB) return cityA.localeCompare(cityB, "ru");
+            return (MONTH_ORDER[monthA] || 99) - (MONTH_ORDER[monthB] || 99);
+          });
+        }
+        setRows(arr);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -220,56 +235,74 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, ri) => (
-              <tr
-                key={row.id || ri}
-                className="border-b border-white/5 transition-colors hover:bg-white/3"
-              >
-                <td
-                  className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                  style={{ background: "var(--sticky-cell-bg)" }}
-                >
-                  {editable && editingRowIdx === ri ? (
-                    <input
-                      ref={rowInputRef}
-                      defaultValue={row.city}
-                      placeholder="Название города..."
-                      onBlur={e => commitCity(ri, e.target.value)}
-                      onKeyDown={e => { if (e.key === "Enter") commitCity(ri, e.currentTarget.value); }}
-                      className="w-full bg-white text-gray-800 text-xs rounded-lg py-1 px-2 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
-                    />
-                  ) : (
-                    <span
-                      onClick={editable ? () => { setEditingRowIdx(ri); setTimeout(() => rowInputRef.current?.focus(), 30); } : undefined}
-                      className={editable ? "cursor-pointer hover:text-white transition-colors" : ""}
-                    >
-                      {row.city || <span className="text-white/20 italic">пусто</span>}
-                    </span>
+            {rows.map((row, ri) => {
+              const cityStr = String(row.city);
+              const hasGroup = cityStr.includes(" — ");
+              const groupName = hasGroup ? cityStr.split(" — ")[0] : null;
+              const prevCity = ri > 0 ? String(rows[ri - 1].city) : "";
+              const prevGroup = prevCity.includes(" — ") ? prevCity.split(" — ")[0] : null;
+              const showGroupHeader = hasGroup && groupName !== prevGroup;
+
+              return (
+                <>
+                  {showGroupHeader && (
+                    <tr key={`group-${groupName}`} className="border-b border-white/8 bg-white/5">
+                      <td
+                        colSpan={columns.length + 2}
+                        className="px-4 py-2 text-white/70 font-bold text-xs uppercase tracking-wide"
+                      >
+                        {groupName}
+                      </td>
+                    </tr>
                   )}
-                </td>
-                {columns.map(col => (
-                  <td key={col.key} className="px-2 py-1.5 text-center">
-                    <input
-                      type="number"
-                      min={0}
-                      value={row[col.key] === 0 ? "" : String(row[col.key])}
-                      placeholder="0"
-                      onChange={e => handleChange(row.id || ri, col.key, e.target.value)}
-                      className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
-                        bg-transparent border border-transparent
-                        hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
-                        [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      style={{ minWidth: 52 }}
-                    />
-                  </td>
-                ))}
-                <td className="px-4 py-2.5 text-center">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
-                    {rowTotal(row).toLocaleString("ru-RU")}
-                  </span>
-                </td>
-              </tr>
-            ))}
+                  <tr key={row.id || ri} className="border-b border-white/5 transition-colors hover:bg-white/3">
+                    <td
+                      className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                      style={{ background: "var(--sticky-cell-bg)", paddingLeft: hasGroup ? 28 : undefined }}
+                    >
+                      {editable && editingRowIdx === ri ? (
+                        <input
+                          ref={rowInputRef}
+                          defaultValue={row.city}
+                          placeholder="Название..."
+                          onBlur={e => commitCity(ri, e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") commitCity(ri, e.currentTarget.value); }}
+                          className="w-full bg-white text-gray-800 text-xs rounded-lg py-1 px-2 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
+                        />
+                      ) : (
+                        <span
+                          onClick={editable ? () => { setEditingRowIdx(ri); setTimeout(() => rowInputRef.current?.focus(), 30); } : undefined}
+                          className={editable ? "cursor-pointer hover:text-white transition-colors" : ""}
+                        >
+                          {hasGroup ? cityStr.split(" — ")[1] : (row.city || <span className="text-white/20 italic">пусто</span>)}
+                        </span>
+                      )}
+                    </td>
+                    {columns.map(col => (
+                      <td key={col.key} className="px-2 py-1.5 text-center">
+                        <input
+                          type="number"
+                          min={0}
+                          value={row[col.key] === 0 ? "" : String(row[col.key])}
+                          placeholder="0"
+                          onChange={e => handleChange(row.id || ri, col.key, e.target.value)}
+                          className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
+                            bg-transparent border border-transparent
+                            hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
+                            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          style={{ minWidth: 52 }}
+                        />
+                      </td>
+                    ))}
+                    <td className="px-4 py-2.5 text-center">
+                      <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
+                        {rowTotal(row).toLocaleString("ru-RU")}
+                      </span>
+                    </td>
+                  </tr>
+                </>
+              );
+            })}
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-white/10">
