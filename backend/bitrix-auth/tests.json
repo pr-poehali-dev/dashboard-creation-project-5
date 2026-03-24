@@ -1,0 +1,27 @@
+{
+  "tests": [
+    {
+      "name": "Get auth URL",
+      "method": "GET",
+      "path": "/?action=auth_url&redirect_uri=https://example.com/callback",
+      "expectedStatus": 200,
+      "expectedBody": {"auth_url": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Verify invalid token",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "verify", "token": "invalid"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "invalid_token"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "OPTIONS CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

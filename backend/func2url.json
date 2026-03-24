@@ -1,4 +1,6 @@
 {
+  "manage-users": "https://functions.poehali.dev/c91102d1-7d24-434e-b229-6e0cb4d2b859",
+  "bitrix-auth": "https://functions.poehali.dev/5edeb3a7-435e-4122-bd0c-0bb9a2f368b1",
   "dashboard-data": "https://functions.poehali.dev/1c235369-17da-479b-a236-5fdf30d0f43b",
   "below-price": "https://functions.poehali.dev/8822427c-6de7-4fda-bdf4-cff0340e40c1",
   "manage-dashboards": "https://functions.poehali.dev/fdef226b-b22c-4ef6-9a1e-746956272ec5",
