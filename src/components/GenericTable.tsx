@@ -88,13 +88,22 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
     }
   };
 
-  const addCity = () => {
-    const newRow: Row = { id: 0, city: "" };
+  const addCity = (groupPrefix?: string) => {
+    const newRow: Row = { id: 0, city: groupPrefix ? `${groupPrefix} — ` : "" };
     columns.forEach(c => { newRow[c.key] = 0; });
     setRows(prev => {
-      const idx = prev.length;
-      setTimeout(() => { setEditingRowIdx(idx); setTimeout(() => rowInputRef.current?.focus(), 30); }, 0);
-      return [...prev, newRow];
+      let insertIdx = prev.length;
+      if (groupPrefix) {
+        for (let i = prev.length - 1; i >= 0; i--) {
+          if (String(prev[i].city).startsWith(groupPrefix + " — ")) {
+            insertIdx = i + 1;
+            break;
+          }
+        }
+      }
+      const updated = [...prev.slice(0, insertIdx), newRow, ...prev.slice(insertIdx)];
+      setTimeout(() => { setEditingRowIdx(insertIdx); setTimeout(() => rowInputRef.current?.focus(), 30); }, 0);
+      return updated;
     });
     setDirty(true);
     setSaved(false);
@@ -251,7 +260,17 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                         colSpan={columns.length + 2}
                         className="px-4 py-2 text-white/70 font-bold text-xs uppercase tracking-wide"
                       >
-                        {groupName}
+                        <div className="flex items-center justify-between">
+                          <span>{groupName}</span>
+                          {editable && (
+                            <button
+                              onClick={() => addCity(groupName!)}
+                              className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 text-white/50 hover:text-white text-[10px] font-medium transition-colors normal-case tracking-normal"
+                            >
+                              <Icon name="Plus" size={10} /> строка
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )}
