@@ -52,12 +52,25 @@ def verify_jwt(token, secret):
 
 
 def fetch_url(url, data=None):
+    from urllib.error import HTTPError
     if data:
         req = Request(url, data=urlencode(data).encode(), method="POST")
     else:
         req = Request(url)
-    with urlopen(req, timeout=10) as resp:
-        return json.loads(resp.read().decode())
+    try:
+        with urlopen(req, timeout=15) as resp:
+            raw = resp.read().decode()
+            print(f"[fetch_url] {url} => status={resp.status}, body={raw[:500]}")
+            return json.loads(raw)
+    except HTTPError as e:
+        raw = e.read().decode() if e.fp else ""
+        print(f"[fetch_url] {url} => HTTPError status={e.code}, body={raw[:500]}")
+        if raw:
+            try:
+                return json.loads(raw)
+            except Exception:
+                pass
+        return {"error": f"http_{e.code}", "body": raw[:200]}
 
 
 def handler(event: dict, context) -> dict:
