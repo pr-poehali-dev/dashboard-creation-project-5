@@ -420,15 +420,35 @@ export default function VyrabotkaCityView({
           <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan }))} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+          <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
+            <defs>
+              <linearGradient id="gradDevPos" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00FFB0" stopOpacity={1} />
+                <stop offset="100%" stopColor="#00C853" stopOpacity={0.8} />
+              </linearGradient>
+              <linearGradient id="gradDevNeg" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0%" stopColor="#FF5252" stopOpacity={1} />
+                <stop offset="100%" stopColor="#FF1744" stopOpacity={0.8} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
             <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => fmtMoney(v)} width={70} />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="deviation" name="Отклонение" radius={[4, 4, 0, 0]} barSize={32}>
+            <ReferenceLine y={0} stroke={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"} strokeWidth={1} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
+            <Bar dataKey="deviation" name="Отклонение" radius={[6, 6, 6, 6]}
+              label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
+                value !== 0 ? (
+                  <text x={x + w / 2} y={value >= 0 ? y - 6 : y + 16} textAnchor="middle"
+                    fill={value >= 0 ? "rgba(0,224,100,0.7)" : "rgba(255,34,68,0.7)"} fontSize={10} fontWeight={600}>
+                    {fmtMoney(value)}
+                  </text>
+                ) : null
+              }
+            >
               {monthlyData.filter(d => d.fact > 0).map((d, i) => (
-                <Cell key={i} fill={d.fact - d.plan >= 0 ? "#00E064" : "#FF2244"} />
+                <Cell key={i} fill={d.fact - d.plan >= 0 ? "url(#gradDevPos)" : "url(#gradDevNeg)"} />
               ))}
             </Bar>
           </BarChart>
