@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDashboards } from "@/hooks/useDashboards";
 import DashboardManager from "@/components/DashboardManager";
 import DashboardView from "@/components/DashboardView";
+import VyrabotkaView from "@/components/VyrabotkaView";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -71,13 +72,17 @@ export default function Dashboard() {
             Загрузка дашбордов...
           </div>
         ) : first ? (
-          <DashboardView
-            title={first.title}
-            apiUrl={first.api_url}
-            columns={first.columns}
-            dashboardId={first.id}
-            readonly
-          />
+          first.slug === "vyrabotka" ? (
+            <VyrabotkaView />
+          ) : (
+            <DashboardView
+              title={first.title}
+              apiUrl={first.api_url}
+              columns={first.columns}
+              dashboardId={first.id}
+              readonly
+            />
+          )
         ) : (
           <div className="flex flex-col items-center justify-center py-32 gap-4 text-white/30">
             <Icon name="LayoutDashboard" size={48} />

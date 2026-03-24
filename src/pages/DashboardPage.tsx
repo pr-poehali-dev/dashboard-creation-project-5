@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
 import DashboardView from "@/components/DashboardView";
+import VyrabotkaView from "@/components/VyrabotkaView";
 import DashboardManager from "@/components/DashboardManager";
 import { useDashboards } from "@/hooks/useDashboards";
 
@@ -94,14 +95,18 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <DashboardView
-          key={dashboard.slug}
-          title={dashboard.title}
-          apiUrl={dashboard.api_url}
-          columns={dashboard.columns}
-          dashboardId={dashboard.id}
-          readonly
-        />
+        {dashboard.slug === "vyrabotka" ? (
+          <VyrabotkaView />
+        ) : (
+          <DashboardView
+            key={dashboard.slug}
+            title={dashboard.title}
+            apiUrl={dashboard.api_url}
+            columns={dashboard.columns}
+            dashboardId={dashboard.id}
+            readonly
+          />
+        )}
       </div>
     </div>
     {showManager && <DashboardManager onClose={() => setShowManager(false)} />}
