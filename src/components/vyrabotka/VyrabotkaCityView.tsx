@@ -275,19 +275,67 @@ export default function VyrabotkaCityView({
       </div>
 
       <div className="glass rounded-2xl p-6 animate-fade-in-up">
-        <div className="mb-6">
-          <h3 className="font-display font-bold text-white text-lg">{selectedCity} · План vs Факт</h3>
-          <p className="text-white/40 text-xs mt-0.5">По месяцам · 2026</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="font-display font-bold text-white text-lg">Динамика по месяцам</h3>
+            <p className="text-white/40 text-xs mt-0.5">План vs Факт · 2026</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#7C5CFF" }} />
+              <span className="text-xs text-white/50">План</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#00E5CC" }} />
+              <span className="text-xs text-white/50">Факт</span>
+            </div>
+          </div>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+          <BarChart data={monthlyData} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="20%">
+            <defs>
+              <linearGradient id="gradBarPlan" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#9B7FFF" stopOpacity={1} />
+                <stop offset="100%" stopColor="#5A3ADB" stopOpacity={0.8} />
+              </linearGradient>
+              <linearGradient id="gradBarFact" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#00FFE0" stopOpacity={1} />
+                <stop offset="100%" stopColor="#00B8A3" stopOpacity={0.8} />
+              </linearGradient>
+              <filter id="barGlow">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
             <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => fmtMoney(v)} width={70} />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[4, 4, 0, 0]} barSize={32} />
-            <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[4, 4, 0, 0]} barSize={32} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
+            <Bar dataKey="plan" name="План" fill="url(#gradBarPlan)" radius={[6, 6, 0, 0]} barSize={20}
+              label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
+                value > 0 ? (
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize={10}>
+                    {fmtMoney(value)}
+                  </text>
+                ) : null
+              }
+            />
+            <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]} barSize={20}
+              label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
+                value > 0 ? (
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,229,204,0.6)" fontSize={10} fontWeight={600}>
+                    {fmtMoney(value)}
+                  </text>
+                ) : null
+              }
+            >
+              {monthlyData.map((entry, index) => (
+                <Cell key={`fact-${index}`}
+                  fill={entry.plan > 0 && entry.fact >= entry.plan ? "url(#gradBarFact)" : entry.fact > 0 ? "#00C4AB" : "transparent"}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
