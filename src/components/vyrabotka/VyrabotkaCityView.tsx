@@ -1,7 +1,7 @@
 import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  Tooltip, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import {
@@ -329,11 +329,15 @@ export default function VyrabotkaCityView({
             <p className="text-white/40 text-xs mt-0.5">Динамика по месяцам</p>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+            <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
               <defs>
-                <linearGradient id="gradPctCity" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
+                <linearGradient id="gradPctAbove" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00E5CC" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#00E5CC" stopOpacity={0.02} />
+                </linearGradient>
+                <linearGradient id="gradPctBelow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#7C5CFF" stopOpacity={0.35} />
+                  <stop offset="100%" stopColor="#7C5CFF" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
@@ -344,8 +348,19 @@ export default function VyrabotkaCityView({
                 contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
                 labelStyle={{ color: "rgba(255,255,255,0.5)" }}
                 itemStyle={{ color: "#fff" }} />
-              <Area type="monotone" dataKey="pct" stroke="#7C5CFF" strokeWidth={3}
-                fill="url(#gradPctCity)" dot={{ fill: "#7C5CFF", r: 5 }} activeDot={{ r: 7 }} />
+              <ReferenceLine y={100} stroke={isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)"} strokeDasharray="6 4" strokeWidth={1.5}
+                label={{ value: "100%", position: "right", fill: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)", fontSize: 11 }} />
+              <Area type="natural" dataKey="pct" stroke="url(#)" strokeWidth={0} fill="url(#gradPctBelow)" />
+              <Area type="natural" dataKey="pct" name="Выполнение"
+                stroke={(() => { const filtered = monthlyData.filter(d => d.fact > 0); const last = filtered[filtered.length - 1]; return last && last.pct >= 100 ? "#00E5CC" : "#7C5CFF"; })()}
+                strokeWidth={2.5}
+                fill="none"
+                dot={({ cx, cy, payload }: { cx: number; cy: number; payload?: { name?: string; pct?: number } }) => (
+                  <circle key={`dot-${payload?.name}`} cx={cx} cy={cy} r={4}
+                    fill={payload?.pct >= 100 ? "#00E5CC" : "#7C5CFF"}
+                    stroke={isLight ? "#fff" : "#1a1030"} strokeWidth={2} />
+                )}
+                activeDot={{ r: 6, strokeWidth: 2, stroke: isLight ? "#fff" : "#1a1030" }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
