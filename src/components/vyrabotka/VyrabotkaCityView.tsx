@@ -292,7 +292,7 @@ export default function VyrabotkaCityView({
           </div>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={monthlyData} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="20%">
+          <BarChart data={monthlyData} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
             <defs>
               <linearGradient id="gradBarPlan" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#9B7FFF" stopOpacity={1} />
@@ -312,7 +312,7 @@ export default function VyrabotkaCityView({
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => fmtMoney(v)} width={70} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
-            <Bar dataKey="plan" name="План" fill="url(#gradBarPlan)" radius={[6, 6, 0, 0]} barSize={20}
+            <Bar dataKey="plan" name="План" fill="url(#gradBarPlan)" radius={[6, 6, 0, 0]}
               label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                 value > 0 ? (
                   <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize={10}>
@@ -321,7 +321,7 @@ export default function VyrabotkaCityView({
                 ) : null
               }
             />
-            <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]} barSize={20}
+            <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]}
               label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                 value > 0 ? (
                   <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,229,204,0.6)" fontSize={10} fontWeight={600}>
