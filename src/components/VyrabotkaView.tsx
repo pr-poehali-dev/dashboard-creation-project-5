@@ -290,42 +290,58 @@ export default function VyrabotkaView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 mb-2">
-        <button
-          onClick={() => setSelectedCity(null)}
-          className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
-            !selectedCity ? "gradient-violet text-white font-semibold" : "glass glass-hover text-white/50"
-          }`}>
-          Все города
-        </button>
-        {DATA.map(d => (
-          <button key={d.city}
-            onClick={() => setSelectedCity(selectedCity === d.city ? null : d.city)}
-            className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
-              selectedCity === d.city ? "gradient-violet text-white font-semibold" : "glass glass-hover text-white/50"
-            }`}>
-            {d.city}
-          </button>
-        ))}
-      </div>
+      <div className="glass rounded-2xl p-4 space-y-3">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="MapPin" size={14} className="text-violet-400" />
+            <span className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">Город</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setSelectedCity(null)}
+              className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                !selectedCity ? "gradient-violet text-white font-semibold" : "glass glass-hover text-white/50"
+              }`}>
+              Все города
+            </button>
+            {DATA.map(d => (
+              <button key={d.city}
+                onClick={() => setSelectedCity(selectedCity === d.city ? null : d.city)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                  selectedCity === d.city ? "gradient-violet text-white font-semibold" : "glass glass-hover text-white/50"
+                }`}>
+                {d.city}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      <div className="flex flex-wrap gap-2 mb-2">
-        <button
-          onClick={() => setSelectedMonth(null)}
-          className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
-            !selectedMonth ? "gradient-cyan text-white font-semibold" : "glass glass-hover text-white/50"
-          }`}>
-          Все месяцы
-        </button>
-        {activeMonths.map(m => (
-          <button key={m}
-            onClick={() => setSelectedMonth(selectedMonth === m ? null : m)}
-            className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
-              selectedMonth === m ? "gradient-cyan text-white font-semibold" : "glass glass-hover text-white/50"
-            }`}>
-            {MONTH_LABELS[m]}
-          </button>
-        ))}
+        <div className="border-t border-white/8" />
+
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="Calendar" size={14} className="text-cyan-400" />
+            <span className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">Месяц</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              onClick={() => setSelectedMonth(null)}
+              className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                !selectedMonth ? "gradient-cyan text-white font-semibold" : "glass glass-hover text-white/50"
+              }`}>
+              Все месяцы
+            </button>
+            {activeMonths.map(m => (
+              <button key={m}
+                onClick={() => setSelectedMonth(selectedMonth === m ? null : m)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                  selectedMonth === m ? "gradient-cyan text-white font-semibold" : "glass glass-hover text-white/50"
+                }`}>
+                {MONTH_LABELS[m]}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* KPI */}
