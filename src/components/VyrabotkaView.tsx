@@ -810,17 +810,19 @@ export default function VyrabotkaView() {
                     <div className="relative h-5 rounded-md bg-white/5 overflow-hidden">
                       <div
                         className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
-                        style={{ width: `${planW}%`, background: "rgba(124, 92, 255, 0.2)", borderRight: "2px dashed rgba(124, 92, 255, 0.5)" }}
+                        style={{ width: `${planW}%`, background: "rgba(124, 92, 255, 0.35)", borderRight: "2px dashed rgba(124, 92, 255, 0.7)" }}
                       />
                       <div
                         className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
                         style={{
                           width: `${factW}%`,
                           background: pct >= 100
-                            ? "linear-gradient(90deg, rgba(0,224,100,0.7), rgba(0,200,83,0.9))"
+                            ? "linear-gradient(90deg, #00E064, #00C853)"
                             : pct >= 80
-                              ? "linear-gradient(90deg, rgba(255,152,0,0.7), rgba(255,183,77,0.9))"
-                              : "linear-gradient(90deg, rgba(229,57,53,0.7), rgba(255,23,68,0.9))",
+                              ? "linear-gradient(90deg, #FF9800, #FFB300)"
+                              : pct >= 60
+                                ? "linear-gradient(90deg, #E53935, #FF1744)"
+                                : "linear-gradient(90deg, #7B1FA2, #B71C1C)",
                         }}
                       />
                       <div className="absolute inset-y-0 left-2 flex items-center gap-2 text-[10px] text-white/80 font-medium">
