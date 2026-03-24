@@ -2,7 +2,6 @@ import {
   BarChart, Bar, AreaChart, Area, Cell,
   XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import {
@@ -40,28 +39,86 @@ interface Props {
   cityRanking: (CityData & { plan: number; fact: number; diff: number; pct: number })[];
 }
 
-function EfficiencyGauge({ value, label, color, max = 100 }: { value: number; label: string; color: string; max?: number }) {
-  const pct = Math.min(value / max, 1);
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - pct * 0.75);
+function SpeedometerGauge({ value, label, scoreLabel, color }: { value: number; label: string; scoreLabel: string; color: string }) {
+  const clamped = Math.min(Math.max(value, 0), 100);
+  const totalTicks = 40;
+  const startAngle = -210;
+  const endAngle = 30;
+  const angleRange = endAngle - startAngle;
+  const needleAngle = startAngle + (clamped / 100) * angleRange;
+  const cx = 150, cy = 140, r = 110;
+  const filledTicks = Math.round((clamped / 100) * totalTicks);
+
+  const ticks = Array.from({ length: totalTicks }, (_, i) => {
+    const angle = startAngle + (i / (totalTicks - 1)) * angleRange;
+    const rad = (angle * Math.PI) / 180;
+    const innerR = r - 14;
+    const outerR = r;
+    return {
+      x1: cx + innerR * Math.cos(rad),
+      y1: cy + innerR * Math.sin(rad),
+      x2: cx + outerR * Math.cos(rad),
+      y2: cy + outerR * Math.sin(rad),
+      filled: i < filledTicks,
+    };
+  });
+
+  const needleRad = (needleAngle * Math.PI) / 180;
+  const needleLen = r - 30;
+  const nx = cx + needleLen * Math.cos(needleRad);
+  const ny = cy + needleLen * Math.sin(needleRad);
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-24 h-24">
-        <svg className="w-full h-full -rotate-[135deg]" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8"
-            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`} strokeLinecap="round" />
-          <circle cx="50" cy="50" r={radius} fill="none" stroke={color} strokeWidth="8"
-            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-            strokeDashoffset={offset} strokeLinecap="round"
-            style={{ transition: "stroke-dashoffset 1s ease-out", filter: `drop-shadow(0 0 6px ${color}40)` }} />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-lg font-bold text-white">{value.toFixed(0)}</span>
-        </div>
+      <p className="text-white/50 text-xs mb-1">{label}</p>
+      <p className="font-display text-3xl font-bold text-white mb-2">{clamped.toFixed(0)}%</p>
+      <svg viewBox="0 0 300 175" className="w-full max-w-[280px]">
+        <defs>
+          <linearGradient id="tickGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={color} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={color} />
+          </linearGradient>
+          <filter id="needleGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+        {ticks.map((t, i) => (
+          <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+            stroke={t.filled ? "url(#tickGrad)" : "rgba(255,255,255,0.1)"}
+            strokeWidth={3} strokeLinecap="round"
+            style={{ transition: `stroke 0.05s ease ${i * 20}ms` }} />
+        ))}
+        <line x1={cx} y1={cy} x2={nx} y2={ny}
+          stroke={color} strokeWidth={3} strokeLinecap="round"
+          filter="url(#needleGlow)"
+          style={{ transition: "all 1s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+        <circle cx={cx} cy={cy} r={6} fill={color} style={{ filter: `drop-shadow(0 0 8px ${color})` }} />
+        <circle cx={cx} cy={cy} r={3} fill="#0f0a1e" />
+        <text x={40} y={170} fill="rgba(255,255,255,0.35)" fontSize="12" textAnchor="middle">0</text>
+        <text x={260} y={170} fill="rgba(255,255,255,0.35)" fontSize="12" textAnchor="middle">100%</text>
+      </svg>
+      <span className="text-sm font-bold px-4 py-1.5 rounded-full -mt-2" style={{ background: `${color}20`, color }}>
+        {scoreLabel}
+      </span>
+    </div>
+  );
+}
+
+function MetricBar({ label, value, max = 100, color }: { label: string; value: number; max?: number; color: string }) {
+  const pct = Math.min((value / max) * 100, 100);
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-white/50 w-28 shrink-0 text-right">{label}</span>
+      <div className="flex-1 h-2.5 rounded-full bg-white/[0.06] overflow-hidden relative">
+        <div className="h-full rounded-full transition-all duration-1000 ease-out"
+          style={{
+            width: `${pct}%`,
+            background: `linear-gradient(90deg, ${color}88, ${color})`,
+            boxShadow: `0 0 12px ${color}40`,
+          }} />
       </div>
-      <span className="text-[10px] text-white/50 mt-1 text-center leading-tight">{label}</span>
+      <span className="text-sm font-semibold text-white/80 w-12 text-right">{value.toFixed(0)}%</span>
     </div>
   );
 }
@@ -126,17 +183,17 @@ export default function VyrabotkaCityView({
     ? ((cityRanking.length - rank) / (cityRanking.length - 1)) * 100
     : 50;
 
-  const radarData = [
-    { metric: "Выполнение", value: Math.min(planExecution, 120), fullMark: 120 },
-    { metric: "Стабильность", value: stability, fullMark: 100 },
-    { metric: "Динамика", value: growthTrend, fullMark: 100 },
-    { metric: "Рейтинг", value: rankScore, fullMark: 100 },
-    { metric: "Доля рынка", value: Math.min(shareOfTotal * 5, 100), fullMark: 100 },
-  ];
-
-  const overallScore = (planExecution * 0.4 + stability * 0.2 + growthTrend * 0.15 + rankScore * 0.15 + Math.min(shareOfTotal * 5, 100) * 0.1);
+  const overallScore = Math.min((planExecution * 0.4 + stability * 0.2 + growthTrend * 0.15 + rankScore * 0.15 + Math.min(shareOfTotal * 5, 100) * 0.1), 100);
   const scoreColor = overallScore >= 80 ? "#00E064" : overallScore >= 60 ? "#FF9800" : "#FF2244";
   const scoreLabel = overallScore >= 80 ? "Отлично" : overallScore >= 60 ? "Хорошо" : overallScore >= 40 ? "Средне" : "Критично";
+
+  const efficiencyMetrics = [
+    { label: "Выполнение плана", value: Math.min(planExecution, 100), color: "#7C5CFF" },
+    { label: "Стабильность", value: stability, color: "#00E5CC" },
+    { label: "Динамика роста", value: growthTrend, color: "#FF9800" },
+    { label: "Позиция в рейтинге", value: rankScore, color: "#00E064" },
+    { label: "Доля рынка", value: Math.min(shareOfTotal * 5, 100), color: "#FF3CAC" },
+  ];
 
   return (
     <>
@@ -207,33 +264,12 @@ export default function VyrabotkaCityView({
           </h3>
           <p className="text-white/40 text-xs mt-0.5">Комплексная оценка по 5 метрикам</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="flex flex-col items-center justify-center">
-            <div className="relative mb-4">
-              <EfficiencyGauge value={overallScore} label="" color={scoreColor} max={100} />
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2">
-                <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: `${scoreColor}20`, color: scoreColor }}>
-                  {scoreLabel}
-                </span>
-              </div>
-            </div>
-            <div className="grid grid-cols-5 gap-3 mt-4 w-full max-w-md">
-              <EfficiencyGauge value={planExecution} label="Выполнение плана" color="#7C5CFF" max={120} />
-              <EfficiencyGauge value={stability} label="Стабильность" color="#00E5CC" />
-              <EfficiencyGauge value={growthTrend} label="Динамика роста" color="#FF9800" />
-              <EfficiencyGauge value={rankScore} label="Позиция в рейтинге" color="#00E064" />
-              <EfficiencyGauge value={Math.min(shareOfTotal * 5, 100)} label="Доля рынка" color="#FF3CAC" />
-            </div>
-          </div>
-          <div>
-            <ResponsiveContainer width="100%" height={280}>
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} />
-                <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 120]} />
-                <Radar name={selectedCity} dataKey="value" stroke={scoreColor} fill={scoreColor} fillOpacity={0.2} strokeWidth={2} />
-              </RadarChart>
-            </ResponsiveContainer>
+        <div className="flex flex-col items-center">
+          <SpeedometerGauge value={overallScore} label="Общий балл" scoreLabel={scoreLabel} color={scoreColor} />
+          <div className="w-full max-w-lg mt-6 flex flex-col gap-3">
+            {efficiencyMetrics.map((m) => (
+              <MetricBar key={m.label} label={m.label} value={m.value} color={m.color} />
+            ))}
           </div>
         </div>
       </div>
