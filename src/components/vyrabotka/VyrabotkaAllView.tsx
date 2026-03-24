@@ -1,0 +1,275 @@
+import {
+  BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+} from "recharts";
+import Icon from "@/components/ui/icon";
+import {
+  type CityData,
+  MONTH_LABELS,
+  PIE_COLORS,
+  fmtMoney,
+  pctColor,
+  getCityTotals,
+  CustomTooltip,
+  PieTooltip,
+} from "./VyrabotkaUtils";
+
+interface MonthlyDataItem {
+  name: string;
+  shortName: string;
+  plan: number;
+  fact: number;
+  pct: number;
+}
+
+interface BarDataItem {
+  name: string;
+  plan: number;
+  fact: number;
+  pct: number;
+}
+
+interface DeviationItem {
+  name: string;
+  value: number;
+  pct: number;
+}
+
+interface PieDataItem {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface Props {
+  DATA: CityData[];
+  activeMonths: string[];
+  selectedMonth: string | null;
+  monthlyData: MonthlyDataItem[];
+  barData: BarDataItem[];
+  pieDataFact: PieDataItem[];
+  deviationData: DeviationItem[];
+  cityRanking: (CityData & { plan: number; fact: number; diff: number; pct: number })[];
+  isLight: boolean;
+  axisColor: string;
+  setSelectedCity: (city: string | null) => void;
+}
+
+export default function VyrabotkaAllView({
+  DATA, activeMonths, selectedMonth, monthlyData, barData, pieDataFact,
+  deviationData, cityRanking, isLight, axisColor, setSelectedCity,
+}: Props) {
+  return (
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-6">
+            <h3 className="font-display font-bold text-white text-lg">Динамика по месяцам</h3>
+            <p className="text-white/40 text-xs mt-0.5">План vs Факт · 2026</p>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+              <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="plan" name="План" radius={[4, 4, 0, 0]} barSize={28}>
+                {monthlyData.map((d) => (
+                  <Cell key={d.shortName} fill="#7C5CFF" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
+                ))}
+              </Bar>
+              <Bar dataKey="fact" name="Факт" radius={[4, 4, 0, 0]} barSize={28}>
+                {monthlyData.map((d) => (
+                  <Cell key={d.shortName} fill="#00E5CC" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-4">
+            <h3 className="font-display font-bold text-white text-lg">Рейтинг городов</h3>
+            <p className="text-white/40 text-xs mt-0.5">По % выполнения плана</p>
+          </div>
+          <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
+            {cityRanking.map((c, i) => (
+              <div key={c.city}
+                className="flex items-center gap-3 cursor-pointer rounded-xl p-2 transition-colors hover:bg-white/5"
+                onClick={() => setSelectedCity(c.city)}>
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                  i === 0 ? "bg-emerald-500/20 text-emerald-400" :
+                  i === cityRanking.length - 1 ? "bg-red-500/20 text-red-400" :
+                  "bg-white/10 text-white/50"
+                }`}>
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{c.city}</p>
+                  <div className="w-full h-1.5 rounded-full bg-white/10 mt-1">
+                    <div className={`h-full rounded-full transition-all duration-700 ${
+                      c.pct >= 100 ? "bg-emerald-500" : c.pct >= 80 ? "bg-amber-500" : "bg-red-500"
+                    }`} style={{ width: `${Math.min(c.pct, 120) / 1.2}%` }} />
+                  </div>
+                </div>
+                <span className={`text-sm font-bold shrink-0 ${pctColor(c.pct)}`}>
+                  {c.pct.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-6">
+            <h3 className="font-display font-bold text-white text-lg">Доля городов в выработке</h3>
+            <p className="text-white/40 text-xs mt-0.5">Фактическая выработка</p>
+          </div>
+          <div className="flex flex-col lg:flex-row items-center gap-4">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={55} outerRadius={95}
+                  dataKey="value" nameKey="name" paddingAngle={2}>
+                  {pieDataFact.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} stroke="transparent" />
+                  ))}
+                </Pie>
+                <Tooltip content={<PieTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs w-full lg:w-auto">
+              {pieDataFact.map((d) => (
+                <div key={d.name} className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
+                  <span className="text-white/60 truncate">{d.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-6">
+            <h3 className="font-display font-bold text-white text-lg">Отклонение от плана</h3>
+            <p className="text-white/40 text-xs mt-0.5">% выполнения по городам</p>
+          </div>
+          <div className="space-y-2">
+            {deviationData.map((entry) => {
+              const isPositive = entry.value >= 0;
+              const pct = entry.pct;
+              const barWidth = Math.min(pct, 130);
+              return (
+                <div key={entry.name} className="flex items-center gap-3">
+                  <span className="text-xs text-white/60 w-[110px] shrink-0 truncate text-right">{entry.name}</span>
+                  <div className="flex-1 h-6 rounded-md bg-white/5 relative overflow-hidden">
+                    <div
+                      className="h-full rounded-md transition-all duration-700"
+                      style={{
+                        width: `${(barWidth / 130) * 100}%`,
+                        background: isPositive
+                          ? `linear-gradient(90deg, #00E064, #00C853)`
+                          : pct >= 80
+                            ? `linear-gradient(90deg, #FF9800, #FFB74D)`
+                            : pct >= 60
+                              ? `linear-gradient(90deg, #E53935, #FF1744)`
+                              : `linear-gradient(90deg, #7B1FA2, #B71C1C)`,
+                      }}
+                    />
+                    {pct >= 100 && (
+                      <div className="absolute left-0 top-0 h-full border-r-2 border-white/30" style={{ width: `${(100 / 130) * 100}%` }} />
+                    )}
+                  </div>
+                  <span className={`text-xs font-bold w-[52px] shrink-0 text-right ${
+                    isPositive ? "text-emerald-400" : pct >= 80 ? "text-amber-400" : "text-red-400"
+                  }`}>
+                    {pct.toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl p-6 animate-fade-in-up">
+        <div className="mb-6">
+          <h3 className="font-display font-bold text-white text-lg">% выполнения по месяцам</h3>
+          <p className="text-white/40 text-xs mt-0.5">Динамика процента выполнения плана</p>
+        </div>
+        <ResponsiveContainer width="100%" height={250}>
+          <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gradPct" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+            <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+              tickFormatter={(v: number) => `${v}%`} domain={[0, 'auto']} />
+            <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Выполнение"]}
+              contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
+              labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+              itemStyle={{ color: "#fff" }} />
+            <Area type="monotone" dataKey="pct" stroke="#7C5CFF" strokeWidth={3}
+              fill="url(#gradPct)" dot={{ fill: "#7C5CFF", r: 5 }} activeDot={{ r: 7 }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="glass rounded-2xl p-6 animate-fade-in-up">
+        <div className="mb-6">
+          <h3 className="font-display font-bold text-white text-lg">План vs Факт по городам</h3>
+          <p className="text-white/40 text-xs mt-0.5">{selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно за период"}</p>
+        </div>
+        <div className="space-y-3">
+          {barData.map((d) => {
+            const maxVal = Math.max(...barData.map(b => b.plan));
+            const planW = maxVal > 0 ? (d.plan / maxVal) * 100 : 0;
+            const factW = maxVal > 0 ? (d.fact / maxVal) * 100 : 0;
+            const pct = d.pct;
+            return (
+              <div key={d.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-white/70 font-medium">{d.name}</span>
+                  <span className={`text-xs font-bold ${pct >= 100 ? "text-emerald-400" : pct >= 80 ? "text-amber-400" : "text-red-400"}`}>
+                    {pct.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="relative h-5 rounded-md bg-white/5 overflow-hidden">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
+                    style={{ width: `${planW}%`, background: "rgba(124, 92, 255, 0.35)", borderRight: "2px dashed rgba(124, 92, 255, 0.7)" }}
+                  />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
+                    style={{
+                      width: `${factW}%`,
+                      background: pct >= 100
+                        ? "linear-gradient(90deg, #00E064, #00C853)"
+                        : pct >= 80
+                          ? "linear-gradient(90deg, #FF9800, #FFB300)"
+                          : pct >= 60
+                            ? "linear-gradient(90deg, #E53935, #FF1744)"
+                            : "linear-gradient(90deg, #7B1FA2, #B71C1C)",
+                    }}
+                  />
+                  <div className="absolute inset-y-0 left-2 flex items-center gap-2 text-[10px] text-white/80 font-medium">
+                    <span>Факт: {fmtMoney(d.fact)}</span>
+                    <span className="text-white/30">|</span>
+                    <span className="text-white/50">План: {fmtMoney(d.plan)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
