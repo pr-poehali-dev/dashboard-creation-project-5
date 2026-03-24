@@ -202,7 +202,7 @@ export default function VyrabotkaAllView({
             <p className="text-white/40 text-xs mt-0.5">Фактическая выработка</p>
           </div>
           <div className="flex flex-col lg:flex-row items-center gap-4">
-            <div className="relative w-full lg:w-auto lg:flex-shrink-0">
+            <div className="relative w-full lg:w-[280px] lg:min-w-[280px] lg:flex-shrink-0">
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <defs>
