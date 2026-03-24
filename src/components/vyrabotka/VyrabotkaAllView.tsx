@@ -272,15 +272,15 @@ export default function VyrabotkaAllView({
             const factW = maxVal > 0 ? (d.fact / maxVal) * 100 : 0;
             const pct = d.pct;
             const factColor = pct >= 100
-              ? "linear-gradient(90deg, #00FF94, #00DDAA)"
+              ? "linear-gradient(90deg, #00FF7F, #00FF50)"
               : pct >= 80
-                ? "linear-gradient(90deg, #FFAA00, #FF8800)"
-                : "linear-gradient(90deg, #FF3366, #FF0044)";
+                ? "linear-gradient(90deg, #FFD600, #FFAB00)"
+                : "linear-gradient(90deg, #FF1744, #FF0033)";
             const factShadow = pct >= 100
-              ? "0 0 12px rgba(0,255,148,0.3)"
+              ? "0 0 20px rgba(0,255,127,0.5), 0 0 40px rgba(0,255,80,0.2)"
               : pct >= 80
-                ? "0 0 12px rgba(255,170,0,0.3)"
-                : "0 0 12px rgba(255,51,102,0.3)";
+                ? "0 0 20px rgba(255,214,0,0.5), 0 0 40px rgba(255,171,0,0.2)"
+                : "0 0 20px rgba(255,23,68,0.5), 0 0 40px rgba(255,0,51,0.2)";
             return (
               <div key={d.name} className="group cursor-pointer" onClick={() => setSelectedCity(d.name)}>
                 <div className="flex items-center justify-between mb-1.5">
