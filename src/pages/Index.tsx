@@ -6,10 +6,12 @@ import DashboardView from "@/components/DashboardView";
 import VyrabotkaView from "@/components/VyrabotkaView";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { user } = useAuth();
   const isLight = theme === "light";
   const [showManager, setShowManager] = useState(false);
   const { dashboards, loading } = useDashboards();
@@ -37,6 +39,11 @@ export default function Dashboard() {
               alt="Dream Team"
               className="h-10 mb-3 object-contain"
             />
+            {user && (
+              <p className="text-white/50 text-sm mb-2">
+                {user.name}, добро пожаловать в систему аналитики Команды Мечты!
+              </p>
+            )}
             <h1 className="font-display text-3xl sm:text-4xl font-black text-white tracking-tight mb-1">
               {first?.title ?? "Дашборды"}
             </h1>
