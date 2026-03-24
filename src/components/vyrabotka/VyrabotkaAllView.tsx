@@ -249,47 +249,69 @@ export default function VyrabotkaAllView({
       </div>
 
       <div className="glass rounded-2xl p-6 animate-fade-in-up">
-        <div className="mb-6">
-          <h3 className="font-display font-bold text-white text-lg">План vs Факт по городам</h3>
-          <p className="text-white/40 text-xs mt-0.5">{selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно за период"}</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="font-display font-bold text-white text-lg">План vs Факт по городам</h3>
+            <p className="text-white/40 text-xs mt-0.5">{selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно за период"}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(167,139,250,0.4)", border: "1px dashed #A78BFA" }} />
+              <span className="text-xs text-white/40">План</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "#00FFCC" }} />
+              <span className="text-xs text-white/40">Факт</span>
+            </div>
+          </div>
         </div>
         <div className="space-y-3">
-          {barData.map((d) => {
-            const maxVal = Math.max(...barData.map(b => b.plan));
+          {barData.map((d, idx) => {
+            const maxVal = Math.max(...barData.map(b => Math.max(b.plan, b.fact)));
             const planW = maxVal > 0 ? (d.plan / maxVal) * 100 : 0;
             const factW = maxVal > 0 ? (d.fact / maxVal) * 100 : 0;
             const pct = d.pct;
+            const factColor = pct >= 100
+              ? "linear-gradient(90deg, #00FF94, #00DDAA)"
+              : pct >= 80
+                ? "linear-gradient(90deg, #FFAA00, #FF8800)"
+                : "linear-gradient(90deg, #FF3366, #FF0044)";
+            const factShadow = pct >= 100
+              ? "0 0 12px rgba(0,255,148,0.3)"
+              : pct >= 80
+                ? "0 0 12px rgba(255,170,0,0.3)"
+                : "0 0 12px rgba(255,51,102,0.3)";
             return (
-              <div key={d.name}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-white/70 font-medium">{d.name}</span>
-                  <span className={`text-xs font-bold ${pct >= 100 ? "text-emerald-400" : pct >= 80 ? "text-amber-400" : "text-red-400"}`}>
-                    {pct.toFixed(1)}%
-                  </span>
-                </div>
-                <div className="relative h-5 rounded-md bg-white/5 overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
-                    style={{ width: `${planW}%`, background: "rgba(124, 92, 255, 0.35)", borderRight: "2px dashed rgba(124, 92, 255, 0.7)" }}
-                  />
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
-                    style={{
-                      width: `${factW}%`,
-                      background: pct >= 100
-                        ? "linear-gradient(90deg, #00E064, #00C853)"
-                        : pct >= 80
-                          ? "linear-gradient(90deg, #FF9800, #FFB300)"
-                          : pct >= 60
-                            ? "linear-gradient(90deg, #E53935, #FF1744)"
-                            : "linear-gradient(90deg, #7B1FA2, #B71C1C)",
-                    }}
-                  />
-                  <div className="absolute inset-y-0 left-2 flex items-center gap-2 text-[10px] text-white/80 font-medium">
-                    <span>Факт: {fmtMoney(d.fact)}</span>
-                    <span className="text-white/30">|</span>
-                    <span className="text-white/50">План: {fmtMoney(d.plan)}</span>
+              <div key={d.name} className="group cursor-pointer" onClick={() => setSelectedCity(d.name)}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      idx === 0 ? "bg-emerald-500/20 text-emerald-400" :
+                      idx === barData.length - 1 ? "bg-red-500/20 text-red-400" :
+                      "bg-white/10 text-white/40"
+                    }`}>{idx + 1}</span>
+                    <span className="text-sm text-white/80 font-medium group-hover:text-white transition-colors">{d.name}</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/30">{fmtMoney(d.fact)} / {fmtMoney(d.plan)}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                      pct >= 100 ? "bg-emerald-500/15 text-emerald-400" :
+                      pct >= 80 ? "bg-amber-500/15 text-amber-400" :
+                      "bg-red-500/15 text-red-400"
+                    }`}>
+                      {pct.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="relative h-7 rounded-lg bg-white/[0.03] overflow-hidden group-hover:bg-white/[0.06] transition-colors">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-lg transition-all duration-700"
+                    style={{ width: `${planW}%`, background: "rgba(167,139,250,0.15)", borderRight: "2px dashed rgba(167,139,250,0.5)" }}
+                  />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-lg transition-all duration-700"
+                    style={{ width: `${factW}%`, background: factColor, boxShadow: factShadow }}
+                  />
                 </div>
               </div>
             );
