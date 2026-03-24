@@ -315,10 +315,10 @@ export default function VyrabotkaCityView({
               <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => fmtMoney(v)} width={70} />
               <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="cumPlan" name="План (нараст.)" stroke="#7C5CFF" strokeWidth={2}
-                fill="url(#gradCumPlan)" dot={{ fill: "#7C5CFF", r: 4 }} />
-              <Area type="monotone" dataKey="cumFact" name="Факт (нараст.)" stroke="#00E5CC" strokeWidth={2}
-                fill="url(#gradCumFact)" dot={{ fill: "#00E5CC", r: 4 }} />
+              <Area type="natural" dataKey="cumPlan" name="План (нараст.)" stroke="#7C5CFF" strokeWidth={2}
+                fill="url(#gradCumPlan)" dot={{ fill: "#7C5CFF", r: 3, strokeWidth: 0 }} />
+              <Area type="natural" dataKey="cumFact" name="Факт (нараст.)" stroke="#00E5CC" strokeWidth={2}
+                fill="url(#gradCumFact)" dot={{ fill: "#00E5CC", r: 3, strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
