@@ -10,6 +10,7 @@ import {
   MONTH_LABELS,
   AnimatedNumber,
   fmtMoney,
+  fmtShort,
   fmtFull,
   pctBg,
   getCityTotals,
@@ -310,13 +311,13 @@ export default function VyrabotkaCityView({
             <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
             <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-              tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+              tickFormatter={(v: number) => fmtShort(v)} width={70} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
             <Bar dataKey="plan" name="План" fill="url(#gradBarPlan)" radius={[6, 6, 0, 0]}
               label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                 value > 0 ? (
                   <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize={10}>
-                    {fmtMoney(value)}
+                    {fmtShort(value)}
                   </text>
                 ) : null
               }
@@ -325,7 +326,7 @@ export default function VyrabotkaCityView({
               label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                 value > 0 ? (
                   <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,229,204,0.6)" fontSize={10} fontWeight={600}>
-                    {fmtMoney(value)}
+                    {fmtShort(value)}
                   </text>
                 ) : null
               }
@@ -361,7 +362,7 @@ export default function VyrabotkaCityView({
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
               <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+                tickFormatter={(v: number) => fmtShort(v)} width={70} />
               <Tooltip content={<CustomTooltip />} />
               <Area type="natural" dataKey="cumPlan" name="План (нараст.)" stroke="#7C5CFF" strokeWidth={2}
                 fill="url(#gradCumPlan)" dot={{ fill: "#7C5CFF", r: 3, strokeWidth: 0 }} />
@@ -434,7 +435,7 @@ export default function VyrabotkaCityView({
             <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
             <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-              tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+              tickFormatter={(v: number) => fmtShort(v)} width={70} />
             <Tooltip cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }}
               content={({ active, payload, label }: { active?: boolean; payload?: Array<{ payload?: { plan?: number; fact?: number; deviation?: number } }>; label?: string }) => {
                 if (!active || !payload?.length) return null;
@@ -473,7 +474,7 @@ export default function VyrabotkaCityView({
                 return (
                   <text x={x + w / 2} y={y - 6} textAnchor="middle"
                     fill={isPositive ? "#00FF94" : "#FF3366"} fontSize={10} fontWeight={600}>
-                    {isPositive ? "+" : "−"}{fmtMoney(value)}
+                    {isPositive ? "+" : "−"}{fmtShort(value)}
                   </text>
                 );
               }}

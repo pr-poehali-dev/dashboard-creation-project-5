@@ -56,6 +56,13 @@ export function fmtMoney(v: number): string {
   return Math.round(v).toLocaleString("ru-RU") + " ₽";
 }
 
+export function fmtShort(v: number): string {
+  if (Math.abs(v) >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1).replace(".", ",")} млрд`;
+  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(0)} млн`;
+  if (Math.abs(v) >= 1_000) return `${Math.round(v / 1_000)} тыс`;
+  return v.toFixed(0);
+}
+
 export function fmtFull(v: number): string {
   return v.toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " ₽";
 }
