@@ -117,35 +117,80 @@ export default function VyrabotkaAllView({
         </div>
 
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-4">
-            <h3 className="font-display font-bold text-white text-lg">Рейтинг городов</h3>
-            <p className="text-white/40 text-xs mt-0.5">По % выполнения плана</p>
-          </div>
-          <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
-            {cityRanking.map((c, i) => (
-              <div key={c.city}
-                className="flex items-center gap-3 cursor-pointer rounded-xl p-2 transition-colors hover:bg-white/5"
-                onClick={() => setSelectedCity(c.city)}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  i === 0 ? "bg-emerald-500/20 text-emerald-400" :
-                  i === cityRanking.length - 1 ? "bg-red-500/20 text-red-400" :
-                  "bg-white/10 text-white/50"
-                }`}>
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{c.city}</p>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 mt-1">
-                    <div className={`h-full rounded-full transition-all duration-700 ${
-                      c.pct >= 100 ? "bg-emerald-500" : c.pct >= 80 ? "bg-amber-500" : "bg-red-500"
-                    }`} style={{ width: `${Math.min(c.pct, 120) / 1.2}%` }} />
-                  </div>
-                </div>
-                <span className={`text-sm font-bold shrink-0 ${pctColor(c.pct)}`}>
-                  {c.pct.toFixed(1)}%
-                </span>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h3 className="font-display font-bold text-white text-lg">Рейтинг городов</h3>
+              <p className="text-white/40 text-xs mt-0.5">По % выполнения плана</p>
+            </div>
+            {cityRanking.length > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/10 border border-amber-400/20">
+                <Icon name="Trophy" size={13} className="text-amber-400" />
+                <span className="text-amber-300 text-[11px] font-semibold">{cityRanking[0].city}</span>
               </div>
-            ))}
+            )}
+          </div>
+          <div className="space-y-1 max-h-[280px] overflow-y-auto pr-1">
+            {cityRanking.map((c, i) => {
+              const isLeader = i === 0;
+              const isTop3 = i < 3;
+              const total = cityRanking.length;
+              const maxPct = cityRanking[0]?.pct || 1;
+              const barWidth = (c.pct / maxPct) * 100;
+              const positionRatio = total > 1 ? i / (total - 1) : 0;
+
+              const rankBarColor = isLeader
+                ? "bg-gradient-to-r from-amber-400 to-yellow-300"
+                : positionRatio <= 0.33
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                : positionRatio <= 0.66
+                ? "bg-gradient-to-r from-blue-500 to-blue-400"
+                : "bg-gradient-to-r from-slate-500 to-slate-400";
+
+              const rankPctColor = isLeader
+                ? "text-amber-400"
+                : positionRatio <= 0.33
+                ? "text-emerald-400"
+                : positionRatio <= 0.66
+                ? "text-blue-400"
+                : "text-slate-400";
+
+              const medals = ["🥇", "🥈", "🥉"];
+
+              return (
+                <div key={c.city}
+                  className={`flex items-center gap-3 cursor-pointer rounded-xl transition-all duration-200 ${
+                    isLeader
+                      ? "p-3 bg-gradient-to-r from-amber-500/[0.12] via-yellow-500/[0.06] to-transparent border border-amber-500/20 hover:border-amber-400/40"
+                      : "p-2.5 hover:bg-white/5"
+                  }`}
+                  onClick={() => setSelectedCity(c.city)}>
+                  {isTop3 ? (
+                    <span className={`shrink-0 flex items-center justify-center ${isLeader ? "text-lg w-8 h-8" : "text-base w-7 h-7"}`}>
+                      {medals[i]}
+                    </span>
+                  ) : (
+                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-white/[0.06] text-white/35">
+                      {i + 1}
+                    </span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className={`text-sm font-medium truncate ${isLeader ? "text-amber-100 font-semibold" : "text-white"}`}>
+                        {c.city}
+                      </p>
+                      {isLeader && <Icon name="Crown" size={12} className="text-amber-400 shrink-0" />}
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/[0.06] mt-1.5 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-1000 ease-out ${rankBarColor}`}
+                        style={{ width: `${Math.min(barWidth, 100)}%` }} />
+                    </div>
+                  </div>
+                  <span className={`font-bold shrink-0 tabular-nums ${isLeader ? "text-base" : "text-sm"} ${rankPctColor}`}>
+                    {c.pct.toFixed(1)}%
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
