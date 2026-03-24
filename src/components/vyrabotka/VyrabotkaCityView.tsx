@@ -456,7 +456,7 @@ export default function VyrabotkaCityView({
                     </div>
                     <div className="flex items-center gap-2 text-sm mt-1 pt-1 border-t border-white/10">
                       <span className={`w-2 h-2 rounded-full ${(d.deviation || 0) >= 0 ? "bg-emerald-400" : "bg-red-400"}`} />
-                      <span className="text-white/70">Отклонение:</span>
+                      <span className="text-white/70">{(d.deviation || 0) >= 0 ? "Перевыполнение:" : "Недовыполнение:"}</span>
                       <span className={`font-semibold ml-auto ${(d.deviation || 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
                         {(d.deviation || 0) >= 0 ? "+" : ""}{fmtFull(d.deviation || 0)}
                       </span>
