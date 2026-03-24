@@ -793,18 +793,46 @@ export default function VyrabotkaView() {
               <h3 className="font-display font-bold text-white text-lg">План vs Факт по городам</h3>
               <p className="text-white/40 text-xs mt-0.5">{selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно за период"}</p>
             </div>
-            <ResponsiveContainer width="100%" height={480}>
-              <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
-                <XAxis type="number" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v: number) => fmtMoney(v)} />
-                <YAxis dataKey="name" type="category" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false}
-                  tickLine={false} width={120} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[0, 4, 4, 0]} barSize={12} />
-                <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[0, 4, 4, 0]} barSize={12} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-3">
+              {barData.map((d) => {
+                const maxVal = Math.max(...barData.map(b => b.plan));
+                const planW = maxVal > 0 ? (d.plan / maxVal) * 100 : 0;
+                const factW = maxVal > 0 ? (d.fact / maxVal) * 100 : 0;
+                const pct = d.pct;
+                return (
+                  <div key={d.name}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-white/70 font-medium">{d.name}</span>
+                      <span className={`text-xs font-bold ${pct >= 100 ? "text-emerald-400" : pct >= 80 ? "text-amber-400" : "text-red-400"}`}>
+                        {pct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="relative h-5 rounded-md bg-white/5 overflow-hidden">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
+                        style={{ width: `${planW}%`, background: "rgba(124, 92, 255, 0.2)", borderRight: "2px dashed rgba(124, 92, 255, 0.5)" }}
+                      />
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-md transition-all duration-700"
+                        style={{
+                          width: `${factW}%`,
+                          background: pct >= 100
+                            ? "linear-gradient(90deg, rgba(0,224,100,0.7), rgba(0,200,83,0.9))"
+                            : pct >= 80
+                              ? "linear-gradient(90deg, rgba(255,152,0,0.7), rgba(255,183,77,0.9))"
+                              : "linear-gradient(90deg, rgba(229,57,53,0.7), rgba(255,23,68,0.9))",
+                        }}
+                      />
+                      <div className="absolute inset-y-0 left-2 flex items-center gap-2 text-[10px] text-white/80 font-medium">
+                        <span>Факт: {fmtMoney(d.fact)}</span>
+                        <span className="text-white/30">|</span>
+                        <span className="text-white/50">План: {fmtMoney(d.plan)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* ALL CITIES VIEW: Summary table */}
