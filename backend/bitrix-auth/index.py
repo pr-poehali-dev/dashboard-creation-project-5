@@ -94,14 +94,18 @@ def handler(event: dict, context) -> dict:
             if not code:
                 return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "code required"})}
 
-            token_url = f"{portal_url}/oauth/token/"
-            token_resp = fetch_url(token_url, {
+            client_id = os.environ["BITRIX_CLIENT_ID"]
+            client_secret = os.environ["BITRIX_CLIENT_SECRET"]
+            token_params = urlencode({
                 "grant_type": "authorization_code",
-                "client_id": os.environ["BITRIX_CLIENT_ID"],
-                "client_secret": os.environ["BITRIX_CLIENT_SECRET"],
+                "client_id": client_id,
+                "client_secret": client_secret,
                 "code": code,
                 "redirect_uri": redirect_uri,
             })
+            token_url = f"{portal_url}/oauth/token/?{token_params}"
+            print(f"[exchange] token_url={token_url}")
+            token_resp = fetch_url(token_url)
 
             if "access_token" not in token_resp:
                 return {"statusCode": 401, "headers": CORS, "body": json.dumps({"error": "invalid_code", "details": token_resp})}
