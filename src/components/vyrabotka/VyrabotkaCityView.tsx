@@ -398,7 +398,7 @@ export default function VyrabotkaCityView({
                 itemStyle={{ color: "#fff" }} />
               <ReferenceLine y={100} stroke={isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)"} strokeDasharray="6 4" strokeWidth={1.5}
                 label={{ value: "100%", position: "right", fill: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)", fontSize: 11 }} />
-              <Area type="natural" dataKey="pct" stroke="url(#)" strokeWidth={0} fill="url(#gradPctBelow)" />
+              <Area type="natural" dataKey="pct" stroke="url(#)" strokeWidth={0} fill="url(#gradPctBelow)" tooltipType="none" />
               <Area type="natural" dataKey="pct" name="Выполнение"
                 stroke={(() => { const filtered = monthlyData.filter(d => d.fact > 0); const last = filtered[filtered.length - 1]; return last && last.pct >= 100 ? "#00E5CC" : "#7C5CFF"; })()}
                 strokeWidth={2.5}
@@ -436,7 +436,35 @@ export default function VyrabotkaCityView({
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => fmtMoney(v)} width={70} />
             <ReferenceLine y={0} stroke={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"} strokeWidth={1} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
+            <Tooltip cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }}
+              content={({ active, payload, label }: { active?: boolean; payload?: Array<{ payload?: { plan?: number; fact?: number; deviation?: number } }>; label?: string }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0]?.payload;
+                if (!d) return null;
+                return (
+                  <div className="chart-tooltip p-3 rounded-xl" style={{ minWidth: 180 }}>
+                    <p className="text-xs text-white/50 mb-2">{label}</p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="w-2 h-2 rounded-full bg-[#7C5CFF]" />
+                      <span className="text-white/70">План:</span>
+                      <span className="font-semibold text-white ml-auto">{fmtFull(d.plan || 0)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="w-2 h-2 rounded-full bg-[#00E5CC]" />
+                      <span className="text-white/70">Факт:</span>
+                      <span className="font-semibold text-white ml-auto">{fmtFull(d.fact || 0)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm mt-1 pt-1 border-t border-white/10">
+                      <span className={`w-2 h-2 rounded-full ${(d.deviation || 0) >= 0 ? "bg-emerald-400" : "bg-red-400"}`} />
+                      <span className="text-white/70">Отклонение:</span>
+                      <span className={`font-semibold ml-auto ${(d.deviation || 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {(d.deviation || 0) >= 0 ? "+" : ""}{fmtFull(d.deviation || 0)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
+            />
             <Bar dataKey="deviation" name="Отклонение" radius={[6, 6, 6, 6]}
               label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                 value !== 0 ? (
