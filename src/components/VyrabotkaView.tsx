@@ -202,7 +202,7 @@ export default function VyrabotkaView() {
   const deviationData = DATA.map(d => {
     const t = getCityTotals(d, selectedMonth);
     return { name: d.city, value: t.diff, pct: t.pct };
-  }).filter(d => d.value !== 0).sort((a, b) => b.value - a.value);
+  }).filter(d => d.value !== 0).sort((a, b) => b.pct - a.pct);
 
   const kpiKey = `${selectedCity || "all"}-${selectedMonth || "all"}`;
 
