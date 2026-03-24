@@ -335,278 +335,357 @@ export default function VyrabotkaView() {
         ))}
       </div>
 
-      {/* Row 1: Monthly bar + Ranking */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">
-              {selectedCity ? `${selectedCity} · Динамика` : "Динамика по месяцам"}
-            </h3>
-            <p className="text-white/40 text-xs mt-0.5">План vs Факт · 2026</p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
-              <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v: number) => fmtMoney(v)} width={70} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[4, 4, 0, 0]} barSize={28} />
-              <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[4, 4, 0, 0]} barSize={28} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-4">
-            <h3 className="font-display font-bold text-white text-lg">Рейтинг городов</h3>
-            <p className="text-white/40 text-xs mt-0.5">По % выполнения плана</p>
-          </div>
-          <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
-            {cityRanking.map((c, i) => (
-              <div key={c.city}
-                className={`flex items-center gap-3 cursor-pointer rounded-xl p-2 transition-colors ${
-                  selectedCity === c.city ? "bg-white/10" : "hover:bg-white/5"
-                }`}
-                onClick={() => setSelectedCity(selectedCity === c.city ? null : c.city)}>
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  i === 0 ? "bg-emerald-500/20 text-emerald-400" :
-                  i === cityRanking.length - 1 ? "bg-red-500/20 text-red-400" :
-                  "bg-white/10 text-white/50"
-                }`}>
-                  {i + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{c.city}</p>
-                  <div className="w-full h-1.5 rounded-full bg-white/10 mt-1">
-                    <div className={`h-full rounded-full transition-all duration-700 ${
-                      c.pct >= 100 ? "bg-emerald-500" : c.pct >= 80 ? "bg-amber-500" : "bg-red-500"
-                    }`} style={{ width: `${Math.min(c.pct, 120) / 1.2}%` }} />
-                  </div>
-                </div>
-                <span className={`text-sm font-bold shrink-0 ${pctColor(c.pct)}`}>
-                  {c.pct.toFixed(1)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Row 2: Pie chart + Deviation chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">Доля городов в выработке</h3>
-            <p className="text-white/40 text-xs mt-0.5">Фактическая выработка</p>
-          </div>
-          <div className="flex flex-col lg:flex-row items-center gap-4">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={55} outerRadius={95}
-                  dataKey="value" nameKey="name" paddingAngle={2}>
-                  {pieDataFact.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} stroke="transparent" />
-                  ))}
-                </Pie>
-                <Tooltip content={<PieTooltip />} />
-              </PieChart>
+      {selectedCity ? (
+        <>
+          {/* CITY VIEW: Monthly dynamics */}
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="mb-6">
+              <h3 className="font-display font-bold text-white text-lg">{selectedCity} · План vs Факт</h3>
+              <p className="text-white/40 text-xs mt-0.5">По месяцам · 2026</p>
+            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[4, 4, 0, 0]} barSize={32} />
+                <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[4, 4, 0, 0]} barSize={32} />
+              </BarChart>
             </ResponsiveContainer>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs w-full lg:w-auto">
-              {pieDataFact.map((d, i) => (
-                <div key={d.name} className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                  <span className="text-white/60 truncate">{d.name}</span>
-                </div>
-              ))}
+          </div>
+
+          {/* CITY VIEW: % выполнения + отклонение по месяцам */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-6">
+                <h3 className="font-display font-bold text-white text-lg">% выполнения плана</h3>
+                <p className="text-white/40 text-xs mt-0.5">Динамика по месяцам</p>
+              </div>
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gradPctCity" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v: number) => `${v}%`} domain={[0, 'auto']} />
+                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Выполнение"]}
+                    contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
+                    labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                    itemStyle={{ color: "#fff" }} />
+                  <Area type="monotone" dataKey="pct" stroke="#7C5CFF" strokeWidth={3}
+                    fill="url(#gradPctCity)" dot={{ fill: "#7C5CFF", r: 5 }} activeDot={{ r: 7 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-6">
+                <h3 className="font-display font-bold text-white text-lg">Отклонение по месяцам</h3>
+                <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
+              </div>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan }))} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="deviation" name="Отклонение" radius={[4, 4, 0, 0]} barSize={32}>
+                    {monthlyData.filter(d => d.fact > 0).map((d, i) => (
+                      <Cell key={i} fill={d.fact - d.plan >= 0 ? "#00E064" : "#FF2244"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </div>
 
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">Отклонение от плана</h3>
-            <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
+          {/* CITY VIEW: Detail table */}
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="mb-6">
+              <h3 className="font-display font-bold text-white text-lg">{selectedCity} · Помесячная детализация</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left text-white/50 font-medium py-3 px-3">Месяц</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">План</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">Факт</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">Отклонение</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeMonths.map(m => {
+                    const cd = DATA.find(d => d.city === selectedCity);
+                    const md = cd?.months[m];
+                    if (!md) return null;
+                    const diff = md.fact - md.plan;
+                    const pct = md.plan > 0 ? (md.fact / md.plan) * 100 : 0;
+                    return (
+                      <tr key={m} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                        <td className="py-3 px-3 text-white font-medium">{MONTH_LABELS[m]}</td>
+                        <td className="py-3 px-3 text-right text-white/70">{fmtFull(md.plan)}</td>
+                        <td className="py-3 px-3 text-right text-white">{md.fact > 0 ? fmtFull(md.fact) : "—"}</td>
+                        <td className={`py-3 px-3 text-right font-semibold ${diff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                          {md.fact > 0 ? ((diff >= 0 ? "+" : "") + fmtFull(diff)) : "—"}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          {md.fact > 0 ? (
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(pct)}`}>
+                              {pct.toFixed(1)}%
+                            </span>
+                          ) : "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-white/20">
+                    <td className="py-3 px-3 text-white font-bold">Итого</td>
+                    <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalPlan)}</td>
+                    <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalFact)}</td>
+                    <td className={`py-3 px-3 text-right font-bold ${totalDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {(totalDiff >= 0 ? "+" : "") + fmtFull(totalDiff)}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(totalPct)}`}>
+                        {totalPct.toFixed(1)}%
+                      </span>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={deviationData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
-              <XAxis type="number" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v: number) => fmtMoney(v)} />
-              <YAxis dataKey="name" type="category" tick={{ fill: axisColor, fontSize: 10 }} axisLine={false}
-                tickLine={false} width={110} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="value" name="Отклонение" radius={[0, 4, 4, 0]} barSize={16}>
-                {deviationData.map((entry, i) => (
-                  <Cell key={i} fill={entry.value >= 0 ? "#00E064" : "#FF2244"} />
+        </>
+      ) : (
+        <>
+          {/* ALL CITIES VIEW: Monthly dynamics + Ranking */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-6">
+                <h3 className="font-display font-bold text-white text-lg">Динамика по месяцам</h3>
+                <p className="text-white/40 text-xs mt-0.5">План vs Факт · 2026</p>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v: number) => fmtMoney(v)} width={70} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[4, 4, 0, 0]} barSize={28} />
+                  <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[4, 4, 0, 0]} barSize={28} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-4">
+                <h3 className="font-display font-bold text-white text-lg">Рейтинг городов</h3>
+                <p className="text-white/40 text-xs mt-0.5">По % выполнения плана</p>
+              </div>
+              <div className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1">
+                {cityRanking.map((c, i) => (
+                  <div key={c.city}
+                    className="flex items-center gap-3 cursor-pointer rounded-xl p-2 transition-colors hover:bg-white/5"
+                    onClick={() => setSelectedCity(c.city)}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      i === 0 ? "bg-emerald-500/20 text-emerald-400" :
+                      i === cityRanking.length - 1 ? "bg-red-500/20 text-red-400" :
+                      "bg-white/10 text-white/50"
+                    }`}>
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{c.city}</p>
+                      <div className="w-full h-1.5 rounded-full bg-white/10 mt-1">
+                        <div className={`h-full rounded-full transition-all duration-700 ${
+                          c.pct >= 100 ? "bg-emerald-500" : c.pct >= 80 ? "bg-amber-500" : "bg-red-500"
+                        }`} style={{ width: `${Math.min(c.pct, 120) / 1.2}%` }} />
+                      </div>
+                    </div>
+                    <span className={`text-sm font-bold shrink-0 ${pctColor(c.pct)}`}>
+                      {c.pct.toFixed(1)}%
+                    </span>
+                  </div>
                 ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Row 3: Area chart — % выполнения по месяцам */}
-      <div className="glass rounded-2xl p-6 animate-fade-in-up">
-        <div className="mb-6">
-          <h3 className="font-display font-bold text-white text-lg">
-            {selectedCity ? `${selectedCity} · % выполнения` : "% выполнения по месяцам"}
-          </h3>
-          <p className="text-white/40 text-xs mt-0.5">Динамика процента выполнения плана</p>
-        </div>
-        <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-            <defs>
-              <linearGradient id="gradPct" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
-            <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-              tickFormatter={(v: number) => `${v}%`} domain={[0, 'auto']} />
-            <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Выполнение"]}
-              contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
-              labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-              itemStyle={{ color: "#fff" }} />
-            <Area type="monotone" dataKey="pct" stroke="#7C5CFF" strokeWidth={3}
-              fill="url(#gradPct)" dot={{ fill: "#7C5CFF", r: 5 }} activeDot={{ r: 7 }} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Row 4: Horizontal bar — plan vs fact (only when all cities) */}
-      {!selectedCity && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">План vs Факт по городам</h3>
-            <p className="text-white/40 text-xs mt-0.5">{selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно за период"}</p>
+              </div>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={480}>
-            <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
-              <XAxis type="number" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v: number) => fmtMoney(v)} />
-              <YAxis dataKey="name" type="category" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false}
-                tickLine={false} width={120} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[0, 4, 4, 0]} barSize={12} />
-              <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[0, 4, 4, 0]} barSize={12} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
 
-      {/* City detail table */}
-      {selectedCity && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">{selectedCity} · Помесячная детализация</h3>
+          {/* ALL CITIES VIEW: Pie + Deviation */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-6">
+                <h3 className="font-display font-bold text-white text-lg">Доля городов в выработке</h3>
+                <p className="text-white/40 text-xs mt-0.5">Фактическая выработка</p>
+              </div>
+              <div className="flex flex-col lg:flex-row items-center gap-4">
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={55} outerRadius={95}
+                      dataKey="value" nameKey="name" paddingAngle={2}>
+                      {pieDataFact.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} stroke="transparent" />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<PieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs w-full lg:w-auto">
+                  {pieDataFact.map((d) => (
+                    <div key={d.name} className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
+                      <span className="text-white/60 truncate">{d.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-6">
+                <h3 className="font-display font-bold text-white text-lg">Отклонение от плана</h3>
+                <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={deviationData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                  <XAxis type="number" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v: number) => fmtMoney(v)} />
+                  <YAxis dataKey="name" type="category" tick={{ fill: axisColor, fontSize: 10 }} axisLine={false}
+                    tickLine={false} width={110} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="value" name="Отклонение" radius={[0, 4, 4, 0]} barSize={16}>
+                    {deviationData.map((entry, i) => (
+                      <Cell key={i} fill={entry.value >= 0 ? "#00E064" : "#FF2244"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left text-white/50 font-medium py-3 px-3">Месяц</th>
-                  <th className="text-right text-white/50 font-medium py-3 px-3">План</th>
-                  <th className="text-right text-white/50 font-medium py-3 px-3">Факт</th>
-                  <th className="text-right text-white/50 font-medium py-3 px-3">Отклонение</th>
-                  <th className="text-right text-white/50 font-medium py-3 px-3">%</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeMonths.map(m => {
-                  const cd = DATA.find(d => d.city === selectedCity);
-                  const md = cd?.months[m];
-                  if (!md) return null;
-                  const diff = md.fact - md.plan;
-                  const pct = md.plan > 0 ? (md.fact / md.plan) * 100 : 0;
-                  return (
-                    <tr key={m} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                      <td className="py-3 px-3 text-white font-medium">{MONTH_LABELS[m]}</td>
-                      <td className="py-3 px-3 text-right text-white/70">{fmtFull(md.plan)}</td>
-                      <td className="py-3 px-3 text-right text-white">{md.fact > 0 ? fmtFull(md.fact) : "—"}</td>
-                      <td className={`py-3 px-3 text-right font-semibold ${diff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                        {md.fact > 0 ? ((diff >= 0 ? "+" : "") + fmtFull(diff)) : "—"}
+
+          {/* ALL CITIES VIEW: % выполнения */}
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="mb-6">
+              <h3 className="font-display font-bold text-white text-lg">% выполнения по месяцам</h3>
+              <p className="text-white/40 text-xs mt-0.5">Динамика процента выполнения плана</p>
+            </div>
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradPct" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v: number) => `${v}%`} domain={[0, 'auto']} />
+                <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, "Выполнение"]}
+                  contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
+                  labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                  itemStyle={{ color: "#fff" }} />
+                <Area type="monotone" dataKey="pct" stroke="#7C5CFF" strokeWidth={3}
+                  fill="url(#gradPct)" dot={{ fill: "#7C5CFF", r: 5 }} activeDot={{ r: 7 }} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* ALL CITIES VIEW: Horizontal bar */}
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="mb-6">
+              <h3 className="font-display font-bold text-white text-lg">План vs Факт по городам</h3>
+              <p className="text-white/40 text-xs mt-0.5">{selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно за период"}</p>
+            </div>
+            <ResponsiveContainer width="100%" height={480}>
+              <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
+                <XAxis type="number" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v: number) => fmtMoney(v)} />
+                <YAxis dataKey="name" type="category" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false}
+                  tickLine={false} width={120} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[0, 4, 4, 0]} barSize={12} />
+                <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[0, 4, 4, 0]} barSize={12} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* ALL CITIES VIEW: Summary table */}
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="mb-6">
+              <h3 className="font-display font-bold text-white text-lg">Сводная таблица</h3>
+              <p className="text-white/40 text-xs mt-0.5">Все города · {selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно"}</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left text-white/50 font-medium py-3 px-3">#</th>
+                    <th className="text-left text-white/50 font-medium py-3 px-3">Город</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">План</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">Факт</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">Отклонение</th>
+                    <th className="text-right text-white/50 font-medium py-3 px-3">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cityRanking.map((d, i) => (
+                    <tr key={d.city}
+                      className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      onClick={() => setSelectedCity(d.city)}>
+                      <td className="py-3 px-3 text-white/40 text-xs">{i + 1}</td>
+                      <td className="py-3 px-3 text-white font-medium">{d.city}</td>
+                      <td className="py-3 px-3 text-right text-white/70">{fmtFull(d.plan)}</td>
+                      <td className="py-3 px-3 text-right text-white">{d.fact > 0 ? fmtFull(d.fact) : "—"}</td>
+                      <td className={`py-3 px-3 text-right font-semibold ${d.diff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                        {d.fact > 0 ? ((d.diff >= 0 ? "+" : "") + fmtFull(d.diff)) : "—"}
                       </td>
                       <td className="py-3 px-3 text-right">
-                        {md.fact > 0 ? (
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(pct)}`}>
-                            {pct.toFixed(1)}%
+                        {d.fact > 0 ? (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(d.pct)}`}>
+                            {d.pct.toFixed(1)}%
                           </span>
                         ) : "—"}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Summary table */}
-      <div className="glass rounded-2xl p-6 animate-fade-in-up">
-        <div className="mb-6">
-          <h3 className="font-display font-bold text-white text-lg">Сводная таблица</h3>
-          <p className="text-white/40 text-xs mt-0.5">Все города · {selectedMonth ? MONTH_LABELS[selectedMonth] : "Суммарно"}</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10">
-                <th className="text-left text-white/50 font-medium py-3 px-3">#</th>
-                <th className="text-left text-white/50 font-medium py-3 px-3">Город</th>
-                <th className="text-right text-white/50 font-medium py-3 px-3">План</th>
-                <th className="text-right text-white/50 font-medium py-3 px-3">Факт</th>
-                <th className="text-right text-white/50 font-medium py-3 px-3">Отклонение</th>
-                <th className="text-right text-white/50 font-medium py-3 px-3">%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cityRanking.map((d, i) => (
-                <tr key={d.city}
-                  className={`border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${
-                    selectedCity === d.city ? "bg-white/10" : ""
-                  }`}
-                  onClick={() => setSelectedCity(selectedCity === d.city ? null : d.city)}>
-                  <td className="py-3 px-3 text-white/40 text-xs">{i + 1}</td>
-                  <td className="py-3 px-3 text-white font-medium">{d.city}</td>
-                  <td className="py-3 px-3 text-right text-white/70">{fmtFull(d.plan)}</td>
-                  <td className="py-3 px-3 text-right text-white">{d.fact > 0 ? fmtFull(d.fact) : "—"}</td>
-                  <td className={`py-3 px-3 text-right font-semibold ${d.diff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {d.fact > 0 ? ((d.diff >= 0 ? "+" : "") + fmtFull(d.diff)) : "—"}
-                  </td>
-                  <td className="py-3 px-3 text-right">
-                    {d.fact > 0 ? (
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(d.pct)}`}>
-                        {d.pct.toFixed(1)}%
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-white/20">
+                    <td className="py-3 px-3"></td>
+                    <td className="py-3 px-3 text-white font-bold">Итого</td>
+                    <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalPlan)}</td>
+                    <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalFact)}</td>
+                    <td className={`py-3 px-3 text-right font-bold ${totalDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {(totalDiff >= 0 ? "+" : "") + fmtFull(totalDiff)}
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(totalPct)}`}>
+                        {totalPct.toFixed(1)}%
                       </span>
-                    ) : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t-2 border-white/20">
-                <td className="py-3 px-3"></td>
-                <td className="py-3 px-3 text-white font-bold">Итого</td>
-                <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalPlan)}</td>
-                <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalFact)}</td>
-                <td className={`py-3 px-3 text-right font-bold ${totalDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                  {(totalDiff >= 0 ? "+" : "") + fmtFull(totalDiff)}
-                </td>
-                <td className="py-3 px-3 text-right">
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${pctBg(totalPct)}`}>
-                    {totalPct.toFixed(1)}%
-                  </span>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
