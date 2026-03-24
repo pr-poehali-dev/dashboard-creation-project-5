@@ -43,10 +43,11 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-sm animate-fade-in-up">
         <div className="glass rounded-3xl p-8">
           <div className="flex justify-center mb-6">
-            <div className="w-14 h-14 gradient-violet rounded-2xl flex items-center justify-center"
-              style={{ boxShadow: "0 8px 32px rgba(124,92,255,0.4)" }}>
-              <Icon name="Shield" size={24} className="text-white" />
-            </div>
+            <img
+              src="https://cdn.poehali.dev/projects/4ade81fe-7dfe-4328-81a3-9fe38e0d8baa/bucket/3d383b24-7864-41cd-9864-ea05cc49ff51.png"
+              alt="Dream Team"
+              className="h-12 object-contain"
+            />
           </div>
 
           <h1 className="font-display font-black text-2xl text-white text-center mb-1">
