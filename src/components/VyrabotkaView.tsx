@@ -91,7 +91,7 @@ export default function VyrabotkaView() {
   const barData = DATA.map(d => {
     const t = getCityTotals(d, activeMonths, selectedMonth);
     return { name: d.city, plan: t.plan, fact: t.fact, pct: t.pct };
-  }).sort((a, b) => b.plan - a.plan);
+  }).sort((a, b) => b.pct - a.pct);
 
   const pieDataFact = DATA.map((d, i) => {
     const t = getCityTotals(d, activeMonths, selectedMonth);
