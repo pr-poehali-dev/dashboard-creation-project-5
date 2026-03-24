@@ -638,8 +638,16 @@ export default function VyrabotkaView() {
                   <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
                     tickFormatter={(v: number) => fmtMoney(v)} width={70} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="plan" name="План" fill="#7C5CFF" radius={[4, 4, 0, 0]} barSize={28} />
-                  <Bar dataKey="fact" name="Факт" fill="#00E5CC" radius={[4, 4, 0, 0]} barSize={28} />
+                  <Bar dataKey="plan" name="План" radius={[4, 4, 0, 0]} barSize={28}>
+                    {monthlyData.map((d) => (
+                      <Cell key={d.shortName} fill="#7C5CFF" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
+                    ))}
+                  </Bar>
+                  <Bar dataKey="fact" name="Факт" radius={[4, 4, 0, 0]} barSize={28}>
+                    {monthlyData.map((d) => (
+                      <Cell key={d.shortName} fill="#00E5CC" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
