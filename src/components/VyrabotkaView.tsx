@@ -719,23 +719,43 @@ export default function VyrabotkaView() {
             <div className="glass rounded-2xl p-6 animate-fade-in-up">
               <div className="mb-6">
                 <h3 className="font-display font-bold text-white text-lg">Отклонение от плана</h3>
-                <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
+                <p className="text-white/40 text-xs mt-0.5">% выполнения по городам</p>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={deviationData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
-                  <XAxis type="number" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                    tickFormatter={(v: number) => fmtMoney(v)} />
-                  <YAxis dataKey="name" type="category" tick={{ fill: axisColor, fontSize: 10 }} axisLine={false}
-                    tickLine={false} width={110} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" name="Отклонение" radius={[0, 4, 4, 0]} barSize={16}>
-                    {deviationData.map((entry, i) => (
-                      <Cell key={i} fill={entry.value >= 0 ? "#00E064" : "#FF2244"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="space-y-2">
+                {deviationData.map((entry) => {
+                  const isPositive = entry.value >= 0;
+                  const pct = entry.pct;
+                  const barWidth = Math.min(pct, 130);
+                  return (
+                    <div key={entry.name} className="flex items-center gap-3">
+                      <span className="text-xs text-white/60 w-[110px] shrink-0 truncate text-right">{entry.name}</span>
+                      <div className="flex-1 h-6 rounded-md bg-white/5 relative overflow-hidden">
+                        <div
+                          className="h-full rounded-md transition-all duration-700"
+                          style={{
+                            width: `${(barWidth / 130) * 100}%`,
+                            background: isPositive
+                              ? `linear-gradient(90deg, #00E064, #00C853)`
+                              : pct >= 80
+                                ? `linear-gradient(90deg, #FF9800, #FFB74D)`
+                                : pct >= 60
+                                  ? `linear-gradient(90deg, #FF5722, #FF8A65)`
+                                  : `linear-gradient(90deg, #D32F2F, #FF2244)`,
+                          }}
+                        />
+                        {pct >= 100 && (
+                          <div className="absolute left-0 top-0 h-full border-r-2 border-white/30" style={{ width: `${(100 / 130) * 100}%` }} />
+                        )}
+                      </div>
+                      <span className={`text-xs font-bold w-[52px] shrink-0 text-right ${
+                        isPositive ? "text-emerald-400" : pct >= 80 ? "text-amber-400" : "text-red-400"
+                      }`}>
+                        {pct.toFixed(1)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
