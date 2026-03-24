@@ -25,10 +25,10 @@ export const MONTH_LABELS: Record<string, string> = {
 };
 
 export const PIE_COLORS = [
-  "#6C3FFF", "#00FFDD", "#FF007A", "#FF6B00",
-  "#00E064", "#0077FF", "#FFD000", "#FF2244",
-  "#CC00FF", "#FF6EC7", "#00C2FF", "#FFB800",
-  "#7C5CFF", "#00E5CC", "#FF3CAC", "#FF9500",
+  "#7B2FFF", "#00FFD5", "#FF0066", "#FF7700",
+  "#00FF6E", "#0088FF", "#FFE000", "#FF1133",
+  "#DD00FF", "#FF55CC", "#00CCFF", "#FFC800",
+  "#8855FF", "#00FFBB", "#FF33AA", "#FFAA00",
 ];
 
 export const DASHBOARD_ID = 6;

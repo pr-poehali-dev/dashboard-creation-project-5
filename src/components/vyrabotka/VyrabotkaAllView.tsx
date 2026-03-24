@@ -155,25 +155,48 @@ export default function VyrabotkaAllView({
             <h3 className="font-display font-bold text-white text-lg">Доля городов в выработке</h3>
             <p className="text-white/40 text-xs mt-0.5">Фактическая выработка</p>
           </div>
-          <div className="flex flex-col lg:flex-row items-center gap-4">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={55} outerRadius={95}
-                  dataKey="value" nameKey="name" paddingAngle={2}>
-                  {pieDataFact.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} stroke="transparent" />
-                  ))}
-                </Pie>
-                <Tooltip content={<PieTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs w-full lg:w-auto">
-              {pieDataFact.map((d) => (
-                <div key={d.name} className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: d.color }} />
-                  <span className="text-white/60 truncate">{d.name}</span>
+          <div className="flex flex-col items-center gap-5">
+            <div className="relative w-full">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <defs>
+                    {pieDataFact.map((entry, i) => (
+                      <filter key={`glow-${i}`} id={`pieGlow${i}`}>
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                      </filter>
+                    ))}
+                  </defs>
+                  <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={60} outerRadius={100}
+                    dataKey="value" nameKey="name" paddingAngle={3} strokeWidth={2}
+                    animationBegin={0} animationDuration={1000}>
+                    {pieDataFact.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} stroke={entry.color} strokeOpacity={0.3}
+                        style={{ filter: `drop-shadow(0 0 8px ${entry.color}66)` }} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<PieTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="text-center">
+                  <p className="text-white/40 text-[10px]">Всего</p>
+                  <p className="text-white font-bold text-sm">{fmtMoney(pieDataFact.reduce((s, d) => s + d.value, 0))}</p>
                 </div>
-              ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-xs w-full">
+              {pieDataFact.map((d) => {
+                const total = pieDataFact.reduce((s, p) => s + p.value, 0);
+                const share = total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
+                return (
+                  <div key={d.name} className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-[3px] shrink-0" style={{ background: d.color, boxShadow: `0 0 8px ${d.color}55` }} />
+                    <span className="text-white/60 truncate flex-1">{d.name}</span>
+                    <span className="text-white/40 font-medium shrink-0">{share}%</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
