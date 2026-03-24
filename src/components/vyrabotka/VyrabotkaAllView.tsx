@@ -155,13 +155,37 @@ export default function VyrabotkaAllView({
             <h3 className="font-display font-bold text-white text-lg">Доля городов в выработке</h3>
             <p className="text-white/40 text-xs mt-0.5">Фактическая выработка</p>
           </div>
-          <div className="flex flex-col items-center gap-5">
-            <div className="relative w-full">
-              <ResponsiveContainer width="100%" height={260}>
+          <div className="flex flex-col lg:flex-row items-center gap-4">
+            <div className="relative w-full lg:w-auto lg:flex-shrink-0">
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={pieDataFact} cx="50%" cy="50%" innerRadius={65} outerRadius={100}
-                    dataKey="value" nameKey="name" paddingAngle={2} strokeWidth={0}
-                    animationBegin={0} animationDuration={800}>
+                  <defs>
+                    <filter id="pieShadow">
+                      <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="rgba(0,0,0,0.5)" />
+                    </filter>
+                  </defs>
+                  <Pie data={pieDataFact} cx="50%" cy="50%" outerRadius={110}
+                    dataKey="value" nameKey="name" paddingAngle={1.5}
+                    stroke="rgba(0,0,0,0.3)" strokeWidth={1}
+                    animationBegin={0} animationDuration={800}
+                    style={{ filter: "url(#pieShadow)" }}
+                    label={({ cx, cy, midAngle, outerRadius: oR, percent }: {
+                      cx: number; cy: number; midAngle: number; outerRadius: number; percent: number;
+                    }) => {
+                      if (percent < 0.04) return null;
+                      const rad = (midAngle * Math.PI) / 180;
+                      const r = oR * 0.7;
+                      const x = cx + r * Math.cos(rad);
+                      const y = cy - r * Math.sin(rad);
+                      return (
+                        <text x={x} y={y} textAnchor="middle" dominantBaseline="central"
+                          fill="white" fontSize={11} fontWeight={700}
+                          style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
+                          {(percent * 100).toFixed(0)}%
+                        </text>
+                      );
+                    }}
+                    labelLine={false}>
                     {pieDataFact.map((entry, i) => (
                       <Cell key={i} fill={entry.color} />
                     ))}
@@ -169,22 +193,16 @@ export default function VyrabotkaAllView({
                   <Tooltip content={<PieTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="text-center">
-                  <p className="text-white/40 text-[10px]">Всего</p>
-                  <p className="text-white font-bold text-base">{fmtMoney(pieDataFact.reduce((s, d) => s + d.value, 0))}</p>
-                </div>
-              </div>
             </div>
-            <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-xs w-full">
+            <div className="flex flex-col gap-2 text-xs w-full lg:w-auto">
               {pieDataFact.map((d) => {
                 const total = pieDataFact.reduce((s, p) => s + p.value, 0);
                 const share = total > 0 ? ((d.value / total) * 100).toFixed(1) : "0";
                 return (
                   <div key={d.name} className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
-                    <span className="text-white/60 truncate flex-1">{d.name}</span>
-                    <span className="font-semibold shrink-0" style={{ color: d.color }}>{share}%</span>
+                    <span className="w-3 h-3 rounded-[2px] shrink-0" style={{ background: d.color }} />
+                    <span className="text-white/70 truncate">{d.name}</span>
+                    <span className="font-bold text-white/90 shrink-0 ml-auto">{share}%</span>
                   </div>
                 );
               })}
