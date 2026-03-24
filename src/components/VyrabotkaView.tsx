@@ -739,8 +739,8 @@ export default function VyrabotkaView() {
                               : pct >= 80
                                 ? `linear-gradient(90deg, #FF9800, #FFB74D)`
                                 : pct >= 60
-                                  ? `linear-gradient(90deg, #FF5722, #FF8A65)`
-                                  : `linear-gradient(90deg, #D32F2F, #FF2244)`,
+                                  ? `linear-gradient(90deg, #E53935, #FF1744)`
+                                  : `linear-gradient(90deg, #7B1FA2, #B71C1C)`,
                           }}
                         />
                         {pct >= 100 && (
