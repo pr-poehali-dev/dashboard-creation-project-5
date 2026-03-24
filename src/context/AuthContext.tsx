@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const exchangeCode = useCallback(async (code: string) => {
     try {
-      const redirectUri = window.location.origin + "/auth/callback";
+      const redirectUri = AUTH_URL;
       const resp = await fetch(AUTH_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [exchangeCode, verifyToken]);
 
   const login = useCallback(async () => {
-    const redirectUri = window.location.origin + "/auth/callback";
+    const redirectUri = AUTH_URL;
     try {
       const resp = await fetch(AUTH_URL, {
         method: "POST",

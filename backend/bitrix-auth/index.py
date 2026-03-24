@@ -173,4 +173,16 @@ def handler(event: dict, context) -> dict:
             )
             return {"statusCode": 200, "headers": CORS, "body": json.dumps({"auth_url": auth_url})}
 
+    if method == "GET":
+        params = event.get("queryStringParameters") or {}
+        code = params.get("code")
+        if code:
+            site_url = os.environ.get("SITE_URL", "https://preview--dashboard-creation-project-5.poehali.dev")
+            redirect = f"{site_url}/auth/callback?code={code}"
+            return {
+                "statusCode": 302,
+                "headers": {**CORS, "Location": redirect},
+                "body": "",
+            }
+
     return {"statusCode": 405, "headers": CORS, "body": json.dumps({"error": "method_not_allowed"})}
