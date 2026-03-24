@@ -107,7 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async () => {
     const redirectUri = window.location.origin + "/auth/callback";
     try {
-      const resp = await fetch(`${AUTH_URL}?action=auth_url&redirect_uri=${encodeURIComponent(redirectUri)}`);
+      const resp = await fetch(AUTH_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_auth_url", redirect_uri: redirectUri }),
+      });
       const data = await resp.json();
       if (data.auth_url) {
         window.location.href = data.auth_url;

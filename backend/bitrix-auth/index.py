@@ -163,10 +163,8 @@ def handler(event: dict, context) -> dict:
                 },
             })}
 
-    if method == "GET":
-        action = params.get("action", "")
-        if action == "auth_url":
-            redirect_uri = params.get("redirect_uri", "")
+        elif action == "get_auth_url":
+            redirect_uri = body.get("redirect_uri", "")
             auth_url = (
                 f"{portal_url}/oauth/authorize/"
                 f"?client_id={os.environ['BITRIX_CLIENT_ID']}"

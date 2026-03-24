@@ -1,9 +1,10 @@
 {
   "tests": [
     {
-      "name": "Get auth URL",
-      "method": "GET",
-      "path": "/?action=auth_url&redirect_uri=https://example.com/callback",
+      "name": "Get auth URL via POST",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "get_auth_url", "redirect_uri": "https://example.com/callback"},
       "expectedStatus": 200,
       "expectedBody": {"auth_url": "string"},
       "bodyMatcher": "partial"
@@ -12,7 +13,7 @@
       "name": "Verify invalid token",
       "method": "POST",
       "path": "/",
-      "body": {"action": "verify", "token": "invalid"},
+      "body": {"action": "verify", "token": "invalid.token.here"},
       "expectedStatus": 401,
       "expectedBody": {"error": "invalid_token"},
       "bodyMatcher": "partial"
