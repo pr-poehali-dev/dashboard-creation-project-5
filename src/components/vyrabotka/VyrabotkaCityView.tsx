@@ -8,6 +8,9 @@ import {
   type CityData,
   MONTHS,
   MONTH_LABELS,
+  COLORS,
+  statusGradient,
+  statusGlow,
   AnimatedNumber,
   fmtMoney,
   fmtShort,
@@ -185,15 +188,15 @@ export default function VyrabotkaCityView({
     : 50;
 
   const overallScore = Math.min((planExecution * 0.4 + stability * 0.2 + growthTrend * 0.15 + rankScore * 0.15 + Math.min(shareOfTotal * 5, 100) * 0.1), 100);
-  const scoreColor = overallScore >= 80 ? "#00E064" : overallScore >= 60 ? "#FF9800" : "#FF2244";
+  const scoreColor = overallScore >= 80 ? COLORS.good : overallScore >= 60 ? COLORS.warn : COLORS.bad;
   const scoreLabel = overallScore >= 80 ? "Отлично" : overallScore >= 60 ? "Хорошо" : overallScore >= 40 ? "Средне" : "Критично";
 
   const efficiencyMetrics = [
-    { label: "Выполнение плана", value: Math.min(planExecution, 100), color: "#7C5CFF" },
-    { label: "Стабильность", value: stability, color: "#00E5CC" },
-    { label: "Динамика роста", value: growthTrend, color: "#FF9800" },
-    { label: "Позиция в рейтинге", value: rankScore, color: "#00E064" },
-    { label: "Доля рынка", value: Math.min(shareOfTotal * 5, 100), color: "#FF3CAC" },
+    { label: "Выполнение плана", value: Math.min(planExecution, 100), color: COLORS.plan },
+    { label: "Стабильность", value: stability, color: COLORS.fact },
+    { label: "Динамика роста", value: growthTrend, color: COLORS.warn },
+    { label: "Позиция в рейтинге", value: rankScore, color: COLORS.good },
+    { label: "Доля рынка", value: Math.min(shareOfTotal * 5, 100), color: COLORS.bad },
   ];
 
   return (
@@ -202,7 +205,7 @@ export default function VyrabotkaCityView({
         <div className="glass glass-hover rounded-2xl p-5 animate-fade-in-up">
           <div className="flex items-start justify-between mb-4">
             <div className="w-10 h-10 rounded-xl gradient-violet flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(124,92,255,0.35)" }}>
+              style={{ boxShadow: "0 8px 24px rgba(139,92,246,0.35)" }}>
               <Icon name="Percent" size={18} className="text-white" />
             </div>
             <span className="text-xs font-semibold px-2 py-1 rounded-full bg-white/8 text-white/40">от компании</span>
@@ -216,7 +219,7 @@ export default function VyrabotkaCityView({
         <div className="glass glass-hover rounded-2xl p-5 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
           <div className="flex items-start justify-between mb-4">
             <div className="w-10 h-10 rounded-xl gradient-cyan flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(0,229,204,0.35)" }}>
+              style={{ boxShadow: "0 8px 24px rgba(0,191,255,0.35)" }}>
               <Icon name="Calculator" size={18} className="text-white" />
             </div>
             <span className="text-xs font-semibold px-2 py-1 rounded-full bg-white/8 text-white/40">среднее</span>
@@ -230,7 +233,7 @@ export default function VyrabotkaCityView({
         <div className="glass glass-hover rounded-2xl p-5 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
           <div className="flex items-start justify-between mb-4">
             <div className={`w-10 h-10 rounded-xl ${yearForecast >= yearPlan ? "gradient-green" : "gradient-pink"} flex items-center justify-center`}
-              style={{ boxShadow: yearForecast >= yearPlan ? "0 8px 24px rgba(0,212,106,0.35)" : "0 8px 24px rgba(255,60,172,0.35)" }}>
+              style={{ boxShadow: yearForecast >= yearPlan ? `0 8px 24px ${COLORS.goodGlow}` : `0 8px 24px ${COLORS.badGlow}` }}>
               <Icon name="Rocket" size={18} className="text-white" />
             </div>
             <span className="text-xs font-semibold px-2 py-1 rounded-full bg-white/8 text-white/40">прогноз</span>
@@ -244,7 +247,7 @@ export default function VyrabotkaCityView({
         <div className="glass glass-hover rounded-2xl p-5 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
           <div className="flex items-start justify-between mb-4">
             <div className="w-10 h-10 rounded-xl gradient-green flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(0,212,106,0.35)" }}>
+              style={{ boxShadow: `0 8px 24px ${COLORS.goodGlow}` }}>
               <Icon name="Trophy" size={18} className="text-white" />
             </div>
             <span className="text-xs font-semibold px-2 py-1 rounded-full bg-white/8 text-white/40">лучший мес.</span>
@@ -283,11 +286,11 @@ export default function VyrabotkaCityView({
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#7C5CFF" }} />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS.plan }} />
               <span className="text-xs text-white/50">План</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: "#00E5CC" }} />
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS.fact }} />
               <span className="text-xs text-white/50">Факт</span>
             </div>
           </div>
@@ -296,12 +299,12 @@ export default function VyrabotkaCityView({
           <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
             <defs>
               <linearGradient id="gradBarPlan" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#A78BFA" stopOpacity={1} />
-                <stop offset="100%" stopColor="#7C3AED" stopOpacity={1} />
+                <stop offset="0%" stopColor={COLORS.plan} stopOpacity={1} />
+                <stop offset="100%" stopColor={COLORS.planDark} stopOpacity={1} />
               </linearGradient>
               <linearGradient id="gradBarFact" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00FFCC" stopOpacity={1} />
-                <stop offset="100%" stopColor="#00D4A8" stopOpacity={1} />
+                <stop offset="0%" stopColor={COLORS.fact} stopOpacity={1} />
+                <stop offset="100%" stopColor={COLORS.factDark} stopOpacity={1} />
               </linearGradient>
               <filter id="barGlow">
                 <feGaussianBlur stdDeviation="3" result="blur" />
@@ -325,7 +328,7 @@ export default function VyrabotkaCityView({
             <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]}
               label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                 value > 0 ? (
-                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,229,204,0.6)" fontSize={10} fontWeight={600}>
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,191,255,0.7)" fontSize={10} fontWeight={600}>
                     {fmtShort(value)}
                   </text>
                 ) : null
@@ -333,7 +336,7 @@ export default function VyrabotkaCityView({
             >
               {monthlyData.map((entry, index) => (
                 <Cell key={`fact-${index}`}
-                  fill={entry.plan > 0 && entry.fact >= entry.plan ? "url(#gradBarFact)" : entry.fact > 0 ? "#00C4AB" : "transparent"}
+                  fill={entry.plan > 0 && entry.fact >= entry.plan ? "url(#gradBarFact)" : entry.fact > 0 ? COLORS.factDark : "transparent"}
                 />
               ))}
             </Bar>
@@ -351,12 +354,12 @@ export default function VyrabotkaCityView({
             <AreaChart data={cumulativeData} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradCumPlan" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
+                  <stop offset="5%" stopColor={COLORS.plan} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLORS.plan} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gradCumFact" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00E5CC" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#00E5CC" stopOpacity={0} />
+                  <stop offset="5%" stopColor={COLORS.fact} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLORS.fact} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
@@ -364,10 +367,10 @@ export default function VyrabotkaCityView({
               <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
                 tickFormatter={(v: number) => fmtShort(v)} width={70} />
               <Tooltip content={<CustomTooltip />} />
-              <Area type="natural" dataKey="cumPlan" name="План (нараст.)" stroke="#7C5CFF" strokeWidth={2}
-                fill="url(#gradCumPlan)" dot={{ fill: "#7C5CFF", r: 3, strokeWidth: 0 }} />
-              <Area type="natural" dataKey="cumFact" name="Факт (нараст.)" stroke="#00E5CC" strokeWidth={2}
-                fill="url(#gradCumFact)" dot={{ fill: "#00E5CC", r: 3, strokeWidth: 0 }} />
+              <Area type="natural" dataKey="cumPlan" name="План (нараст.)" stroke={COLORS.plan} strokeWidth={2}
+                fill="url(#gradCumPlan)" dot={{ fill: COLORS.plan, r: 3, strokeWidth: 0 }} />
+              <Area type="natural" dataKey="cumFact" name="Факт (нараст.)" stroke={COLORS.fact} strokeWidth={2}
+                fill="url(#gradCumFact)" dot={{ fill: COLORS.fact, r: 3, strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -381,12 +384,12 @@ export default function VyrabotkaCityView({
             <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradPctAbove" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00E5CC" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#00E5CC" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={COLORS.good} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={COLORS.good} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradPctBelow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7C5CFF" stopOpacity={0.35} />
-                  <stop offset="100%" stopColor="#7C5CFF" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={COLORS.bad} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={COLORS.bad} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
@@ -401,12 +404,12 @@ export default function VyrabotkaCityView({
                 label={{ value: "100%", position: "right", fill: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)", fontSize: 11 }} />
               <Area type="natural" dataKey="pct" stroke="url(#)" strokeWidth={0} fill="url(#gradPctBelow)" tooltipType="none" />
               <Area type="natural" dataKey="pct" name="Выполнение"
-                stroke={(() => { const filtered = monthlyData.filter(d => d.fact > 0); const last = filtered[filtered.length - 1]; return last && last.pct >= 100 ? "#00E5CC" : "#7C5CFF"; })()}
+                stroke={(() => { const filtered = monthlyData.filter(d => d.fact > 0); const last = filtered[filtered.length - 1]; return last && last.pct >= 100 ? COLORS.good : COLORS.bad; })()}
                 strokeWidth={2.5}
                 fill="none"
                 dot={({ cx, cy, payload }: { cx: number; cy: number; payload?: { name?: string; pct?: number } }) => (
                   <circle key={`dot-${payload?.name}`} cx={cx} cy={cy} r={4}
-                    fill={payload?.pct >= 100 ? "#00E5CC" : "#7C5CFF"}
+                    fill={payload?.pct >= 100 ? COLORS.good : COLORS.bad}
                     stroke={isLight ? "#fff" : "#1a1030"} strokeWidth={2} />
                 )}
                 activeDot={{ r: 6, strokeWidth: 2, stroke: isLight ? "#fff" : "#1a1030" }} />
@@ -424,12 +427,12 @@ export default function VyrabotkaCityView({
           <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan, absDeviation: Math.abs(d.fact - d.plan) }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
             <defs>
               <linearGradient id="gradDevPos" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00FF94" stopOpacity={1} />
-                <stop offset="100%" stopColor="#00CC66" stopOpacity={0.9} />
+                <stop offset="0%" stopColor={COLORS.good} stopOpacity={1} />
+                <stop offset="100%" stopColor="#009933" stopOpacity={0.9} />
               </linearGradient>
               <linearGradient id="gradDevNeg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FF3366" stopOpacity={1} />
-                <stop offset="100%" stopColor="#CC0033" stopOpacity={0.9} />
+                <stop offset="0%" stopColor={COLORS.bad} stopOpacity={1} />
+                <stop offset="100%" stopColor="#B30000" stopOpacity={0.9} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
@@ -445,19 +448,19 @@ export default function VyrabotkaCityView({
                   <div className="chart-tooltip p-3 rounded-xl" style={{ minWidth: 180 }}>
                     <p className="text-xs text-white/50 mb-2">{label}</p>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="w-2 h-2 rounded-full bg-[#7C5CFF]" />
+                      <span className="w-2 h-2 rounded-full" style={{ background: COLORS.plan }} />
                       <span className="text-white/70">План:</span>
                       <span className="font-semibold text-white ml-auto">{fmtFull(d.plan || 0)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="w-2 h-2 rounded-full bg-[#00E5CC]" />
+                      <span className="w-2 h-2 rounded-full" style={{ background: COLORS.fact }} />
                       <span className="text-white/70">Факт:</span>
                       <span className="font-semibold text-white ml-auto">{fmtFull(d.fact || 0)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm mt-1 pt-1 border-t border-white/10">
-                      <span className={`w-2 h-2 rounded-full ${(d.deviation || 0) >= 0 ? "bg-emerald-400" : "bg-red-400"}`} />
+                      <span className="w-2 h-2 rounded-full" style={{ background: (d.deviation || 0) >= 0 ? COLORS.good : COLORS.bad }} />
                       <span className="text-white/70">{(d.deviation || 0) >= 0 ? "Перевыполнение:" : "Недовыполнение:"}</span>
-                      <span className={`font-semibold ml-auto ${(d.deviation || 0) >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      <span className="font-semibold ml-auto" style={{ color: (d.deviation || 0) >= 0 ? COLORS.good : COLORS.bad }}>
                         {(d.deviation || 0) >= 0 ? "+" : ""}{fmtFull(d.deviation || 0)}
                       </span>
                     </div>
@@ -473,7 +476,7 @@ export default function VyrabotkaCityView({
                 const isPositive = d.fact - d.plan >= 0;
                 return (
                   <text x={x + w / 2} y={y - 6} textAnchor="middle"
-                    fill={isPositive ? "#00FF94" : "#FF3366"} fontSize={10} fontWeight={600}>
+                    fill={isPositive ? COLORS.good : COLORS.bad} fontSize={10} fontWeight={600}>
                     {isPositive ? "+" : "−"}{fmtShort(value)}
                   </text>
                 );
@@ -513,7 +516,7 @@ export default function VyrabotkaCityView({
                     <td className="py-3 px-3 text-white font-medium">{MONTH_LABELS[m]}</td>
                     <td className="py-3 px-3 text-right text-white/70">{fmtFull(md.plan)}</td>
                     <td className="py-3 px-3 text-right text-white">{md.fact > 0 ? fmtFull(md.fact) : "—"}</td>
-                    <td className={`py-3 px-3 text-right font-semibold ${diff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <td className="py-3 px-3 text-right font-semibold" style={{ color: diff >= 0 ? COLORS.good : COLORS.bad }}>
                       {md.fact > 0 ? ((diff >= 0 ? "+" : "") + fmtFull(diff)) : "—"}
                     </td>
                     <td className="py-3 px-3 text-right">
@@ -532,7 +535,7 @@ export default function VyrabotkaCityView({
                 <td className="py-3 px-3 text-white font-bold">Итого</td>
                 <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalPlan)}</td>
                 <td className="py-3 px-3 text-right text-white font-bold">{fmtFull(totalFact)}</td>
-                <td className={`py-3 px-3 text-right font-bold ${totalDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                <td className="py-3 px-3 text-right font-bold" style={{ color: totalDiff >= 0 ? COLORS.good : COLORS.bad }}>
                   {(totalDiff >= 0 ? "+" : "") + fmtFull(totalDiff)}
                 </td>
                 <td className="py-3 px-3 text-right">

@@ -1,3 +1,5 @@
+import { COLORS } from "./VyrabotkaUtils";
+
 interface CityPoint {
   name: string;
   x: number;
@@ -190,10 +192,10 @@ const SAKHALIN = [
 ].join(" ");
 
 function getColor(pct: number, isTop: boolean): string {
-  if (isTop) return "#00FF7F";
-  if (pct >= 100) return "#00E5CC";
-  if (pct >= 80) return "#FFAA00";
-  return "#FF3366";
+  if (isTop) return COLORS.good;
+  if (pct >= 100) return COLORS.fact;
+  if (pct >= 80) return COLORS.warn;
+  return COLORS.bad;
 }
 
 export default function RussiaMap({ cityRanking, onCityClick }: Props) {
@@ -223,19 +225,19 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
       {/* Legend */}
       <div className="flex items-center gap-4 mb-4">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#00FF7F]" />
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS.good }} />
           <span className="text-[10px] text-white/50">Лидер</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#00E5CC]" />
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS.fact }} />
           <span className="text-[10px] text-white/50">&ge;100%</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#FFAA00]" />
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS.warn }} />
           <span className="text-[10px] text-white/50">&ge;80%</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#FF3366]" />
+          <span className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS.bad }} />
           <span className="text-[10px] text-white/50">&lt;80%</span>
         </div>
       </div>
@@ -249,8 +251,8 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
           <defs>
             {/* Fill gradient for land */}
             <linearGradient id="russiaMapGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="rgba(124,92,255,0.10)" />
-              <stop offset="100%" stopColor="rgba(0,229,204,0.06)" />
+              <stop offset="0%" stopColor="rgba(139,92,246,0.10)" />
+              <stop offset="100%" stopColor="rgba(0,191,255,0.06)" />
             </linearGradient>
 
             {/* Glow filter for city dots */}
@@ -269,7 +271,7 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
           <path
             d={RUSSIA_MAIN}
             fill="url(#russiaMapGrad)"
-            stroke="rgba(124,92,255,0.18)"
+            stroke="rgba(139,92,246,0.18)"
             strokeWidth="1.2"
             strokeLinejoin="round"
           />
@@ -278,7 +280,7 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
           <path
             d={RUSSIA_MAIN}
             fill="none"
-            stroke="rgba(124,92,255,0.07)"
+            stroke="rgba(139,92,246,0.07)"
             strokeWidth="0.6"
             strokeDasharray="6 4"
             strokeLinejoin="round"
@@ -288,7 +290,7 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
           <path
             d={KALININGRAD}
             fill="url(#russiaMapGrad)"
-            stroke="rgba(124,92,255,0.18)"
+            stroke="rgba(139,92,246,0.18)"
             strokeWidth="1"
             strokeLinejoin="round"
           />
@@ -297,7 +299,7 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
           <path
             d={KAMCHATKA}
             fill="url(#russiaMapGrad)"
-            stroke="rgba(124,92,255,0.18)"
+            stroke="rgba(139,92,246,0.18)"
             strokeWidth="1"
             strokeLinejoin="round"
           />
@@ -306,7 +308,7 @@ export default function RussiaMap({ cityRanking, onCityClick }: Props) {
           <path
             d={SAKHALIN}
             fill="url(#russiaMapGrad)"
-            stroke="rgba(124,92,255,0.18)"
+            stroke="rgba(139,92,246,0.18)"
             strokeWidth="1"
             strokeLinejoin="round"
           />

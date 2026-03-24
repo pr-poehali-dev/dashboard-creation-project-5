@@ -35,11 +35,11 @@
     --radius: 1rem;
 
     /* Brand colors */
-    --violet: #7c5cff;
-    --cyan: #00e5cc;
-    --pink: #ff3cac;
-    --orange: #ff7a00;
-    --green: #00d46a;
+    --violet: #8b5cf6;
+    --cyan: #00bfff;
+    --pink: #e50000;
+    --orange: #ffb800;
+    --green: #00cc44;
 
     /* Theme tokens */
     --page-bg: linear-gradient(135deg, #0a0812 0%, #0d0f1c 50%, #080b18 100%);
@@ -245,38 +245,38 @@
 }
 
 .gradient-violet {
-  background: linear-gradient(135deg, #7c5cff 0%, #b16cea 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
 }
 .gradient-cyan {
-  background: linear-gradient(135deg, #00e5cc 0%, #0096ff 100%);
+  background: linear-gradient(135deg, #00bfff 0%, #0099cc 100%);
 }
 .gradient-pink {
-  background: linear-gradient(135deg, #ff3cac 0%, #ff7a00 100%);
+  background: linear-gradient(135deg, #e50000 0%, #ff1a1a 100%);
 }
 .gradient-green {
-  background: linear-gradient(135deg, #00d46a 0%, #00e5cc 100%);
+  background: linear-gradient(135deg, #00cc44 0%, #00e04d 100%);
 }
 
 .text-gradient-violet {
-  background: linear-gradient(135deg, #7c5cff, #b16cea);
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #00e5cc, #0096ff);
+  background: linear-gradient(135deg, #00bfff, #33ccff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .text-gradient-pink {
-  background: linear-gradient(135deg, #ff3cac, #ff7a00);
+  background: linear-gradient(135deg, #e50000, #ff3333);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 .text-gradient-green {
-  background: linear-gradient(135deg, #00d46a, #00e5cc);
+  background: linear-gradient(135deg, #00cc44, #00e04d);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -287,14 +287,14 @@
   cursor: pointer;
 }
 .filter-btn.active {
-  background: linear-gradient(135deg, #7c5cff, #b16cea);
+  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
   color: white;
-  box-shadow: 0 4px 20px rgba(124, 92, 255, 0.4);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
 }
 
 .chart-tooltip {
   background: var(--tooltip-bg) !important;
-  border: 1px solid rgba(124, 92, 255, 0.3) !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
   border-radius: 12px !important;
   backdrop-filter: blur(12px);
 }

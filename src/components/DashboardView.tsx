@@ -10,9 +10,9 @@ import { DASHBOARD_DATA_URL } from "@/config/dashboards";
 import type { ColumnDef } from "@/config/dashboards";
 
 const PIE_COLORS = [
-  "#6C3FFF", "#00FFDD", "#FF007A", "#FF6B00",
-  "#00E064", "#0077FF", "#FFD000", "#FF2244", "#CC00FF",
-  "#FF6EC7", "#00C2FF", "#FFB800",
+  "#8B5CF6", "#00BFFF", "#FF6B8A", "#FFB800",
+  "#00CC44", "#3B82F6", "#F59E0B", "#EC4899",
+  "#A855F7", "#06B6D4", "#EF4444", "#10B981",
 ];
 
 interface Row {
@@ -225,8 +225,8 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7C5CFF" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#7C5CFF" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
@@ -236,8 +236,8 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                   tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="total" name="Итого"
-                  stroke="#7C5CFF" strokeWidth={2.5} fill={`url(#${gradId})`}
-                  dot={false} activeDot={{ r: 5, fill: "#7C5CFF", stroke: "white", strokeWidth: 2 }} />
+                  stroke="#8B5CF6" strokeWidth={2.5} fill={`url(#${gradId})`}
+                  dot={false} activeDot={{ r: 5, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -263,7 +263,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid rgba(124,92,255,0.3)", borderRadius: 12 }}
+                    contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12 }}
                     itemStyle={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.7)" }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -319,9 +319,9 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <button onClick={() => setShowAllCities(v => !v)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
                 style={{
-                  background: showAllCities ? "rgba(124,92,255,0.2)" : "rgba(255,255,255,0.06)",
-                  color: showAllCities ? "#a78bfa" : "rgba(255,255,255,0.5)",
-                  border: showAllCities ? "1px solid rgba(124,92,255,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                  background: showAllCities ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.06)",
+                  color: showAllCities ? "#8B5CF6" : "rgba(255,255,255,0.5)",
+                  border: showAllCities ? "1px solid rgba(139,92,246,0.4)" : "1px solid rgba(255,255,255,0.08)",
                 }}>
                 <Icon name={showAllCities ? "ChevronUp" : "ChevronDown"} size={14} />
                 {showAllCities ? "Свернуть" : `Показать все (${rows.length})`}

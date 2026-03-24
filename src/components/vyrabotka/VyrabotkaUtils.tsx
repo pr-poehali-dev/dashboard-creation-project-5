@@ -24,11 +24,24 @@ export const MONTH_LABELS: Record<string, string> = {
   "Сентябрь": "Сентябрь", "Октябрь": "Октябрь", "Ноябрь": "Ноябрь", "Декабрь": "Декабрь",
 };
 
+export const COLORS = {
+  plan: "#8B5CF6",
+  planDark: "#6D3ACD",
+  fact: "#00BFFF",
+  factDark: "#0099CC",
+  good: "#00CC44",
+  warn: "#FFB800",
+  bad: "#E50000",
+  goodGlow: "rgba(0,204,68,0.4)",
+  warnGlow: "rgba(255,184,0,0.4)",
+  badGlow: "rgba(229,0,0,0.4)",
+};
+
 export const PIE_COLORS = [
-  "#7B2FFF", "#00FFD5", "#FF0066", "#FF7700",
-  "#00FF6E", "#0088FF", "#FFE000", "#FF1133",
-  "#DD00FF", "#FF55CC", "#00CCFF", "#FFC800",
-  "#8855FF", "#00FFBB", "#FF33AA", "#FFAA00",
+  "#8B5CF6", "#00BFFF", "#FF6B8A", "#FFB800",
+  "#00CC44", "#3B82F6", "#F59E0B", "#EC4899",
+  "#A855F7", "#06B6D4", "#EF4444", "#10B981",
+  "#F97316", "#6366F1", "#14B8A6", "#E879F9",
 ];
 
 export const DASHBOARD_ID = 6;
@@ -68,15 +81,27 @@ export function fmtFull(v: number): string {
 }
 
 export function pctColor(pct: number): string {
-  if (pct >= 100) return "text-emerald-400";
-  if (pct >= 80) return "text-amber-400";
-  return "text-red-400";
+  if (pct >= 100) return "text-[#00CC44]";
+  if (pct >= 80) return "text-[#FFB800]";
+  return "text-[#E50000]";
 }
 
 export function pctBg(pct: number): string {
-  if (pct >= 100) return "bg-emerald-500/20 text-emerald-400";
-  if (pct >= 80) return "bg-amber-500/20 text-amber-400";
-  return "bg-red-500/20 text-red-400";
+  if (pct >= 100) return "bg-[#00CC44]/20 text-[#00CC44]";
+  if (pct >= 80) return "bg-[#FFB800]/20 text-[#FFB800]";
+  return "bg-[#E50000]/20 text-[#E50000]";
+}
+
+export function statusGradient(pct: number): string {
+  if (pct >= 100) return `linear-gradient(90deg, ${COLORS.good}, #00E04D)`;
+  if (pct >= 80) return `linear-gradient(90deg, ${COLORS.warn}, #FFC933)`;
+  return `linear-gradient(90deg, ${COLORS.bad}, #FF1A1A)`;
+}
+
+export function statusGlow(pct: number): string {
+  if (pct >= 100) return `0 0 20px ${COLORS.goodGlow}, 0 0 40px rgba(0,204,68,0.15)`;
+  if (pct >= 80) return `0 0 20px ${COLORS.warnGlow}, 0 0 40px rgba(255,184,0,0.15)`;
+  return `0 0 20px ${COLORS.badGlow}, 0 0 40px rgba(229,0,0,0.15)`;
 }
 
 interface TPayload { color: string; name: string; value: number; }

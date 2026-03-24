@@ -8,9 +8,12 @@ import {
   type CityData,
   MONTH_LABELS,
   PIE_COLORS,
+  COLORS,
   fmtMoney,
   fmtShort,
   pctColor,
+  statusGradient,
+  statusGlow,
   getCityTotals,
   CustomTooltip,
   PieTooltip,
@@ -73,12 +76,12 @@ export default function VyrabotkaAllView({
             <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
               <defs>
                 <linearGradient id="gradAllPlan" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#9B7FFF" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#5A3ADB" stopOpacity={0.8} />
+                  <stop offset="0%" stopColor={COLORS.plan} stopOpacity={1} />
+                  <stop offset="100%" stopColor={COLORS.planDark} stopOpacity={0.8} />
                 </linearGradient>
                 <linearGradient id="gradAllFact" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00FFE0" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#00B8A3" stopOpacity={0.8} />
+                  <stop offset="0%" stopColor={COLORS.fact} stopOpacity={1} />
+                  <stop offset="100%" stopColor={COLORS.factDark} stopOpacity={0.8} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
@@ -102,7 +105,7 @@ export default function VyrabotkaAllView({
               <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]}
                 label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
                   value > 0 ? (
-                    <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,229,204,0.6)" fontSize={10} fontWeight={600}>
+                    <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,191,255,0.7)" fontSize={10} fontWeight={600}>
                       {fmtShort(value)}
                     </text>
                   ) : null
@@ -139,19 +142,19 @@ export default function VyrabotkaAllView({
               const positionRatio = total > 1 ? i / (total - 1) : 0;
 
               const rankBarColor = isLeader
-                ? "bg-gradient-to-r from-amber-400 to-yellow-300"
+                ? "bg-gradient-to-r from-[#FFB800] to-[#FFC933]"
                 : positionRatio <= 0.33
-                ? "bg-gradient-to-r from-emerald-500 to-emerald-400"
+                ? "bg-gradient-to-r from-[#00CC44] to-[#00E04D]"
                 : positionRatio <= 0.66
-                ? "bg-gradient-to-r from-blue-500 to-blue-400"
+                ? "bg-gradient-to-r from-[#00BFFF] to-[#33CCFF]"
                 : "bg-gradient-to-r from-slate-500 to-slate-400";
 
               const rankPctColor = isLeader
-                ? "text-amber-400"
+                ? "text-[#FFB800]"
                 : positionRatio <= 0.33
-                ? "text-emerald-400"
+                ? "text-[#00CC44]"
                 : positionRatio <= 0.66
-                ? "text-blue-400"
+                ? "text-[#00BFFF]"
                 : "text-slate-400";
 
               const medals = ["🥇", "🥈", "🥉"];
@@ -274,22 +277,14 @@ export default function VyrabotkaAllView({
                       className="h-full rounded-md transition-all duration-700"
                       style={{
                         width: `${(barWidth / 130) * 100}%`,
-                        background: isPositive
-                          ? `linear-gradient(90deg, #00E064, #00C853)`
-                          : pct >= 80
-                            ? `linear-gradient(90deg, #FF9800, #FFB74D)`
-                            : pct >= 60
-                              ? `linear-gradient(90deg, #E53935, #FF1744)`
-                              : `linear-gradient(90deg, #7B1FA2, #B71C1C)`,
+                        background: statusGradient(isPositive ? 100 : pct),
                       }}
                     />
                     {pct >= 100 && (
                       <div className="absolute left-0 top-0 h-full border-r-2 border-white/30" style={{ width: `${(100 / 130) * 100}%` }} />
                     )}
                   </div>
-                  <span className={`text-xs font-bold w-[52px] shrink-0 text-right ${
-                    isPositive ? "text-emerald-400" : pct >= 80 ? "text-amber-400" : "text-red-400"
-                  }`}>
+                  <span className={`text-xs font-bold w-[52px] shrink-0 text-right ${pctColor(pct)}`}>
                     {pct.toFixed(1)}%
                   </span>
                 </div>
@@ -308,8 +303,8 @@ export default function VyrabotkaAllView({
           <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="gradPct" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#7C5CFF" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#7C5CFF" stopOpacity={0} />
+                <stop offset="5%" stopColor={COLORS.plan} stopOpacity={0.4} />
+                <stop offset="95%" stopColor={COLORS.plan} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
@@ -320,8 +315,8 @@ export default function VyrabotkaAllView({
               contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
               labelStyle={{ color: "rgba(255,255,255,0.5)" }}
               itemStyle={{ color: "#fff" }} />
-            <Area type="monotone" dataKey="pct" stroke="#7C5CFF" strokeWidth={3}
-              fill="url(#gradPct)" dot={{ fill: "#7C5CFF", r: 5 }} activeDot={{ r: 7 }} />
+            <Area type="monotone" dataKey="pct" stroke={COLORS.plan} strokeWidth={3}
+              fill="url(#gradPct)" dot={{ fill: COLORS.plan, r: 5 }} activeDot={{ r: 7 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -334,11 +329,11 @@ export default function VyrabotkaAllView({
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(167,139,250,0.4)", border: "1px dashed #A78BFA" }} />
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(139,92,246,0.4)", border: `1px dashed ${COLORS.plan}` }} />
               <span className="text-xs text-white/40">План</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: "#00FFCC" }} />
+              <div className="w-2.5 h-2.5 rounded-sm" style={{ background: COLORS.fact }} />
               <span className="text-xs text-white/40">Факт</span>
             </div>
           </div>
@@ -349,23 +344,15 @@ export default function VyrabotkaAllView({
             const planW = maxVal > 0 ? (d.plan / maxVal) * 100 : 0;
             const factW = maxVal > 0 ? (d.fact / maxVal) * 100 : 0;
             const pct = d.pct;
-            const factColor = pct >= 100
-              ? "linear-gradient(90deg, #00FF7F, #00FF50)"
-              : pct >= 80
-                ? "linear-gradient(90deg, #FFD600, #FFAB00)"
-                : "linear-gradient(90deg, #FF1744, #FF0033)";
-            const factShadow = pct >= 100
-              ? "0 0 20px rgba(0,255,127,0.5), 0 0 40px rgba(0,255,80,0.2)"
-              : pct >= 80
-                ? "0 0 20px rgba(255,214,0,0.5), 0 0 40px rgba(255,171,0,0.2)"
-                : "0 0 20px rgba(255,23,68,0.5), 0 0 40px rgba(255,0,51,0.2)";
+            const factColor = statusGradient(pct);
+            const factShadow = statusGlow(pct);
             return (
               <div key={d.name} className="group cursor-pointer" onClick={() => setSelectedCity(d.name)}>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      idx === 0 ? "bg-emerald-500/20 text-emerald-400" :
-                      idx === barData.length - 1 ? "bg-red-500/20 text-red-400" :
+                      idx === 0 ? "bg-[#00CC44]/20 text-[#00CC44]" :
+                      idx === barData.length - 1 ? "bg-[#E50000]/20 text-[#E50000]" :
                       "bg-white/10 text-white/40"
                     }`}>{idx + 1}</span>
                     <span className="text-sm text-white/80 font-medium group-hover:text-white transition-colors">{d.name}</span>
@@ -373,9 +360,9 @@ export default function VyrabotkaAllView({
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-white/30">{fmtMoney(d.fact)} / {fmtMoney(d.plan)}</span>
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                      pct >= 100 ? "bg-emerald-500/15 text-emerald-400" :
-                      pct >= 80 ? "bg-amber-500/15 text-amber-400" :
-                      "bg-red-500/15 text-red-400"
+                      pct >= 100 ? "bg-[#00CC44]/15 text-[#00CC44]" :
+                      pct >= 80 ? "bg-[#FFB800]/15 text-[#FFB800]" :
+                      "bg-[#E50000]/15 text-[#E50000]"
                     }`}>
                       {pct.toFixed(1)}%
                     </span>
@@ -384,7 +371,7 @@ export default function VyrabotkaAllView({
                 <div className="relative h-7 rounded-lg bg-white/[0.03] overflow-hidden group-hover:bg-white/[0.06] transition-colors">
                   <div
                     className="absolute inset-y-0 left-0 rounded-lg transition-all duration-700"
-                    style={{ width: `${planW}%`, background: "rgba(167,139,250,0.15)", borderRight: "2px dashed rgba(167,139,250,0.5)" }}
+                    style={{ width: `${planW}%`, background: "rgba(139,92,246,0.15)", borderRight: `2px dashed rgba(139,92,246,0.5)` }}
                   />
                   <div
                     className="absolute inset-y-0 left-0 rounded-lg transition-all duration-700"
