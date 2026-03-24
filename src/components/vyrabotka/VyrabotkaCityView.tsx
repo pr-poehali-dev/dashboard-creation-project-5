@@ -295,12 +295,12 @@ export default function VyrabotkaCityView({
           <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
             <defs>
               <linearGradient id="gradBarPlan" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#9B7FFF" stopOpacity={1} />
-                <stop offset="100%" stopColor="#5A3ADB" stopOpacity={0.8} />
+                <stop offset="0%" stopColor="#A78BFA" stopOpacity={1} />
+                <stop offset="100%" stopColor="#7C3AED" stopOpacity={1} />
               </linearGradient>
               <linearGradient id="gradBarFact" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00FFE0" stopOpacity={1} />
-                <stop offset="100%" stopColor="#00B8A3" stopOpacity={0.8} />
+                <stop offset="0%" stopColor="#00FFCC" stopOpacity={1} />
+                <stop offset="100%" stopColor="#00D4A8" stopOpacity={1} />
               </linearGradient>
               <filter id="barGlow">
                 <feGaussianBlur stdDeviation="3" result="blur" />
@@ -420,22 +420,21 @@ export default function VyrabotkaCityView({
           <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
+          <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan, absDeviation: Math.abs(d.fact - d.plan) }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
             <defs>
               <linearGradient id="gradDevPos" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00FFB0" stopOpacity={1} />
-                <stop offset="100%" stopColor="#00C853" stopOpacity={0.8} />
+                <stop offset="0%" stopColor="#00FF94" stopOpacity={1} />
+                <stop offset="100%" stopColor="#00CC66" stopOpacity={0.9} />
               </linearGradient>
-              <linearGradient id="gradDevNeg" x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stopColor="#FF5252" stopOpacity={1} />
-                <stop offset="100%" stopColor="#FF1744" stopOpacity={0.8} />
+              <linearGradient id="gradDevNeg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FF3366" stopOpacity={1} />
+                <stop offset="100%" stopColor="#CC0033" stopOpacity={0.9} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
             <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
               tickFormatter={(v: number) => fmtMoney(v)} width={70} />
-            <ReferenceLine y={0} stroke={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"} strokeWidth={1} />
             <Tooltip cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }}
               content={({ active, payload, label }: { active?: boolean; payload?: Array<{ payload?: { plan?: number; fact?: number; deviation?: number } }>; label?: string }) => {
                 if (!active || !payload?.length) return null;
@@ -465,15 +464,19 @@ export default function VyrabotkaCityView({
                 );
               }}
             />
-            <Bar dataKey="deviation" name="Отклонение" radius={[6, 6, 6, 6]}
-              label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
-                value !== 0 ? (
-                  <text x={x + w / 2} y={value >= 0 ? y - 6 : y + 16} textAnchor="middle"
-                    fill={value >= 0 ? "rgba(0,224,100,0.7)" : "rgba(255,34,68,0.7)"} fontSize={10} fontWeight={600}>
-                    {fmtMoney(value)}
+            <Bar dataKey="absDeviation" name="Отклонение" radius={[6, 6, 0, 0]}
+              label={({ x, y, width: w, value, index }: { x: number; y: number; width: number; value: number; index: number }) => {
+                const filtered = monthlyData.filter(d => d.fact > 0);
+                const d = filtered[index];
+                if (!d || value === 0) return null;
+                const isPositive = d.fact - d.plan >= 0;
+                return (
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle"
+                    fill={isPositive ? "#00FF94" : "#FF3366"} fontSize={10} fontWeight={600}>
+                    {isPositive ? "+" : "−"}{fmtMoney(value)}
                   </text>
-                ) : null
-              }
+                );
+              }}
             >
               {monthlyData.filter(d => d.fact > 0).map((d, i) => (
                 <Cell key={i} fill={d.fact - d.plan >= 0 ? "url(#gradDevPos)" : "url(#gradDevNeg)"} />
