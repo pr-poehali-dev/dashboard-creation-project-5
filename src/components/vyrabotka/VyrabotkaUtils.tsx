@@ -53,9 +53,13 @@ export function AnimatedNumber({ value, key2 }: { value: string | number; key2?:
 }
 
 export function fmtMoney(v: number): string {
-  if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(".", ",")} млн`;
-  if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)} тыс`;
-  return v.toFixed(0);
+  if (Math.abs(v) >= 1_000_000) {
+    const m = v / 1_000_000;
+    const formatted = Number.isInteger(m) ? m.toFixed(0) : m.toFixed(1).replace(".", ",").replace(/,0$/, "");
+    return `${formatted} млн ₽`;
+  }
+  if (Math.abs(v) >= 1_000) return `${Math.round(v / 1_000)} тыс ₽`;
+  return v.toFixed(0) + " ₽";
 }
 
 export function fmtFull(v: number): string {
