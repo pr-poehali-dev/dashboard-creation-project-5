@@ -66,21 +66,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ action: "exchange_code", code, redirect_uri: redirectUri }),
       });
       const data = await resp.json();
+      console.log("[auth] exchange response:", data);
       if (data.token && data.user) {
         localStorage.setItem(TOKEN_KEY, data.token);
-        setToken(data.token);
-        setUser(data.user);
-        window.history.replaceState({}, "", "/");
+        window.location.href = "/";
         return true;
       }
       if (data.error === "access_denied") {
-        window.history.replaceState({}, "", "/login?error=access_denied&name=" + encodeURIComponent(data.name || "") + "&bitrix_id=" + (data.bitrix_id || ""));
+        window.location.href = "/login?error=access_denied&name=" + encodeURIComponent(data.name || "") + "&bitrix_id=" + (data.bitrix_id || "");
         return false;
       }
     } catch (e) {
       console.error("Code exchange failed", e);
     }
-    window.history.replaceState({}, "", "/login?error=auth_failed");
+    window.location.href = "/login?error=auth_failed";
     return false;
   }, []);
 
