@@ -47,6 +47,7 @@ def handler(event: dict, context) -> dict:
         col_keys = [c["key"] for c in columns]
 
         if method == "GET":
+            raw_mode = params.get("raw") == "1"
             cur.execute(
                 f"SELECT id, city, data FROM {SCHEMA}.dashboard_rows WHERE dashboard_id = %s ORDER BY id",
                 (int(dashboard_id),),
@@ -55,9 +56,12 @@ def handler(event: dict, context) -> dict:
             result = []
             for r in rows:
                 row_data = r[2] if isinstance(r[2], dict) else json.loads(r[2])
-                item = {"id": r[0], "city": r[1]}
-                for k in col_keys:
-                    item[k] = row_data.get(k, 0)
+                if raw_mode:
+                    item = {"id": r[0], "city": r[1], "data": row_data}
+                else:
+                    item = {"id": r[0], "city": r[1]}
+                    for k in col_keys:
+                        item[k] = row_data.get(k, 0)
                 result.append(item)
             return {
                 "statusCode": 200,

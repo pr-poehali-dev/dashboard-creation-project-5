@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
+import funcUrls from "../../backend/func2url.json";
 
 interface CityMonthData {
   plan: number;
@@ -31,24 +32,7 @@ const PIE_COLORS = [
   "#7C5CFF", "#00E5CC", "#FF3CAC", "#FF9500",
 ];
 
-const DATA: CityData[] = [
-  { city: "Красноярск", months: { "янв": { plan: 33000000, fact: 30234890 }, "фев": { plan: 38000000, fact: 43446100 }, "мар": { plan: 40000000, fact: 0 } } },
-  { city: "Санкт-Петербург", months: { "янв": { plan: 40000000, fact: 35080383.23 }, "фев": { plan: 40000000, fact: 50000017.88 }, "мар": { plan: 43000000, fact: 0 } } },
-  { city: "Омск", months: { "янв": { plan: 35000000, fact: 30180644.86 }, "фев": { plan: 35000000, fact: 35326751.87 }, "мар": { plan: 40000000, fact: 0 } } },
-  { city: "Кемерово", months: { "янв": { plan: 35000000, fact: 25334148.26 }, "фев": { plan: 40000000, fact: 30779228.15 }, "мар": { plan: 35000000, fact: 0 } } },
-  { city: "Краснодар Буд", months: { "янв": { plan: 20000000, fact: 10505380 }, "фев": { plan: 18000000, fact: 6452875 }, "мар": { plan: 20000000, fact: 0 } } },
-  { city: "Краснодар Сев", months: { "янв": { plan: 10000000, fact: 4557125 }, "фев": { plan: 10000000, fact: 8927550 }, "мар": { plan: 15000000, fact: 0 } } },
-  { city: "Самара", months: { "янв": { plan: 55000000, fact: 50250950 }, "фев": { plan: 60000000, fact: 50275700 }, "мар": { plan: 60000000, fact: 0 } } },
-  { city: "Пермь", months: { "янв": { plan: 40000000, fact: 29290277.16 }, "фев": { plan: 40000000, fact: 41177550.50 }, "мар": { plan: 45000000, fact: 0 } } },
-  { city: "Ростов", months: { "янв": { plan: 38000000, fact: 34178070 }, "фев": { plan: 50000000, fact: 42808575 }, "мар": { plan: 43000000, fact: 0 } } },
-  { city: "Нижний Новгород", months: { "янв": { plan: 40000000, fact: 34140224 }, "фев": { plan: 40000000, fact: 36102343 }, "мар": { plan: 42000000, fact: 0 } } },
-  { city: "Новосибирск", months: { "янв": { plan: 35000000, fact: 22840437 }, "фев": { plan: 35000000, fact: 26769030 }, "мар": { plan: 35000000, fact: 0 } } },
-  { city: "Калининград", months: { "янв": { plan: 35000000, fact: 23451002.07 }, "фев": { plan: 35000000, fact: 19217643.66 }, "мар": { plan: 35000000, fact: 0 } } },
-  { city: "Барнаул", months: { "янв": { plan: 22000000, fact: 10673705 }, "фев": { plan: 15000000, fact: 11572085 }, "мар": { plan: 17000000, fact: 0 } } },
-  { city: "Тольятти", months: { "янв": { plan: 15000000, fact: 10851500 }, "фев": { plan: 15000000, fact: 9345600 }, "мар": { plan: 15000000, fact: 0 } } },
-  { city: "Улан-Удэ", months: { "янв": { plan: 25000000, fact: 14571465 }, "фев": { plan: 25000000, fact: 20542472.90 }, "мар": { plan: 30000000, fact: 0 } } },
-  { city: "Новокузнецк", months: { "янв": { plan: 40000000, fact: 28526884.01 }, "фев": { plan: 40000000, fact: 29694730.69 }, "мар": { plan: 38000000, fact: 0 } } },
-];
+const DASHBOARD_ID = 6;
 
 function AnimatedNumber({ value, key2 }: { value: string | number; key2?: string }) {
   const [displayed, setDisplayed] = useState("0");
@@ -128,8 +112,22 @@ export default function VyrabotkaView() {
   const isLight = theme === "light";
   const axisColor = isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)";
 
+  const [DATA, setDATA] = useState<CityData[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+
+  useEffect(() => {
+    const url = `${funcUrls["dashboard-data"]}?dashboard_id=${DASHBOARD_ID}&raw=1`;
+    fetch(url)
+      .then(r => r.json())
+      .then((rows: Array<{ id: number; city: string; data: Record<string, CityMonthData> }>) => {
+        const mapped: CityData[] = rows.map(r => ({ city: r.city, months: r.data }));
+        setDATA(mapped);
+      })
+      .catch(e => console.error("Failed to load vyrabotka data", e))
+      .finally(() => setDataLoading(false));
+  }, []);
 
   const activeMonths = MONTHS.filter(m =>
     DATA.some(d => {
@@ -137,6 +135,17 @@ export default function VyrabotkaView() {
       return md && (md.plan > 0 || md.fact > 0);
     })
   );
+
+  if (dataLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex items-center gap-3 text-white/40">
+          <div className="w-5 h-5 rounded-full border-2 border-white/20 border-t-violet-500 animate-spin" />
+          Загрузка данных...
+        </div>
+      </div>
+    );
+  }
 
   const getCityTotals = (city: CityData, month?: string | null) => {
     let plan = 0, fact = 0;
