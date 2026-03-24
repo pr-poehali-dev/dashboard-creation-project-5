@@ -292,7 +292,7 @@ export default function VyrabotkaCityView({
           </div>
         </div>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={monthlyData} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
+          <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
             <defs>
               <linearGradient id="gradBarPlan" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#9B7FFF" stopOpacity={1} />
