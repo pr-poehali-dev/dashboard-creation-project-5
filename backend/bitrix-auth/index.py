@@ -103,7 +103,7 @@ def handler(event: dict, context) -> dict:
                 "code": code,
                 "redirect_uri": redirect_uri,
             })
-            token_url = f"{portal_url}/oauth/token/?{token_params}"
+            token_url = f"https://oauth.bitrix.info/oauth/token/?{token_params}"
             print(f"[exchange] token_url={token_url}")
             token_resp = fetch_url(token_url)
 
