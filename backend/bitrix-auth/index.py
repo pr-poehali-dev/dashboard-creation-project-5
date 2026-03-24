@@ -194,7 +194,7 @@ def handler(event: dict, context) -> dict:
         params = event.get("queryStringParameters") or {}
         code = params.get("code")
         if code:
-            site_url = os.environ.get("SITE_URL", "https://preview--dashboard-creation-project-5.poehali.dev")
+            site_url = os.environ.get("SITE_URL", "https://dashboard-km.ru")
             redirect = f"{site_url}/auth/callback?code={code}"
             return {
                 "statusCode": 302,
