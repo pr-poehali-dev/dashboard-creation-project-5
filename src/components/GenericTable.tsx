@@ -39,8 +39,8 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
   }, [initialColumns.map(c => c.key).join(",")]);
 
   const MONTH_ORDER: Record<string, number> = {
-    "янв": 1, "фев": 2, "мар": 3, "апр": 4, "май": 5, "июн": 6,
-    "июл": 7, "авг": 8, "сен": 9, "окт": 10, "ноя": 11, "дек": 12,
+    "Январь": 1, "Февраль": 2, "Март": 3, "Апрель": 4, "Май": 5, "Июнь": 6,
+    "Июль": 7, "Август": 8, "Сентябрь": 9, "Октябрь": 10, "Ноябрь": 11, "Декабрь": 12,
   };
 
   useEffect(() => {
