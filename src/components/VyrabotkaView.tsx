@@ -118,11 +118,20 @@ export default function VyrabotkaView() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   useEffect(() => {
-    const url = `${funcUrls["dashboard-data"]}?dashboard_id=${DASHBOARD_ID}&raw=1`;
+    const url = `${funcUrls["dashboard-data"]}?dashboard_id=${DASHBOARD_ID}`;
     fetch(url)
       .then(r => r.json())
-      .then((rows: Array<{ id: number; city: string; data: Record<string, CityMonthData> }>) => {
-        const mapped: CityData[] = rows.map(r => ({ city: r.city, months: r.data }));
+      .then((rows: Array<{ id: number; city: string; plan: number; fact: number }>) => {
+        const cityMap: Record<string, Record<string, CityMonthData>> = {};
+        rows.forEach(r => {
+          const sep = r.city.lastIndexOf(" — ");
+          if (sep === -1) return;
+          const cityName = r.city.substring(0, sep);
+          const month = r.city.substring(sep + 3);
+          if (!cityMap[cityName]) cityMap[cityName] = {};
+          cityMap[cityName][month] = { plan: r.plan, fact: r.fact };
+        });
+        const mapped: CityData[] = Object.entries(cityMap).map(([city, months]) => ({ city, months }));
         setDATA(mapped);
       })
       .catch(e => console.error("Failed to load vyrabotka data", e))
