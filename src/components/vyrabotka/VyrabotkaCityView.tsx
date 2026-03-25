@@ -148,8 +148,12 @@ export default function VyrabotkaCityView({
   const yearForecast = avgMonthlyFact * 12;
   const yearPlan = activeMonths.reduce((s, m) => s + (cd.months[m]?.plan || 0), 0);
 
+  const cityActiveMonths = activeMonths.filter(m => {
+    const md = cd.months[m];
+    return md && (md.plan > 0 || md.fact > 0);
+  });
   let cumPlan = 0, cumFact = 0;
-  const cumulativeData = activeMonths.map(m => {
+  const cumulativeData = cityActiveMonths.map(m => {
     const md = cd.months[m];
     if (md) { cumPlan += md.plan; cumFact += md.fact; }
     return { name: MONTH_LABELS[m], cumPlan, cumFact };
@@ -187,7 +191,7 @@ export default function VyrabotkaCityView({
     ? ((cityRanking.length - rank) / (cityRanking.length - 1)) * 100
     : 50;
 
-  const overallScore = Math.min((planExecution * 0.4 + stability * 0.2 + growthTrend * 0.15 + rankScore * 0.15 + Math.min(shareOfTotal * 5, 100) * 0.1), 100);
+  const overallScore = Math.min((planExecution * 0.55 + rankScore * 0.25 + Math.min(shareOfTotal * 5, 100) * 0.2), 100);
   const scoreColor = overallScore >= 80 ? COLORS.good : overallScore >= 60 ? COLORS.warn : COLORS.bad;
   const scoreLabel = overallScore >= 80 ? "Отлично" : overallScore >= 60 ? "Хорошо" : overallScore >= 40 ? "Средне" : "Критично";
 
@@ -474,7 +478,7 @@ export default function VyrabotkaCityView({
             <p className="text-white/40 text-xs mt-0.5">Динамика по месяцам</p>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
+            <AreaChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradPctAbove" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={COLORS.good} stopOpacity={0.35} />
@@ -517,7 +521,7 @@ export default function VyrabotkaCityView({
           <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan, absDeviation: Math.abs(d.fact - d.plan) }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
+          <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan, absDeviation: Math.abs(d.fact - d.plan) }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
             <defs>
               <linearGradient id="gradDevPos" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={COLORS.good} stopOpacity={1} />

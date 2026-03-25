@@ -47,7 +47,12 @@ export default function VyrabotkaView() {
       .finally(() => setDataLoading(false));
   }, []);
 
-  const activeMonths = MONTHS;
+  const activeMonths = MONTHS.filter(m =>
+    DATA.some(d => {
+      const md = d.months[m];
+      return md && (md.plan > 0 || md.fact > 0);
+    })
+  );
 
   if (dataLoading) {
     return (

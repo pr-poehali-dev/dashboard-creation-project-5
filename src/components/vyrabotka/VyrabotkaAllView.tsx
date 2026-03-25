@@ -300,7 +300,7 @@ export default function VyrabotkaAllView({
           <p className="text-white/40 text-xs mt-0.5">Динамика процента выполнения плана</p>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <AreaChart data={monthlyData.filter(d => d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+          <AreaChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="gradPct" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={COLORS.plan} stopOpacity={0.4} />
