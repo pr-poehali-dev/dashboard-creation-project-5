@@ -199,6 +199,20 @@ export default function VyrabotkaCityView({
     { label: "Доля рынка", value: Math.min(shareOfTotal * 5, 100), color: COLORS.bad },
   ];
 
+  const growthRateData = monthsWithFact.length >= 2
+    ? monthsWithFact.map((m, i) => {
+        const curr = cd.months[m];
+        if (i === 0) return { name: MONTH_LABELS[m], rate: 0, fact: curr.fact, isFirst: true };
+        const prevM = monthsWithFact[i - 1];
+        const prev = cd.months[prevM];
+        const rate = prev.fact > 0 ? ((curr.fact - prev.fact) / prev.fact) * 100 : 0;
+        return { name: MONTH_LABELS[m], rate: Math.round(rate * 10) / 10, fact: curr.fact, isFirst: false };
+      }).filter(d => !d.isFirst)
+    : [];
+  const avgGrowthRate = growthRateData.length > 0
+    ? growthRateData.reduce((s, d) => s + d.rate, 0) / growthRateData.length
+    : 0;
+
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -259,22 +273,73 @@ export default function VyrabotkaCityView({
         </div>
       </div>
 
-      {/* Эффективность клиники */}
-      <div className="glass rounded-2xl p-6 animate-fade-in-up">
-        <div className="mb-6">
-          <h3 className="font-display font-bold text-white text-lg">
-            <Icon name="Activity" size={20} className="inline mr-2 text-violet-400" />
-            Эффективность клиники
-          </h3>
-          <p className="text-white/40 text-xs mt-0.5">Комплексная оценка по 5 метрикам</p>
-        </div>
-        <div className="flex flex-col items-center">
-          <SpeedometerGauge value={overallScore} label="Общий балл" scoreLabel={scoreLabel} color={scoreColor} />
-          <div className="w-full max-w-lg mt-6 flex flex-col gap-3">
-            {efficiencyMetrics.map((m) => (
-              <MetricBar key={m.label} label={m.label} value={m.value} color={m.color} />
-            ))}
+      {/* Эффективность + Темп роста */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-6">
+            <h3 className="font-display font-bold text-white text-lg">
+              <Icon name="Activity" size={20} className="inline mr-2 text-violet-400" />
+              Эффективность клиники
+            </h3>
+            <p className="text-white/40 text-xs mt-0.5">Комплексная оценка по 5 метрикам</p>
           </div>
+          <div className="flex flex-col items-center">
+            <SpeedometerGauge value={overallScore} label="Общий балл" scoreLabel={scoreLabel} color={scoreColor} />
+            <div className="w-full max-w-lg mt-6 flex flex-col gap-3">
+              {efficiencyMetrics.map((m) => (
+                <MetricBar key={m.label} label={m.label} value={m.value} color={m.color} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="glass rounded-2xl p-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-display font-bold text-white text-lg">
+                  <Icon name="TrendingUp" size={20} className="inline mr-2 text-cyan-400" />
+                  Темп роста
+                </h3>
+                <p className="text-white/40 text-xs mt-0.5">Прирост факта м/м, %</p>
+              </div>
+              <div className={`text-right px-3 py-1.5 rounded-xl ${avgGrowthRate >= 0 ? "bg-[#00CC44]/10" : "bg-[#E50000]/10"}`}>
+                <p className="text-[10px] text-white/40 uppercase tracking-wider">Средний</p>
+                <p className={`font-display text-xl font-bold ${avgGrowthRate >= 0 ? "text-[#00CC44]" : "text-[#E50000]"}`}>
+                  {avgGrowthRate >= 0 ? "+" : ""}{avgGrowthRate.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </div>
+          {growthRateData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={growthRateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v: number) => `${v}%`} />
+                <ReferenceLine y={0} stroke={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"} strokeWidth={1.5} />
+                <Tooltip
+                  formatter={(value: number) => [`${value >= 0 ? "+" : ""}${value.toFixed(1)}%`, "Прирост"]}
+                  contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
+                  labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                  itemStyle={{ color: "#fff" }} />
+                <Bar dataKey="rate" radius={[6, 6, 0, 0]} maxBarSize={40}>
+                  {growthRateData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.rate >= 0 ? COLORS.good : COLORS.bad}
+                      fillOpacity={0.85}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[280px] text-white/30 text-sm">
+              Недостаточно данных (нужно минимум 2 месяца)
+            </div>
+          )}
         </div>
       </div>
 
