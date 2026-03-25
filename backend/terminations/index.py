@@ -1,8 +1,6 @@
-"""Получение и обновление данных таблицы причин расторжений."""
+"""Получение и обновление данных таблицы причин расторжений с поддержкой месяцев."""
 import json
 import os
-import urllib.request
-import urllib.parse
 
 CORS = {
     "Access-Control-Allow-Origin": "*",
@@ -22,30 +20,24 @@ COLUMNS = [
     "refund_completed",
 ]
 
-def get_conn():
-    import psycopg2
-    return psycopg2.connect(os.environ["DATABASE_URL"])
-
 def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
     method = event.get("httpMethod", "GET")
-
     import psycopg2
 
     if method == "GET":
         conn = psycopg2.connect(os.environ["DATABASE_URL"])
         cur = conn.cursor()
+        cols_select = ", ".join(COLUMNS)
         cur.execute(
-            "SELECT id, city, deadline_violations, poor_quality_service, patient_no_contact, "
-            "patient_died, reregistration, complaint, procedures_not_needed, "
-            "financial_difficulties, refund_completed "
-            "FROM t_p56096254_dashboard_creation_p.terminations ORDER BY id"
+            f"SELECT id, city, month, {cols_select} "
+            f"FROM t_p56096254_dashboard_creation_p.terminations ORDER BY id"
         )
         rows = cur.fetchall()
-        cols = ["id", "city"] + COLUMNS
-        result = [dict(zip(cols, row)) for row in rows]
+        col_names = ["id", "city", "month"] + COLUMNS
+        result = [dict(zip(col_names, row)) for row in rows]
         cur.close()
         conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps(result, ensure_ascii=False)}

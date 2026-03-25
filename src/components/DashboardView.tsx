@@ -15,19 +15,22 @@ const PIE_COLORS = [
   "#A855F7", "#06B6D4", "#EF4444", "#10B981",
 ];
 
+const MONTHS_ORDER = [
+  "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+  "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+];
+
 interface Row {
   id: number;
   city: string;
-  [key: string]: number | string;
+  month?: string;
+  [key: string]: number | string | undefined;
 }
 
-function AnimatedNumber({ value }: { value: string | number }) {
+function AnimatedNumber({ value, animKey }: { value: string | number; animKey?: string }) {
   const [displayed, setDisplayed] = useState("0");
-  const done = useRef(false);
   const strVal = String(value);
   useEffect(() => {
-    if (done.current) return;
-    done.current = true;
     const numeric = parseFloat(strVal.replace(/\s/g, "").replace(",", "."));
     if (isNaN(numeric)) { setDisplayed(strVal); return; }
     const steps = 40;
@@ -39,7 +42,7 @@ function AnimatedNumber({ value }: { value: string | number }) {
       setDisplayed(Math.floor(cur).toLocaleString("ru-RU"));
     }, 1200 / steps);
     return () => clearInterval(iv);
-  }, [strVal]);
+  }, [strVal, animKey]);
   return <span>{displayed}</span>;
 }
 
@@ -75,7 +78,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
   const axisColor = isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)";
   const gradId = `gradViolet-${apiUrl.slice(-8)}`;
 
-  const [rows, setRows] = useState<Row[]>([]);
+  const [allRows, setAllRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -83,28 +86,95 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
   const [showAllCities, setShowAllCities] = useState(false);
   const [newCity, setNewCity] = useState("");
 
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+
   const isUniversalApi = apiUrl === DASHBOARD_DATA_URL || apiUrl.startsWith(DASHBOARD_DATA_URL);
   const fetchUrl = isUniversalApi && dashboardId ? `${DASHBOARD_DATA_URL}?dashboard_id=${dashboardId}` : apiUrl;
 
   useEffect(() => {
-    setRows([]);
+    setAllRows([]);
     setLoading(true);
     setDirty(false);
     setSaved(false);
+    setSelectedCity(null);
+    setSelectedMonth(null);
     fetch(fetchUrl)
       .then(r => r.json())
       .then(data => {
         const parsed: Row[] = typeof data === "string" ? JSON.parse(data) : data;
-        setRows(parsed);
+        setAllRows(parsed);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [fetchUrl]);
 
+  const hasMonths = allRows.some(r => r.month && r.month.length > 0);
+
+  const cities = [...new Set(allRows.map(r => r.city as string))];
+  const activeMonths = hasMonths
+    ? MONTHS_ORDER.filter(m =>
+        allRows.some(r => r.month === m && columns.some(c => (Number(r[c.key]) || 0) > 0))
+      )
+    : [];
+  const allMonths = hasMonths
+    ? MONTHS_ORDER.filter(m => allRows.some(r => r.month === m))
+    : [];
+
+  const filteredRows = allRows.filter(r => {
+    if (selectedCity && r.city !== selectedCity) return false;
+    if (hasMonths && selectedMonth && r.month !== selectedMonth) return false;
+    return true;
+  });
+
+  const rowTotal = (row: Row) => columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
+  const colTotal = (key: string) => filteredRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
+  const grandTotal = filteredRows.reduce((s, r) => s + rowTotal(r), 0);
+
+  const aggregatedByCityRows = (() => {
+    const map: Record<string, Row> = {};
+    filteredRows.forEach(r => {
+      const city = r.city as string;
+      if (!map[city]) {
+        map[city] = { id: r.id, city };
+        columns.forEach(c => { map[city][c.key] = 0; });
+      }
+      columns.forEach(c => {
+        (map[city][c.key] as number) += Number(r[c.key]) || 0;
+      });
+    });
+    return Object.values(map);
+  })();
+
+  const aggregatedByMonthRows = (() => {
+    if (!hasMonths) return [];
+    const map: Record<string, Record<string, number>> = {};
+    filteredRows.forEach(r => {
+      const m = r.month || "—";
+      if (!map[m]) {
+        map[m] = {};
+        columns.forEach(c => { map[m][c.key] = 0; });
+      }
+      columns.forEach(c => {
+        map[m][c.key] += Number(r[c.key]) || 0;
+      });
+    });
+    return allMonths
+      .filter(m => map[m])
+      .map(m => ({ month: m, ...map[m], total: columns.reduce((s, c) => s + (map[m][c.key] || 0), 0) }));
+  })();
+
+  const colTotals = columns.map((c, i) => ({ ...c, total: colTotal(c.key), color: PIE_COLORS[i % PIE_COLORS.length] }));
+  const sorted = [...colTotals].sort((a, b) => b.total - a.total);
+  const top1 = sorted[0];
+  const top2 = sorted[1];
+
+  const cityBarData = aggregatedByCityRows.map(r => ({ name: r.city as string, total: rowTotal(r) })).sort((a, b) => b.total - a.total);
+
   const handleChange = (id: number, col: string, val: string) => {
     const num = val === "" ? 0 : parseInt(val, 10);
     if (isNaN(num) || num < 0) return;
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [col]: num } : r));
+    setAllRows(prev => prev.map(r => r.id === id ? { ...r, [col]: num } : r));
     setDirty(true);
     setSaved(false);
   };
@@ -113,8 +183,8 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
     setSaving(true);
     try {
       const payload = isUniversalApi
-        ? rows.map(r => ({ ...r, id: r.id < 0 ? undefined : r.id }))
-        : rows;
+        ? allRows.map(r => ({ ...r, id: r.id < 0 ? undefined : r.id }))
+        : allRows;
       await fetch(fetchUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -123,7 +193,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       if (isUniversalApi) {
         const res = await fetch(fetchUrl);
         const data = await res.json();
-        setRows(typeof data === "string" ? JSON.parse(data) : data);
+        setAllRows(typeof data === "string" ? JSON.parse(data) : data);
       }
       setSaved(true);
       setDirty(false);
@@ -132,26 +202,17 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
     }
   };
 
-  const rowTotal = (row: Row) => columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
-  const colTotal = (key: string) => rows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
-  const grandTotal = rows.reduce((s, r) => s + rowTotal(r), 0);
-
-  const colTotals = columns.map((c, i) => ({ ...c, total: colTotal(c.key), color: PIE_COLORS[i % PIE_COLORS.length] }));
-  const sorted = [...colTotals].sort((a, b) => b.total - a.total);
-  const top1 = sorted[0];
-  const top2 = sorted[1];
-
-  const cityBarData = rows.map(r => ({ name: r.city as string, total: rowTotal(r) }));
+  const kpiKey = `${selectedCity || "all"}-${selectedMonth || "all"}`;
 
   const kpiCards = [
     {
-      label: `Всего · ${title}`,
+      label: selectedCity ? `Всего · ${selectedCity}` : `Всего · ${title}`,
       value: grandTotal.toLocaleString("ru-RU"),
       icon: "BarChart2",
       gradient: "gradient-violet",
       textGradient: "text-gradient-violet",
       glow: "rgba(124,92,255,0.35)",
-      sub: `${rows.length} городов`,
+      sub: selectedMonth || `${aggregatedByCityRows.length} городов`,
     },
     {
       label: "Главная причина",
@@ -173,18 +234,77 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
     },
     {
       label: "Городов с данными",
-      value: rows.filter(r => rowTotal(r) > 0).length.toLocaleString("ru-RU"),
+      value: aggregatedByCityRows.filter(r => rowTotal(r) > 0).length.toLocaleString("ru-RU"),
       icon: "MapPin",
       gradient: "gradient-green",
       textGradient: "text-gradient-green",
       glow: "rgba(0,212,106,0.35)",
-      sub: `из ${rows.length}`,
+      sub: `из ${cities.length}`,
     },
   ];
 
+  const displayRows = hasMonths && !selectedMonth
+    ? aggregatedByCityRows
+    : filteredRows;
+
   return (
     <div className="space-y-4">
-      {/* KPI */}
+      {hasMonths && (
+        <div className="glass rounded-2xl p-4 space-y-3">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="MapPin" size={14} className="text-violet-400" />
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">Город</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSelectedCity(null)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                  !selectedCity ? "gradient-violet text-white font-semibold" : "glass glass-hover text-white/50"
+                }`}>
+                Все города
+              </button>
+              {cities.map(city => (
+                <button key={city}
+                  onClick={() => setSelectedCity(selectedCity === city ? null : city)}
+                  className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                    selectedCity === city ? "gradient-violet text-white font-semibold" : "glass glass-hover text-white/50"
+                  }`}>
+                  {city}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-white/8" />
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Icon name="Calendar" size={14} className="text-cyan-400" />
+              <span className="text-[11px] font-semibold text-white/40 uppercase tracking-wider">Месяц</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSelectedMonth(null)}
+                className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                  !selectedMonth ? "gradient-cyan text-white font-semibold" : "glass glass-hover text-white/50"
+                }`}>
+                Все месяцы
+              </button>
+              {allMonths.map(m => (
+                <button key={m}
+                  onClick={() => setSelectedMonth(selectedMonth === m ? null : m)}
+                  className={`text-xs px-3 py-1.5 rounded-full transition-all duration-200 ${
+                    selectedMonth === m ? "gradient-cyan text-white font-semibold" : "glass glass-hover text-white/50"
+                  }`}>
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiCards.map((card, i) => (
           <div key={card.label} className="glass glass-hover rounded-2xl p-5 animate-fade-in-up"
@@ -201,16 +321,14 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <div className="h-8 w-24 rounded-lg bg-white/5 animate-pulse" />
             ) : (
               <p className={`font-display text-2xl font-bold ${card.textGradient}`}>
-                <AnimatedNumber value={card.value} />
+                <AnimatedNumber value={card.value} animKey={kpiKey} />
               </p>
             )}
           </div>
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Area */}
         <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -243,7 +361,6 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
           )}
         </div>
 
-        {/* Pie */}
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="mb-4">
             <h3 className="font-display font-bold text-white text-lg">Распределение</h3>
@@ -281,11 +398,13 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         </div>
       </div>
 
-      {/* Bar */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <h3 className="font-display font-bold text-white text-lg mb-1">Причины — сравнение</h3>
-          <p className="text-white/40 text-xs mb-6">Суммарно по всем городам</p>
+          <p className="text-white/40 text-xs mb-6">
+            {selectedCity ? `${selectedCity}` : "Суммарно по всем городам"}
+            {selectedMonth ? ` · ${selectedMonth}` : ""}
+          </p>
           {loading ? (
             <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
           ) : (
@@ -306,87 +425,116 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
           )}
         </div>
 
-        {/* Города — stacked bar по причинам */}
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h3 className="font-display font-bold text-white text-lg">
-                {showAllCities ? "Все города" : "Топ-5 городов"}
-              </h3>
-              <p className="text-white/40 text-xs mt-0.5">1 полоса = 1 город · цвета = причины</p>
-            </div>
-            {!loading && rows.length > 5 && (
-              <button onClick={() => setShowAllCities(v => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
-                style={{
-                  background: showAllCities ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.06)",
-                  color: showAllCities ? "#8B5CF6" : "rgba(255,255,255,0.5)",
-                  border: showAllCities ? "1px solid rgba(139,92,246,0.4)" : "1px solid rgba(255,255,255,0.08)",
-                }}>
-                <Icon name={showAllCities ? "ChevronUp" : "ChevronDown"} size={14} />
-                {showAllCities ? "Свернуть" : `Показать все (${rows.length})`}
-              </button>
+        {hasMonths && !selectedMonth ? (
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <h3 className="font-display font-bold text-white text-lg mb-1">Динамика по месяцам</h3>
+            <p className="text-white/40 text-xs mb-6">
+              {selectedCity ? selectedCity : "Все города"}
+            </p>
+            {loading ? (
+              <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={340}>
+                <BarChart data={aggregatedByMonthRows.filter(d => d.total > 0)}
+                  margin={{ top: 5, right: 5, left: 10, bottom: 0 }} barSize={28}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="total" name="Итого" fill="#8B5CF6" radius={[6, 6, 0, 0]}>
+                    {aggregatedByMonthRows.filter(d => d.total > 0).map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             )}
           </div>
-          {loading ? (
-            <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
-          ) : rows.length === 0 ? (
-            <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-white/20">
-              <Icon name="BarChart2" size={28} />
-              <p className="text-xs">Нет данных</p>
+        ) : (
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="font-display font-bold text-white text-lg">
+                  {showAllCities ? "Все города" : "Топ-5 городов"}
+                </h3>
+                <p className="text-white/40 text-xs mt-0.5">1 полоса = 1 город · цвета = причины</p>
+              </div>
+              {!loading && aggregatedByCityRows.length > 5 && (
+                <button onClick={() => setShowAllCities(v => !v)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200"
+                  style={{
+                    background: showAllCities ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.06)",
+                    color: showAllCities ? "#8B5CF6" : "rgba(255,255,255,0.5)",
+                    border: showAllCities ? "1px solid rgba(139,92,246,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                  }}>
+                  <Icon name={showAllCities ? "ChevronUp" : "ChevronDown"} size={14} />
+                  {showAllCities ? "Свернуть" : `Показать все (${aggregatedByCityRows.length})`}
+                </button>
+              )}
             </div>
-          ) : (() => {
-            const sortedRows = [...rows].sort((a, b) => rowTotal(b) - rowTotal(a));
-            const displayed = showAllCities ? sortedRows : sortedRows.slice(0, 5);
-            const maxVal = Math.max(...displayed.map(r => rowTotal(r)), 1);
-            return (
-              <>
-                <div className="space-y-3">
-                  {displayed.map(row => {
-                    const total = rowTotal(row);
-                    return (
-                      <div key={row.id}>
-                        <div className="flex justify-between text-xs mb-1.5">
-                          <span className="font-medium" style={{ color: "var(--text-primary)" }}>{row.city}</span>
-                          <span style={{ color: "var(--text-secondary)" }}>{total.toLocaleString("ru-RU")}</span>
+            {loading ? (
+              <div className="h-[220px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+            ) : aggregatedByCityRows.length === 0 ? (
+              <div className="h-[220px] flex flex-col items-center justify-center gap-2 text-white/20">
+                <Icon name="BarChart2" size={28} />
+                <p className="text-xs">Нет данных</p>
+              </div>
+            ) : (() => {
+              const sortedR = [...aggregatedByCityRows].sort((a, b) => rowTotal(b) - rowTotal(a));
+              const displayed = showAllCities ? sortedR : sortedR.slice(0, 5);
+              const maxVal = Math.max(...displayed.map(r => rowTotal(r)), 1);
+              return (
+                <>
+                  <div className="space-y-3">
+                    {displayed.map(row => {
+                      const total = rowTotal(row);
+                      return (
+                        <div key={row.city}>
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span className="font-medium" style={{ color: "var(--text-primary)" }}>{row.city}</span>
+                            <span style={{ color: "var(--text-secondary)" }}>{total.toLocaleString("ru-RU")}</span>
+                          </div>
+                          <div className="h-5 rounded-lg bg-white/5 overflow-hidden flex" style={{ width: "100%" }}>
+                            {columns.map((col, ci) => {
+                              const val = Number(row[col.key]) || 0;
+                              const pct = total > 0 ? (val / maxVal) * 100 : 0;
+                              if (pct === 0) return null;
+                              return (
+                                <div key={col.key} title={`${col.label}: ${val}`}
+                                  className="h-full transition-all duration-500"
+                                  style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }} />
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div className="h-5 rounded-lg bg-white/5 overflow-hidden flex"
-                          style={{ width: "100%" }}>
-                          {columns.map((col, ci) => {
-                            const val = Number(row[col.key]) || 0;
-                            const pct = total > 0 ? (val / maxVal) * 100 : 0;
-                            if (pct === 0) return null;
-                            return (
-                              <div key={col.key} title={`${col.label}: ${val}`}
-                                className="h-full transition-all duration-500"
-                                style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }} />
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/6">
-                  {columns.map((c, i) => (
-                    <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-                      <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0"
-                        style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      {c.label}
-                    </span>
-                  ))}
-                </div>
-              </>
-            );
-          })()}
-        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 pt-4 border-t border-white/6">
+                    {columns.map((c, i) => (
+                      <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                        <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0"
+                          style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                        {c.label}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
-      {/* Table */}
       <div className="glass rounded-2xl overflow-hidden animate-fade-in-up">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
           <div>
-            <h3 className="font-display font-bold text-white text-lg">{title}</h3>
+            <h3 className="font-display font-bold text-white text-lg">
+              {title}
+              {selectedCity ? ` · ${selectedCity}` : ""}
+              {selectedMonth ? ` · ${selectedMonth}` : ""}
+            </h3>
             {!readonly && <p className="text-white/40 text-xs mt-0.5">Кликните на ячейку для редактирования</p>}
           </div>
           {!readonly && (
@@ -406,8 +554,13 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <tr className="border-b border-white/8">
                 <th className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
                   style={{ background: "var(--sticky-cell-bg)", minWidth: 140 }}>
-                  Город / Причина
+                  {hasMonths && !selectedMonth ? "Город" : hasMonths ? "Город" : "Город / Причина"}
                 </th>
+                {hasMonths && !selectedMonth && (
+                  <th className="text-left px-3 py-3 text-white/50 font-medium text-xs whitespace-nowrap">
+                    Месяц
+                  </th>
+                )}
                 {columns.map(col => (
                   <th key={col.key} className="px-3 py-3 text-white/50 font-medium text-xs text-center leading-tight"
                     style={{ minWidth: 90, maxWidth: 120 }}>
@@ -418,67 +571,68 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               </tr>
             </thead>
             <tbody>
-              {rows.map((row, ri) => (
-                <tr key={row.id} className="border-b border-white/5 transition-colors hover:bg-white/3"
-                  style={{ animationDelay: `${ri * 0.03}s` }}>
-                  <td className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                    style={{ background: "var(--sticky-cell-bg)" }}>
-                    {row.city}
-                  </td>
-                  {columns.map(col => (
-                    <td key={col.key} className="px-2 py-1.5 text-center">
-                      {readonly ? (
+              {hasMonths && !selectedMonth ? (
+                aggregatedByCityRows.map((row, ri) => (
+                  <tr key={row.city} className="border-b border-white/5 transition-colors hover:bg-white/3">
+                    <td className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                      style={{ background: "var(--sticky-cell-bg)" }}>
+                      {row.city}
+                    </td>
+                    <td className="px-3 py-2.5 text-white/40 text-xs">Все</td>
+                    {columns.map(col => (
+                      <td key={col.key} className="px-2 py-1.5 text-center">
                         <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
                           {(Number(row[col.key]) || 0).toLocaleString("ru-RU")}
                         </span>
-                      ) : (
-                        <input type="number" min={0}
-                          value={row[col.key] === 0 ? "" : String(row[col.key])}
-                          placeholder="0"
-                          onChange={e => handleChange(row.id, col.key, e.target.value)}
-                          className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
-                            bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
-                            [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          style={{ minWidth: 52 }} />
-                      )}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2.5 text-center">
+                      <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
+                        {rowTotal(row).toLocaleString("ru-RU")}
+                      </span>
                     </td>
-                  ))}
-                  <td className="px-4 py-2.5 text-center">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
-                      {rowTotal(row).toLocaleString("ru-RU")}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {isUniversalApi && !readonly && (
-                <tr className="border-b border-white/5">
-                  <td className="px-2 py-1.5 sticky left-0 z-10" style={{ background: "var(--sticky-cell-bg)" }}>
-                    <input
-                      value={newCity}
-                      onChange={e => setNewCity(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter" && newCity.trim()) {
-                          const tempId = -(Date.now());
-                          const newRow: Row = { id: tempId, city: newCity.trim() };
-                          columns.forEach(c => { newRow[c.key] = 0; });
-                          setRows(prev => [...prev, newRow]);
-                          setNewCity("");
-                          setDirty(true);
-                          setSaved(false);
-                        }
-                      }}
-                      placeholder="+ Новый город"
-                      className="w-full bg-transparent text-white/40 text-xs rounded-lg py-1.5 px-2 outline-none border border-dashed border-white/10 hover:border-white/20 focus:border-violet-500/60 transition-all placeholder:text-white/20"
-                    />
-                  </td>
-                  <td colSpan={columns.length + 1}></td>
-                </tr>
+                  </tr>
+                ))
+              ) : (
+                filteredRows.map((row, ri) => (
+                  <tr key={row.id} className="border-b border-white/5 transition-colors hover:bg-white/3"
+                    style={{ animationDelay: `${ri * 0.03}s` }}>
+                    <td className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                      style={{ background: "var(--sticky-cell-bg)" }}>
+                      {row.city}
+                    </td>
+                    {columns.map(col => (
+                      <td key={col.key} className="px-2 py-1.5 text-center">
+                        {readonly ? (
+                          <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
+                            {(Number(row[col.key]) || 0).toLocaleString("ru-RU")}
+                          </span>
+                        ) : (
+                          <input type="number" min={0}
+                            value={row[col.key] === 0 ? "" : String(row[col.key])}
+                            placeholder="0"
+                            onChange={e => handleChange(row.id, col.key, e.target.value)}
+                            className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
+                              bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
+                              [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ minWidth: 52 }} />
+                        )}
+                      </td>
+                    ))}
+                    <td className="px-4 py-2.5 text-center">
+                      <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
+                        {rowTotal(row).toLocaleString("ru-RU")}
+                      </span>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-white/10">
                 <td className="px-4 py-3 text-white/70 font-bold text-xs sticky left-0 z-10"
                   style={{ background: "var(--sticky-cell-bg)" }}>ИТОГО</td>
+                {hasMonths && !selectedMonth && <td></td>}
                 {columns.map(col => (
                   <td key={col.key} className="px-2 py-3 text-center">
                     <span className={`text-xs font-bold ${colTotal(col.key) > 0 ? "text-gradient-cyan" : "text-white/30"}`}>

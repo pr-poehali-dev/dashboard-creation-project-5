@@ -1,4 +1,4 @@
-"""Получение и обновление данных таблицы причин стоимости ниже прайса. v2"""
+"""Получение и обновление данных таблицы причин стоимости ниже прайса с поддержкой месяцев."""
 import json
 import os
 
@@ -27,19 +27,18 @@ def handler(event: dict, context) -> dict:
         return {"statusCode": 200, "headers": CORS, "body": ""}
 
     method = event.get("httpMethod", "GET")
-
     import psycopg2
-    conn = psycopg2.connect(os.environ["DATABASE_URL"])
-    cur = conn.cursor()
 
     if method == "GET":
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cur = conn.cursor()
         cols_select = ", ".join(COLUMNS)
         cur.execute(
-            f"SELECT id, city, {cols_select} "
+            f"SELECT id, city, month, {cols_select} "
             f"FROM t_p56096254_dashboard_creation_p.below_price ORDER BY id"
         )
         rows = cur.fetchall()
-        col_names = ["id", "city"] + COLUMNS
+        col_names = ["id", "city", "month"] + COLUMNS
         result = [dict(zip(col_names, row)) for row in rows]
         cur.close()
         conn.close()
@@ -48,6 +47,8 @@ def handler(event: dict, context) -> dict:
     if method == "POST":
         body = json.loads(event.get("body") or "{}")
         rows = body.get("rows", [])
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cur = conn.cursor()
         for row in rows:
             cols_set = ", ".join(f"{col} = %s" for col in COLUMNS)
             vals = [int(row.get(col, 0)) for col in COLUMNS]
@@ -62,6 +63,4 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return {"statusCode": 200, "headers": CORS, "body": json.dumps({"ok": True})}
 
-    cur.close()
-    conn.close()
     return {"statusCode": 405, "headers": CORS, "body": json.dumps({"error": "Method not allowed"})}

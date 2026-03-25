@@ -1,12 +1,11 @@
 {
   "tests": [
     {
-      "name": "GET terminations list",
+      "name": "GET terminations list with months",
       "method": "GET",
       "path": "/",
       "expectedStatus": 200,
-      "expectedBody": [],
-      "bodyMatcher": "partial"
+      "expectedBody": "string"
     }
   ]
 }
