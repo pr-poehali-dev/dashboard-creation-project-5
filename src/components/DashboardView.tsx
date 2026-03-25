@@ -4,6 +4,7 @@ import {
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
   LineChart, Line,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
@@ -224,6 +225,79 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
     ...item,
     pct: grandTotal > 0 ? (item.total / grandTotal) * 100 : 0,
   }));
+
+  const reasonsByMonth = (() => {
+    if (!hasMonths) return [];
+    return allMonths.map(m => {
+      const monthRows = allRows.filter(r =>
+        (!selectedCity || r.city === selectedCity) && r.month === m
+      );
+      const entry: Record<string, number | string> = { month: m };
+      columns.forEach(c => {
+        entry[c.key] = monthRows.reduce((s, r) => s + (Number(r[c.key]) || 0), 0);
+      });
+      return entry;
+    }).filter(d => columns.some(c => (d[c.key] as number) > 0));
+  })();
+
+  const top3Total = top3Reasons.reduce((s, r) => s + r.total, 0);
+  const concentrationPct = grandTotal > 0 ? (top3Total / grandTotal) * 100 : 0;
+
+  const anomalies = (() => {
+    if (!hasMonths || allMonths.length < 2) return [];
+    const results: { city: string; reason: string; month: string; prev: number; cur: number; pctChange: number; color: string }[] = [];
+    const citiesToCheck = selectedCity ? [selectedCity] : cities;
+    citiesToCheck.forEach(city => {
+      columns.forEach((col, ci) => {
+        const monthVals = allMonths.map(m => {
+          const rows = allRows.filter(r => r.city === city && r.month === m);
+          return rows.reduce((s, r) => s + (Number(r[col.key]) || 0), 0);
+        });
+        for (let i = 1; i < monthVals.length; i++) {
+          const prev = monthVals[i - 1];
+          const cur = monthVals[i];
+          if (prev === 0 && cur === 0) continue;
+          const pctChange = prev > 0 ? ((cur - prev) / prev) * 100 : cur > 5 ? 999 : 0;
+          if (Math.abs(pctChange) >= 80 && Math.abs(cur - prev) >= 3) {
+            results.push({
+              city, reason: col.label, month: allMonths[i],
+              prev, cur, pctChange,
+              color: PIE_COLORS[ci % PIE_COLORS.length],
+            });
+          }
+        }
+      });
+    });
+    return results.sort((a, b) => Math.abs(b.pctChange) - Math.abs(a.pctChange)).slice(0, 8);
+  })();
+
+  const cityProfileData = (() => {
+    if (!selectedCity) return [];
+    const cityAgg: Record<string, number> = {};
+    const avgAgg: Record<string, number> = {};
+    columns.forEach(c => { cityAgg[c.key] = 0; avgAgg[c.key] = 0; });
+    allRows.forEach(r => {
+      columns.forEach(c => {
+        const v = Number(r[c.key]) || 0;
+        avgAgg[c.key] += v;
+        if (r.city === selectedCity) cityAgg[c.key] += v;
+      });
+    });
+    const numCities = cities.length || 1;
+    return columns.map((c, i) => {
+      const avg = avgAgg[c.key] / numCities;
+      const maxVal = Math.max(cityAgg[c.key], avg, 1);
+      return {
+        reason: c.label.length > 18 ? c.label.slice(0, 16) + "…" : c.label,
+        fullLabel: c.label,
+        city: Math.round((cityAgg[c.key] / maxVal) * 100),
+        avg: Math.round((avg / maxVal) * 100),
+        cityRaw: cityAgg[c.key],
+        avgRaw: Math.round(avg),
+        color: PIE_COLORS[i % PIE_COLORS.length],
+      };
+    });
+  })();
 
   const handleChange = (id: number, col: string, val: string) => {
     const num = val === "" ? 0 : parseInt(val, 10);
@@ -542,6 +616,176 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {!loading && grandTotal > 0 && (
+        <div className="glass rounded-2xl p-5 animate-fade-in-up">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-xl gradient-cyan flex items-center justify-center"
+              style={{ boxShadow: "0 8px 24px rgba(0,191,255,0.25)" }}>
+              <Icon name="Target" size={18} className="text-white" />
+            </div>
+            <div>
+              <p className="text-white/50 text-xs">Концентрация причин</p>
+              <p className="font-display text-xl font-bold text-gradient-cyan">
+                Топ-3 = {concentrationPct.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 h-4 rounded-full overflow-hidden flex" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
+            {top3Reasons.map((item, i) => (
+              <div key={item.key} className="h-full transition-all duration-700"
+                title={`${item.label}: ${item.pct.toFixed(1)}%`}
+                style={{ width: `${item.pct}%`, background: item.color }} />
+            ))}
+            {concentrationPct < 100 && (
+              <div className="h-full" style={{ width: `${100 - concentrationPct}%`, background: isLight ? "rgba(20,10,40,0.04)" : "rgba(255,255,255,0.04)" }} />
+            )}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+            {top3Reasons.map(item => (
+              <span key={item.key} className="flex items-center gap-1.5 text-xs text-white/50">
+                <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                {item.label}: {item.pct.toFixed(1)}%
+              </span>
+            ))}
+            <span className="text-xs text-white/30">
+              Остальные: {(100 - concentrationPct).toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      )}
+
+      {hasMonths && reasonsByMonth.length > 1 && (
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-6">
+            <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
+            <p className="text-white/40 text-xs mt-0.5">
+              {selectedCity ? selectedCity : "Все города"} · каждая причина отдельно
+            </p>
+          </div>
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={50} />
+              <Tooltip content={<CustomTooltip />} />
+              {columns.map((col, i) => (
+                <Line key={col.key} type="monotone" dataKey={col.key} name={col.label}
+                  stroke={PIE_COLORS[i % PIE_COLORS.length]} strokeWidth={2}
+                  dot={{ r: 3, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 1 }}
+                  activeDot={{ r: 5 }} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
+            {columns.map((c, i) => (
+              <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/50">
+                <span className="w-3 h-0.5 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                {c.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {anomalies.length > 0 && (
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
+              style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
+              <Icon name="Zap" size={18} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
+              <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {anomalies.map((a, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
+                style={{ background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.03)" }}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.pctChange > 0 ? "bg-red-500/15" : "bg-emerald-500/15"}`}>
+                  <Icon name={a.pctChange > 0 ? "TrendingUp" : "TrendingDown"} size={16}
+                    className={a.pctChange > 0 ? "text-red-400" : "text-emerald-400"} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                      {a.city}
+                    </span>
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${a.color}20`, color: a.color }}>
+                      {a.reason}
+                    </span>
+                  </div>
+                  <span className="text-xs text-white/40">{a.month}: {a.prev} → {a.cur}</span>
+                </div>
+                <span className={`text-sm font-bold flex-shrink-0 ${a.pctChange > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                  {a.pctChange > 0 ? "+" : ""}{a.pctChange > 500 ? "новая" : `${Math.round(a.pctChange)}%`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selectedCity && cityProfileData.length > 0 && (
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl gradient-green flex items-center justify-center"
+              style={{ boxShadow: "0 8px 24px rgba(0,212,106,0.25)" }}>
+              <Icon name="Radar" size={18} className="text-white" fallback="CircleAlert" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-white text-lg">Профиль города</h3>
+              <p className="text-white/40 text-xs mt-0.5">{selectedCity} vs средние по всем городам</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={cityProfileData}>
+                <PolarGrid stroke={isLight ? "rgba(20,10,40,0.1)" : "rgba(255,255,255,0.1)"} />
+                <PolarAngleAxis dataKey="reason" tick={{ fill: axisColor, fontSize: 9 }} />
+                <PolarRadiusAxis tick={false} axisLine={false} />
+                <Radar name={selectedCity} dataKey="city" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} strokeWidth={2} />
+                <Radar name="Среднее" dataKey="avg" stroke="#00BFFF" fill="#00BFFF" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
+                <Tooltip contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12 }}
+                  formatter={(value: number, name: string, props: { payload: { fullLabel: string; cityRaw: number; avgRaw: number } }) => {
+                    const d = props.payload;
+                    return name === selectedCity ? `${d.cityRaw}` : `${d.avgRaw}`;
+                  }} />
+              </RadarChart>
+            </ResponsiveContainer>
+            <div className="space-y-2 flex flex-col justify-center">
+              {cityProfileData.map((d, i) => {
+                const diff = d.cityRaw - d.avgRaw;
+                const pct = d.avgRaw > 0 ? ((diff / d.avgRaw) * 100) : 0;
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                    <span className="text-xs text-white/60 flex-1 truncate" title={d.fullLabel}>{d.fullLabel}</span>
+                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{d.cityRaw}</span>
+                    <span className="text-xs text-white/30">/ {d.avgRaw} ср.</span>
+                    {diff !== 0 && (
+                      <span className={`text-xs font-semibold ${diff > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                        {diff > 0 ? "+" : ""}{Math.round(pct)}%
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/8">
+                <span className="flex items-center gap-1.5 text-xs text-white/40">
+                  <span className="w-3 h-1 rounded-full bg-violet-500" /> {selectedCity}
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-white/40">
+                  <span className="w-3 h-1 rounded-full bg-cyan-400 opacity-50" style={{ borderBottom: "1px dashed" }} /> Среднее
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       )}
