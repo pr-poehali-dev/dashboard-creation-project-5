@@ -521,7 +521,7 @@ export default function VyrabotkaCityView({
           <p className="text-white/40 text-xs mt-0.5">Перевыполнение / недовыполнение</p>
         </div>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan, absDeviation: Math.abs(d.fact - d.plan) }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
+          <BarChart data={monthlyData.filter(d => d.fact > 0).map(d => ({ ...d, deviation: d.fact - d.plan, absDeviation: Math.abs(d.fact - d.plan) }))} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%">
             <defs>
               <linearGradient id="gradDevPos" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={COLORS.good} stopOpacity={1} />
