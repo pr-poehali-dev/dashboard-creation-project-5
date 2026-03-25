@@ -50,8 +50,21 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
       .then(data => {
         const parsed = typeof data === "string" ? JSON.parse(data) : data;
         const arr: Row[] = Array.isArray(parsed) ? parsed : [];
+        const hasMonthField = arr.some(r => r.month && String(r.month).length > 0);
         const hasGroups = arr.some(r => r.city && String(r.city).includes(" — "));
-        if (hasGroups) {
+        if (hasMonthField) {
+          arr.sort((a, b) => {
+            const cityA = String(a.city);
+            const cityB = String(b.city);
+            if (cityA !== cityB) return cityA.localeCompare(cityB, "ru");
+            return (MONTH_ORDER[String(a.month)] || 99) - (MONTH_ORDER[String(b.month)] || 99);
+          });
+          arr.forEach(r => {
+            if (r.month && String(r.month).length > 0) {
+              r.city = `${r.city} — ${r.month}`;
+            }
+          });
+        } else if (hasGroups) {
           arr.sort((a, b) => {
             const [cityA, monthA] = String(a.city).split(" — ");
             const [cityB, monthB] = String(b.city).split(" — ");
@@ -76,10 +89,18 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
   const handleSave = async () => {
     setSaving(true);
     try {
+      const saveRows = rows.map(r => {
+        const cityStr = String(r.city);
+        const sep = cityStr.lastIndexOf(" — ");
+        if (sep !== -1 && r.month !== undefined) {
+          return { ...r, city: cityStr.substring(0, sep), month: cityStr.substring(sep + 3) };
+        }
+        return r;
+      });
       await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows }),
+        body: JSON.stringify({ rows: saveRows }),
       });
       setSaved(true);
       setDirty(false);
