@@ -92,16 +92,32 @@ export function pctBg(pct: number): string {
   return "bg-[#E50000]/20 text-[#E50000]";
 }
 
+function lerpColor(pct: number): string {
+  const clamped = Math.max(0, Math.min(pct, 120));
+  if (clamped >= 100) return COLORS.good;
+  if (clamped >= 80) {
+    const t = (clamped - 80) / 20;
+    const r = Math.round(255 * (1 - t) + 0 * t);
+    const g = Math.round(184 * (1 - t) + 204 * t);
+    const b = Math.round(0 * (1 - t) + 68 * t);
+    return `rgb(${r},${g},${b})`;
+  }
+  const t = clamped / 80;
+  const r = Math.round(229 + (255 - 229) * (1 - t));
+  const g = Math.round(0 + 184 * t);
+  const b = 0;
+  return `rgb(${r},${g},${b})`;
+}
+
 export function statusGradient(pct: number): string {
-  if (pct >= 100) return `linear-gradient(90deg, ${COLORS.good}, #00E04D)`;
-  if (pct >= 80) return `linear-gradient(90deg, ${COLORS.warn}, #FFC933)`;
-  return `linear-gradient(90deg, ${COLORS.bad}, #FF1A1A)`;
+  const c = lerpColor(pct);
+  const cBright = lerpColor(Math.min(pct + 5, 120));
+  return `linear-gradient(90deg, ${c}, ${cBright})`;
 }
 
 export function statusGlow(pct: number): string {
-  if (pct >= 100) return `0 0 20px ${COLORS.goodGlow}, 0 0 40px rgba(0,204,68,0.15)`;
-  if (pct >= 80) return `0 0 20px ${COLORS.warnGlow}, 0 0 40px rgba(255,184,0,0.15)`;
-  return `0 0 20px ${COLORS.badGlow}, 0 0 40px rgba(229,0,0,0.15)`;
+  const c = lerpColor(pct);
+  return `0 0 20px ${c}66, 0 0 40px ${c}26`;
 }
 
 interface TPayload { color: string; name: string; value: number; }
