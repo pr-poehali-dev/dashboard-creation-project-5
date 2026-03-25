@@ -89,10 +89,11 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
   const handleSave = async () => {
     setSaving(true);
     try {
+      const hasMonthData = rows.some(r => r.month !== undefined);
       const saveRows = rows.map(r => {
         const cityStr = String(r.city);
         const sep = cityStr.lastIndexOf(" — ");
-        if (sep !== -1 && r.month !== undefined) {
+        if (sep !== -1 && hasMonthData) {
           return { ...r, city: cityStr.substring(0, sep), month: cityStr.substring(sep + 3) };
         }
         return r;
