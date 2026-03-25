@@ -3,6 +3,7 @@ import {
   AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
+  LineChart, Line,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
@@ -171,6 +172,59 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
 
   const cityBarData = aggregatedByCityRows.map(r => ({ name: r.city as string, total: rowTotal(r) })).sort((a, b) => b.total - a.total);
 
+  const allRowsTotal = allRows.reduce((s, r) => s + columns.reduce((ss, c) => ss + (Number(r[c.key]) || 0), 0), 0);
+  const cityShare = selectedCity && allRowsTotal > 0
+    ? (grandTotal / allRowsTotal * 100)
+    : 0;
+
+  const allCitiesAggregated = (() => {
+    const map: Record<string, number> = {};
+    allRows.forEach(r => {
+      const city = r.city as string;
+      if (!map[city]) map[city] = 0;
+      map[city] += columns.reduce((s, c) => s + (Number(r[c.key]) || 0), 0);
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  })();
+  const cityRank = selectedCity
+    ? allCitiesAggregated.findIndex(([c]) => c === selectedCity) + 1
+    : 0;
+  const totalCities = allCitiesAggregated.length;
+
+  const monthOverMonth = (() => {
+    if (!hasMonths || !selectedMonth) return null;
+    const currentIdx = MONTHS_ORDER.indexOf(selectedMonth);
+    if (currentIdx <= 0) return null;
+    const prevMonth = MONTHS_ORDER[currentIdx - 1];
+
+    const currentTotal = allRows
+      .filter(r => (!selectedCity || r.city === selectedCity) && r.month === selectedMonth)
+      .reduce((s, r) => s + columns.reduce((ss, c) => ss + (Number(r[c.key]) || 0), 0), 0);
+    const prevTotal = allRows
+      .filter(r => (!selectedCity || r.city === selectedCity) && r.month === prevMonth)
+      .reduce((s, r) => s + columns.reduce((ss, c) => ss + (Number(r[c.key]) || 0), 0), 0);
+
+    if (prevTotal === 0) return null;
+    const change = ((currentTotal - prevTotal) / prevTotal) * 100;
+    return { prevMonth, prevTotal, currentTotal, change };
+  })();
+
+  const monthlyTrendData = (() => {
+    if (!hasMonths) return [];
+    return allMonths.map(m => {
+      const monthRows = allRows.filter(r =>
+        (!selectedCity || r.city === selectedCity) && r.month === m
+      );
+      const total = monthRows.reduce((s, r) => s + columns.reduce((ss, c) => ss + (Number(r[c.key]) || 0), 0), 0);
+      return { month: m, total };
+    }).filter(d => d.total > 0);
+  })();
+
+  const top3Reasons = sorted.slice(0, 3).map(item => ({
+    ...item,
+    pct: grandTotal > 0 ? (item.total / grandTotal) * 100 : 0,
+  }));
+
   const handleChange = (id: number, col: string, val: string) => {
     const num = val === "" ? 0 : parseInt(val, 10);
     if (isNaN(num) || num < 0) return;
@@ -212,27 +266,41 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       gradient: "gradient-violet",
       textGradient: "text-gradient-violet",
       glow: "rgba(124,92,255,0.35)",
-      sub: selectedMonth || `${aggregatedByCityRows.length} городов`,
+      sub: monthOverMonth
+        ? `${monthOverMonth.change > 0 ? "\u2191" : "\u2193"} ${Math.abs(Math.round(monthOverMonth.change))}% к ${monthOverMonth.prevMonth.toLowerCase()}`
+        : selectedMonth || `${aggregatedByCityRows.length} городов`,
+      changeType: monthOverMonth ? (monthOverMonth.change > 0 ? "up" : "down") as string | null : null,
     },
     {
       label: "Главная причина",
-      value: top1?.label ?? "—",
+      value: top1?.label ?? "\u2014",
       icon: "AlertTriangle",
       gradient: "gradient-pink",
       textGradient: "text-gradient-pink",
       glow: "rgba(255,60,172,0.35)",
       sub: top1 ? `${top1.total.toLocaleString("ru-RU")} случаев` : "",
+      changeType: null as string | null,
     },
     {
       label: "2-я по частоте",
-      value: top2?.label ?? "—",
+      value: top2?.label ?? "\u2014",
       icon: "AlertCircle",
       gradient: "gradient-cyan",
       textGradient: "text-gradient-cyan",
       glow: "rgba(0,229,204,0.35)",
       sub: top2 ? `${top2.total.toLocaleString("ru-RU")} случаев` : "",
+      changeType: null as string | null,
     },
-    {
+    ...(selectedCity && cityRank > 0 ? [{
+      label: "Рейтинг города",
+      value: `${cityRank}-е место`,
+      icon: "Trophy",
+      gradient: "gradient-green",
+      textGradient: "text-gradient-green",
+      glow: "rgba(0,212,106,0.35)",
+      sub: `из ${totalCities} городов`,
+      changeType: null as string | null,
+    }] : [{
       label: "Городов с данными",
       value: aggregatedByCityRows.filter(r => rowTotal(r) > 0).length.toLocaleString("ru-RU"),
       icon: "MapPin",
@@ -240,7 +308,18 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       textGradient: "text-gradient-green",
       glow: "rgba(0,212,106,0.35)",
       sub: `из ${cities.length}`,
-    },
+      changeType: null as string | null,
+    }]),
+    ...(selectedCity && cityShare > 0 ? [{
+      label: "Доля от общего",
+      value: `${cityShare.toFixed(1)}%`,
+      icon: "PieChart",
+      gradient: "gradient-violet",
+      textGradient: "text-gradient-violet",
+      glow: "rgba(99,102,241,0.35)",
+      sub: `${grandTotal.toLocaleString("ru-RU")} из ${allRowsTotal.toLocaleString("ru-RU")}`,
+      changeType: null as string | null,
+    }] : []),
   ];
 
   const displayRows = hasMonths && !selectedMonth
@@ -305,7 +384,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${kpiCards.length > 4 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-4`}>
         {kpiCards.map((card, i) => (
           <div key={card.label} className="glass glass-hover rounded-2xl p-5 animate-fade-in-up"
             style={{ animationDelay: `${i * 0.1}s` }}>
@@ -314,7 +393,11 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 style={{ boxShadow: `0 8px 24px ${card.glow}` }}>
                 <Icon name={card.icon} size={18} className="text-white" />
               </div>
-              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-white/8 text-white/40">{card.sub}</span>
+              <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                card.changeType === 'up' ? 'bg-red-500/15 text-red-400' :
+                card.changeType === 'down' ? 'bg-emerald-500/15 text-emerald-400' :
+                'bg-white/8 text-white/40'
+              }`}>{card.sub}</span>
             </div>
             <p className="text-white/50 text-xs mb-1">{card.label}</p>
             {loading ? (
@@ -398,6 +481,71 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         </div>
       </div>
 
+      {hasMonths && monthlyTrendData.length > 1 && (
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-6">
+            <h3 className="font-display font-bold text-white text-lg">Тренд по месяцам</h3>
+            <p className="text-white/40 text-xs mt-0.5">
+              {selectedCity ? selectedCity : "Все города"} · линия тренда
+            </p>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={monthlyTrendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={50} />
+              <Tooltip content={<CustomTooltip />} />
+              <Line type="monotone" dataKey="total" name="Итого" stroke="#8B5CF6" strokeWidth={3}
+                dot={{ r: 5, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }}
+                activeDot={{ r: 7, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {!loading && grandTotal > 0 && (
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="mb-5">
+            <h3 className="font-display font-bold text-white text-lg">Топ причины</h3>
+            <p className="text-white/40 text-xs mt-0.5">
+              {selectedCity ? selectedCity : "Все города"}
+              {selectedMonth ? ` · ${selectedMonth}` : ""} · доля от общего
+            </p>
+          </div>
+          <div className="space-y-4">
+            {top3Reasons.map((item, i) => (
+              <div key={item.key}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white"
+                      style={{ background: item.color }}>
+                      {i + 1}
+                    </span>
+                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                      {item.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
+                      {item.total.toLocaleString("ru-RU")}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+                      style={{ background: `${item.color}20`, color: item.color }}>
+                      {item.pct.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+                <div className="h-3 rounded-full overflow-hidden" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
+                  <div className="h-full rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${item.pct}%`, background: `linear-gradient(90deg, ${item.color}, ${item.color}CC)` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <h3 className="font-display font-bold text-white text-lg mb-1">Причины — сравнение</h3>
@@ -412,31 +560,34 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <BarChart data={sorted.map(c => ({ name: c.label, value: c.total, color: c.color }))}
                 margin={{ top: 5, right: 5, left: 10, bottom: 70 }} barSize={22}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 9 }}
-                  axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} />
+                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
+                  axisLine={false} tickLine={false} angle={-40} textAnchor="end" interval={0} />
                 <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="Итого" radius={[4, 4, 0, 0]}>
-                  {sorted.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                <Bar dataKey="value" name="Кол-во" radius={[8, 8, 0, 0]}>
+                  {sorted.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
 
-        {hasMonths && !selectedMonth ? (
+        {hasMonths ? (
           <div className="glass rounded-2xl p-6 animate-fade-in-up">
             <h3 className="font-display font-bold text-white text-lg mb-1">Динамика по месяцам</h3>
             <p className="text-white/40 text-xs mb-6">
               {selectedCity ? selectedCity : "Все города"}
+              {selectedMonth ? ` · ${selectedMonth}` : " · все месяцы"}
             </p>
             {loading ? (
               <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
             ) : (
               <ResponsiveContainer width="100%" height={340}>
                 <BarChart data={aggregatedByMonthRows.filter(d => d.total > 0)}
-                  margin={{ top: 5, right: 5, left: 10, bottom: 0 }} barSize={28}>
+                  margin={{ top: 5, right: 5, left: 10, bottom: 5 }} barSize={28}>
                   <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
                   <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
