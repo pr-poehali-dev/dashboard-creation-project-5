@@ -431,7 +431,7 @@ export default function VyrabotkaCityView({
                 ) : null
               }
             >
-              {monthlyData.map((entry, index) => (
+              {monthlyData.filter(d => d.plan > 0 || d.fact > 0).map((entry, index) => (
                 <Cell key={`fact-${index}`}
                   fill={entry.plan > 0 && entry.fact >= entry.plan ? "url(#gradBarFact)" : entry.fact > 0 ? COLORS.factDark : "transparent"}
                 />
