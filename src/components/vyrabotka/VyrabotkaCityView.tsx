@@ -388,8 +388,8 @@ export default function VyrabotkaCityView({
                   <stop offset="100%" stopColor={COLORS.good} stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="gradPctBelow" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={COLORS.bad} stopOpacity={0.35} />
-                  <stop offset="100%" stopColor={COLORS.bad} stopOpacity={0.02} />
+                  <stop offset="0%" stopColor={COLORS.good} stopOpacity={0.35} />
+                  <stop offset="100%" stopColor={COLORS.good} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} />
@@ -404,12 +404,12 @@ export default function VyrabotkaCityView({
                 label={{ value: "100%", position: "right", fill: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)", fontSize: 11 }} />
               <Area type="natural" dataKey="pct" stroke="url(#)" strokeWidth={0} fill="url(#gradPctBelow)" tooltipType="none" />
               <Area type="natural" dataKey="pct" name="Выполнение"
-                stroke={(() => { const filtered = monthlyData.filter(d => d.fact > 0); const last = filtered[filtered.length - 1]; return last && last.pct >= 100 ? COLORS.good : COLORS.bad; })()}
+                stroke={COLORS.good}
                 strokeWidth={2.5}
                 fill="none"
                 dot={({ cx, cy, payload }: { cx: number; cy: number; payload?: { name?: string; pct?: number } }) => (
                   <circle key={`dot-${payload?.name}`} cx={cx} cy={cy} r={4}
-                    fill={payload?.pct >= 100 ? COLORS.good : COLORS.bad}
+                    fill={COLORS.good}
                     stroke={isLight ? "#fff" : "#1a1030"} strokeWidth={2} />
                 )}
                 activeDot={{ r: 6, strokeWidth: 2, stroke: isLight ? "#fff" : "#1a1030" }} />
