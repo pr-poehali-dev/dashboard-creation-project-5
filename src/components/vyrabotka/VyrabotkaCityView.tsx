@@ -191,19 +191,22 @@ export default function VyrabotkaCityView({
   const scoreColor = overallScore >= 80 ? COLORS.good : overallScore >= 60 ? COLORS.warn : COLORS.bad;
   const scoreLabel = overallScore >= 80 ? "Отлично" : overallScore >= 60 ? "Хорошо" : overallScore >= 40 ? "Средне" : "Критично";
 
+  const overallScore3 = Math.min((planExecution * 0.55 + rankScore * 0.25 + Math.min(shareOfTotal * 5, 100) * 0.2), 100);
   const efficiencyMetrics = [
     { label: "Выполнение плана", value: Math.min(planExecution, 100), color: COLORS.plan },
-    { label: "Стабильность", value: stability, color: COLORS.fact },
-    { label: "Динамика роста", value: growthTrend, color: COLORS.warn },
     { label: "Позиция в рейтинге", value: rankScore, color: COLORS.good },
-    { label: "Доля рынка", value: Math.min(shareOfTotal * 5, 100), color: COLORS.bad },
+    { label: "Доля среди всех клиник", value: Math.min(shareOfTotal * 5, 100), color: COLORS.warn },
   ];
 
-  const growthRateData = monthsWithFact.length >= 2
-    ? monthsWithFact.map((m, i) => {
+  const monthsWithData = activeMonths.filter(m => {
+    const md = cd.months[m];
+    return md && (md.plan > 0 || md.fact > 0);
+  });
+  const growthRateData = monthsWithData.length >= 2
+    ? monthsWithData.map((m, i) => {
         const curr = cd.months[m];
         if (i === 0) return { name: MONTH_LABELS[m], rate: 0, fact: curr.fact, isFirst: true };
-        const prevM = monthsWithFact[i - 1];
+        const prevM = monthsWithData[i - 1];
         const prev = cd.months[prevM];
         const rate = prev.fact > 0 ? ((curr.fact - prev.fact) / prev.fact) * 100 : 0;
         return { name: MONTH_LABELS[m], rate: Math.round(rate * 10) / 10, fact: curr.fact, isFirst: false };
@@ -281,7 +284,7 @@ export default function VyrabotkaCityView({
               <Icon name="Activity" size={20} className="inline mr-2 text-violet-400" />
               Эффективность клиники
             </h3>
-            <p className="text-white/40 text-xs mt-0.5">Комплексная оценка по 5 метрикам</p>
+            <p className="text-white/40 text-xs mt-0.5">Комплексная оценка по 3 метрикам</p>
           </div>
           <div className="flex flex-col items-center">
             <SpeedometerGauge value={overallScore} label="Общий балл" scoreLabel={scoreLabel} color={scoreColor} />
@@ -293,8 +296,8 @@ export default function VyrabotkaCityView({
           </div>
         </div>
 
-        <div className="glass rounded-2xl p-6 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-          <div className="mb-6">
+        <div className="glass rounded-2xl p-6 animate-fade-in-up flex flex-col" style={{ animationDelay: "0.1s" }}>
+          <div className="mb-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-display font-bold text-white text-lg">
@@ -312,31 +315,33 @@ export default function VyrabotkaCityView({
             </div>
           </div>
           {growthRateData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={growthRateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v: number) => `${v}%`} />
-                <ReferenceLine y={0} stroke={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"} strokeWidth={1.5} />
-                <Tooltip
-                  formatter={(value: number) => [`${value >= 0 ? "+" : ""}${value.toFixed(1)}%`, "Прирост"]}
-                  contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
-                  labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-                  itemStyle={{ color: "#fff" }} />
-                <Bar dataKey="rate" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                  {growthRateData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.rate >= 0 ? COLORS.good : COLORS.bad}
-                      fillOpacity={0.85}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="flex-1 min-h-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={growthRateData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v: number) => `${v}%`} />
+                  <ReferenceLine y={0} stroke={isLight ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.15)"} strokeWidth={1.5} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value >= 0 ? "+" : ""}${value.toFixed(1)}%`, "Прирост"]}
+                    contentStyle={{ background: "rgba(15,10,30,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12 }}
+                    labelStyle={{ color: "rgba(255,255,255,0.5)" }}
+                    itemStyle={{ color: "#fff" }} />
+                  <Bar dataKey="rate" radius={[6, 6, 0, 0]} maxBarSize={50}>
+                    {growthRateData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.rate >= 0 ? COLORS.good : COLORS.bad}
+                        fillOpacity={0.85}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-[280px] text-white/30 text-sm">
+            <div className="flex-1 flex items-center justify-center text-white/30 text-sm">
               Недостаточно данных (нужно минимум 2 месяца)
             </div>
           )}
