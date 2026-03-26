@@ -615,38 +615,65 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         )}
 
         <div className={`${selectedCity ? "lg:col-span-3" : ""} glass rounded-2xl p-6 animate-fade-in-up`}>
-          <div className="mb-4">
+          <div className="mb-5">
             <h3 className="font-display font-bold text-white text-lg">Распределение</h3>
-            <p className="text-white/40 text-xs mt-0.5">По типам причин</p>
+            <p className="text-white/40 text-xs mt-0.5">По типам причин{grandTotal > 0 ? ` · всего ${grandTotal.toLocaleString("ru-RU")}` : ""}</p>
           </div>
           {loading ? (
             <div className="h-[180px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
           ) : (
-            <>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={colTotals.filter(c => c.total > 0)}
-                    cx="50%" cy="50%" innerRadius={50} outerRadius={80}
-                    paddingAngle={3} dataKey="total" nameKey="label" strokeWidth={0}>
-                    {colTotals.filter(c => c.total > 0).map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12 }}
-                    itemStyle={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.7)" }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="grid grid-cols-1 gap-1.5 mt-1 max-h-[120px] overflow-y-auto">
-                {sorted.filter(c => c.total > 0).map(item => (
-                  <div key={item.key} className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
-                    <span className="text-white/50 text-xs truncate flex-1">{item.label}</span>
-                    <span className="text-white text-xs font-bold ml-auto">{item.total.toLocaleString("ru-RU")}</span>
-                  </div>
-                ))}
+            <div className={selectedCity ? "flex flex-col lg:flex-row gap-6 items-start" : ""}>
+              <div className={selectedCity ? "flex-shrink-0 w-full lg:w-auto" : ""}>
+                <ResponsiveContainer width={selectedCity ? 220 : "100%"} height={selectedCity ? 220 : 180}>
+                  <PieChart>
+                    <Pie data={colTotals.filter(c => c.total > 0)}
+                      cx="50%" cy="50%"
+                      innerRadius={selectedCity ? 60 : 50} outerRadius={selectedCity ? 95 : 80}
+                      paddingAngle={3} dataKey="total" nameKey="label" strokeWidth={0}>
+                      {colTotals.filter(c => c.total > 0).map((entry, i) => (
+                        <Cell key={i} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12 }}
+                      itemStyle={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.7)" }} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-            </>
+              <div className={`flex-1 ${selectedCity ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "grid grid-cols-1 gap-1.5 mt-1 max-h-[120px] overflow-y-auto"}`}>
+                {sorted.filter(c => c.total > 0).map(item => {
+                  const pct = grandTotal > 0 ? (item.total / grandTotal) * 100 : 0;
+                  return selectedCity ? (
+                    <div key={item.key} className="rounded-xl p-3 transition-colors"
+                      style={{ background: isLight ? "rgba(20,10,40,0.04)" : "rgba(255,255,255,0.04)" }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
+                        <span className="text-white/60 text-xs truncate flex-1">{item.label}</span>
+                      </div>
+                      <div className="flex items-end justify-between gap-2 mb-1.5">
+                        <span className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+                          {item.total.toLocaleString("ru-RU")}
+                        </span>
+                        <span className="text-xs font-semibold px-1.5 py-0.5 rounded-md" style={{ background: `${item.color}15`, color: item.color }}>
+                          {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
+                        <div className="h-full rounded-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${item.color}88, ${item.color})` }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div key={item.key} className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
+                      <span className="text-white/50 text-xs truncate flex-1">{item.label}</span>
+                      <span className="text-white/30 text-[10px]">{pct.toFixed(0)}%</span>
+                      <span className="text-white text-xs font-bold ml-auto">{item.total.toLocaleString("ru-RU")}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       </div>
