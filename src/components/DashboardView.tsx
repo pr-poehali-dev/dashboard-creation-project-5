@@ -783,35 +783,47 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
 
       {hasMonths && reasonsByMonth.length > 1 && (
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
-            <p className="text-white/40 text-xs mt-0.5">
-              {selectedCity ? selectedCity : "Все города"} · каждая причина отдельно
-            </p>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
+              <p className="text-white/40 text-xs mt-0.5">
+                {selectedCity ? selectedCity : "Все города"} · каждая причина отдельно
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
+              {columns.map((c, i) => (
+                <span key={c.key} className="flex items-center gap-1.5 text-[11px] text-white/50">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  {c.label}
+                </span>
+              ))}
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+          <ResponsiveContainer width="100%" height={420}>
+            <AreaChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+              <defs>
+                {columns.map((col, i) => (
+                  <linearGradient key={col.key} id={`gradReason-${col.key}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0} />
+                  </linearGradient>
+                ))}
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
-              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={50} />
+              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }}
+                axisLine={false} tickLine={false} interval={0} height={40} />
+              <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false}
+                tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
               <Tooltip content={<CustomTooltip />} />
               {columns.map((col, i) => (
-                <Line key={col.key} type="monotone" dataKey={col.key} name={col.label}
-                  stroke={PIE_COLORS[i % PIE_COLORS.length]} strokeWidth={2}
+                <Area key={col.key} type="monotone" dataKey={col.key} name={col.label}
+                  stroke={PIE_COLORS[i % PIE_COLORS.length]} strokeWidth={2.5}
+                  fill={`url(#gradReason-${col.key})`}
                   dot={{ r: 3, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 1 }}
-                  activeDot={{ r: 5 }} />
+                  activeDot={{ r: 5, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 2 }} />
               ))}
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
-            {columns.map((c, i) => (
-              <span key={c.key} className="flex items-center gap-1.5 text-xs text-white/50">
-                <span className="w-3 h-0.5 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                {c.label}
-              </span>
-            ))}
-          </div>
         </div>
       )}
 
