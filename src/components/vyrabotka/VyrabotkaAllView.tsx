@@ -66,59 +66,59 @@ export default function VyrabotkaAllView({
 }: Props) {
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">Динамика по месяцам</h3>
-            <p className="text-white/40 text-xs mt-0.5">План vs Факт · 2026</p>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 20, right: 5, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
-              <defs>
-                <linearGradient id="gradAllPlan" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={COLORS.plan} stopOpacity={1} />
-                  <stop offset="100%" stopColor={COLORS.planDark} stopOpacity={0.8} />
-                </linearGradient>
-                <linearGradient id="gradAllFact" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={COLORS.fact} stopOpacity={1} />
-                  <stop offset="100%" stopColor={COLORS.factDark} stopOpacity={0.8} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v: number) => fmtShort(v)} width={70} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
-              <Bar dataKey="plan" name="План" radius={[6, 6, 0, 0]}
-                label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
-                  value > 0 ? (
-                    <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize={10}>
-                      {fmtShort(value)}
-                    </text>
-                  ) : null
-                }
-              >
-                {monthlyData.filter(d => d.plan > 0 || d.fact > 0).map((d) => (
-                  <Cell key={d.shortName} fill="url(#gradAllPlan)" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
-                ))}
-              </Bar>
-              <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]}
-                label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
-                  value > 0 ? (
-                    <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,191,255,0.7)" fontSize={10} fontWeight={600}>
-                      {fmtShort(value)}
-                    </text>
-                  ) : null
-                }
-              >
-                {monthlyData.filter(d => d.plan > 0 || d.fact > 0).map((d) => (
-                  <Cell key={d.shortName} fill="url(#gradAllFact)" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+      <div className="glass rounded-2xl p-6 animate-fade-in-up">
+        <div className="mb-6">
+          <h3 className="font-display font-bold text-white text-lg">Динамика по месяцам</h3>
+          <p className="text-white/40 text-xs mt-0.5">План vs Факт · 2026</p>
         </div>
+        <ResponsiveContainer width="100%" height={420}>
+          <BarChart data={monthlyData.filter(d => d.plan > 0 || d.fact > 0)} margin={{ top: 20, right: 20, left: 10, bottom: 0 }} barCategoryGap="8%" barGap={2}>
+            <defs>
+              <linearGradient id="gradAllPlan" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={COLORS.plan} stopOpacity={1} />
+                <stop offset="100%" stopColor={COLORS.planDark} stopOpacity={0.8} />
+              </linearGradient>
+              <linearGradient id="gradAllFact" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={COLORS.fact} stopOpacity={1} />
+                <stop offset="100%" stopColor={COLORS.factDark} stopOpacity={0.8} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)"} vertical={false} />
+            <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+              tickFormatter={(v: number) => fmtShort(v)} width={70} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)", radius: 8 }} />
+            <Bar dataKey="plan" name="План" radius={[6, 6, 0, 0]}
+              label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
+                value > 0 ? (
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize={10}>
+                    {fmtShort(value)}
+                  </text>
+                ) : null
+              }
+            >
+              {monthlyData.filter(d => d.plan > 0 || d.fact > 0).map((d) => (
+                <Cell key={d.shortName} fill="url(#gradAllPlan)" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
+              ))}
+            </Bar>
+            <Bar dataKey="fact" name="Факт" radius={[6, 6, 0, 0]}
+              label={({ x, y, width: w, value }: { x: number; y: number; width: number; value: number }) =>
+                value > 0 ? (
+                  <text x={x + w / 2} y={y - 6} textAnchor="middle" fill="rgba(0,191,255,0.7)" fontSize={10} fontWeight={600}>
+                    {fmtShort(value)}
+                  </text>
+                ) : null
+              }
+            >
+              {monthlyData.filter(d => d.plan > 0 || d.fact > 0).map((d) => (
+                <Cell key={d.shortName} fill="url(#gradAllFact)" opacity={!selectedMonth || d.shortName === selectedMonth ? 1 : 0.15} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="mb-5 flex items-center justify-between">
             <div>
