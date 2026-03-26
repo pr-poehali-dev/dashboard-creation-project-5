@@ -534,30 +534,47 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
             </div>
           </div>
-          <div className="space-y-2.5">
-            {anomalies.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
-                style={{ background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.03)" }}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.pctChange > 0 ? "bg-red-500/15" : "bg-emerald-500/15"}`}>
-                  <Icon name={a.pctChange > 0 ? "TrendingUp" : "TrendingDown"} size={16}
-                    className={a.pctChange > 0 ? "text-red-400" : "text-emerald-400"} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                      {a.city}
-                    </span>
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${a.color}20`, color: a.color }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+            {anomalies.map((a, i) => {
+              const isUp = a.pctChange > 0;
+              const absPct = Math.abs(a.pctChange);
+              const multiplier = a.prev > 0 ? a.cur / a.prev : 0;
+              const changeLabel = a.prev === 0
+                ? `${a.cur.toLocaleString("ru-RU")} (с нуля)`
+                : absPct > 300
+                  ? `×${multiplier.toFixed(1)}`
+                  : `${isUp ? "+" : ""}${Math.round(a.pctChange)}%`;
+              const accentColor = isUp ? "#EF4444" : "#10B981";
+              const barWidth = Math.min(absPct / 5, 100);
+
+              return (
+                <div key={i} className="relative rounded-xl p-4 overflow-hidden transition-all hover:scale-[1.02]"
+                  style={{ background: isLight ? "rgba(20,10,40,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${accentColor}15` }}>
+                  <div className="absolute bottom-0 left-0 h-1 rounded-full transition-all duration-700"
+                    style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, ${accentColor}60, ${accentColor})` }} />
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <span className="text-xs px-2 py-1 rounded-lg font-medium" style={{ background: `${a.color}15`, color: a.color }}>
                       {a.reason}
                     </span>
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
+                      style={{ background: `${accentColor}15` }}>
+                      <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={12} style={{ color: accentColor }} />
+                      <span className="text-xs font-bold" style={{ color: accentColor }}>{changeLabel}</span>
+                    </div>
                   </div>
-                  <span className="text-xs text-white/40">{a.month}: {a.prev} → {a.cur}</span>
+                  {!selectedCity && (
+                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>{a.city}</p>
+                  )}
+                  <div className="flex items-center gap-2 text-xs text-white/40">
+                    <span>{a.month}</span>
+                    <span className="text-white/20">·</span>
+                    <span className="font-mono">{a.prev.toLocaleString("ru-RU")}</span>
+                    <Icon name="ArrowRight" size={10} className="text-white/25" />
+                    <span className="font-mono font-semibold" style={{ color: accentColor }}>{a.cur.toLocaleString("ru-RU")}</span>
+                  </div>
                 </div>
-                <span className={`text-sm font-bold flex-shrink-0 ${a.pctChange > 0 ? "text-red-400" : "text-emerald-400"}`}>
-                  {a.pctChange > 0 ? "+" : ""}{a.pctChange > 500 ? "новая" : `${Math.round(a.pctChange)}%`}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
