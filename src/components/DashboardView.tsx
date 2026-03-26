@@ -522,6 +522,46 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         </div>
       )}
 
+      {anomalies.length > 0 && (
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
+              style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
+              <Icon name="Zap" size={18} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
+              <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
+            </div>
+          </div>
+          <div className="space-y-2.5">
+            {anomalies.map((a, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
+                style={{ background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.03)" }}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.pctChange > 0 ? "bg-red-500/15" : "bg-emerald-500/15"}`}>
+                  <Icon name={a.pctChange > 0 ? "TrendingUp" : "TrendingDown"} size={16}
+                    className={a.pctChange > 0 ? "text-red-400" : "text-emerald-400"} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                      {a.city}
+                    </span>
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${a.color}20`, color: a.color }}>
+                      {a.reason}
+                    </span>
+                  </div>
+                  <span className="text-xs text-white/40">{a.month}: {a.prev} → {a.cur}</span>
+                </div>
+                <span className={`text-sm font-bold flex-shrink-0 ${a.pctChange > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                  {a.pctChange > 0 ? "+" : ""}{a.pctChange > 500 ? "новая" : `${Math.round(a.pctChange)}%`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {!selectedCity && (
           <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
@@ -726,46 +766,6 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 <span className="w-3 h-0.5 rounded-full" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                 {c.label}
               </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {anomalies.length > 0 && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
-              <Icon name="Zap" size={18} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
-              <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
-            </div>
-          </div>
-          <div className="space-y-2.5">
-            {anomalies.map((a, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl transition-colors"
-                style={{ background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.03)" }}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${a.pctChange > 0 ? "bg-red-500/15" : "bg-emerald-500/15"}`}>
-                  <Icon name={a.pctChange > 0 ? "TrendingUp" : "TrendingDown"} size={16}
-                    className={a.pctChange > 0 ? "text-red-400" : "text-emerald-400"} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                      {a.city}
-                    </span>
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${a.color}20`, color: a.color }}>
-                      {a.reason}
-                    </span>
-                  </div>
-                  <span className="text-xs text-white/40">{a.month}: {a.prev} → {a.cur}</span>
-                </div>
-                <span className={`text-sm font-bold flex-shrink-0 ${a.pctChange > 0 ? "text-red-400" : "text-emerald-400"}`}>
-                  {a.pctChange > 0 ? "+" : ""}{a.pctChange > 500 ? "новая" : `${Math.round(a.pctChange)}%`}
-                </span>
-              </div>
             ))}
           </div>
         </div>
