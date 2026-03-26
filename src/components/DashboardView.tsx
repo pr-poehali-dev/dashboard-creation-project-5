@@ -487,34 +487,73 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-display font-bold text-white text-lg">По городам</h3>
-              <p className="text-white/40 text-xs mt-0.5">Суммарное количество по каждому городу</p>
-            </div>
-          </div>
-          {loading ? (
-            <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+          {selectedCity && hasMonths ? (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-display font-bold text-white text-lg">Динамика по месяцам</h3>
+                  <p className="text-white/40 text-xs mt-0.5">{selectedCity} · суммарное количество обращений</p>
+                </div>
+              </div>
+              {loading ? (
+                <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+              ) : aggregatedByMonthRows.length > 0 ? (
+                <ResponsiveContainer width="100%" height={340}>
+                  <AreaChart data={aggregatedByMonthRows} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#00D46A" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#00D46A" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+                    <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 10 }}
+                      axisLine={false} tickLine={false} interval={0} height={40} />
+                    <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                      tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="total" name="Итого"
+                      stroke="#00D46A" strokeWidth={2.5} fill={`url(#${gradId})`}
+                      dot={{ r: 3, fill: "#00D46A", stroke: "white", strokeWidth: 1 }}
+                      activeDot={{ r: 5, fill: "#00D46A", stroke: "white", strokeWidth: 2 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Нет данных по месяцам</div>
+              )}
+            </>
           ) : (
-            <ResponsiveContainer width="100%" height={340}>
-              <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
-                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
-                  axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} height={60} />
-                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="total" name="Итого"
-                  stroke="#8B5CF6" strokeWidth={2.5} fill={`url(#${gradId})`}
-                  dot={false} activeDot={{ r: 5, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-display font-bold text-white text-lg">По городам</h3>
+                  <p className="text-white/40 text-xs mt-0.5">Суммарное количество по каждому городу</p>
+                </div>
+              </div>
+              {loading ? (
+                <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={340}>
+                  <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+                    <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
+                      axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} height={60} />
+                    <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
+                      tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="total" name="Итого"
+                      stroke="#8B5CF6" strokeWidth={2.5} fill={`url(#${gradId})`}
+                      dot={false} activeDot={{ r: 5, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </>
           )}
         </div>
 
