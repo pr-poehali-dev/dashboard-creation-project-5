@@ -187,6 +187,20 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
     pct: grandTotal > 0 ? (item.total / grandTotal) * 100 : 0,
   }));
 
+  const reasonTrend = (colKey: string) => {
+    if (!hasMonths || allMonths.length < 2) return null;
+    const lastTwo = allMonths.slice(-2);
+    const calc = (m: string) => allRows
+      .filter(r => (!selectedCity || r.city === selectedCity) && r.month === m)
+      .reduce((s, r) => s + (Number(r[colKey]) || 0), 0);
+    const prev = calc(lastTwo[0]);
+    const cur = calc(lastTwo[1]);
+    if (prev === 0) return null;
+    return ((cur - prev) / prev) * 100;
+  };
+  const top1Trend = top1 ? reasonTrend(top1.key) : null;
+  const top2Trend = top2 ? reasonTrend(top2.key) : null;
+
   const reasonsByMonth = (() => {
     if (!hasMonths) return [];
     return allMonths.map(m => {
@@ -314,8 +328,10 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       gradient: "gradient-pink",
       textGradient: "text-gradient-pink",
       glow: "rgba(255,60,172,0.35)",
-      sub: top1 ? `${top1.total.toLocaleString("ru-RU")} случаев` : "",
-      changeType: null,
+      sub: top1Trend !== null
+        ? `${top1Trend > 0 ? "\u2191" : "\u2193"} ${Math.abs(Math.round(top1Trend))}% · ${top1!.total.toLocaleString("ru-RU")} случаев`
+        : top1 ? `${top1.total.toLocaleString("ru-RU")} случаев` : "",
+      changeType: top1Trend !== null ? (top1Trend > 0 ? "up" : "down") : null,
     },
     {
       label: "2-я по частоте",
@@ -324,8 +340,10 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
       gradient: "gradient-cyan",
       textGradient: "text-gradient-cyan",
       glow: "rgba(0,229,204,0.35)",
-      sub: top2 ? `${top2.total.toLocaleString("ru-RU")} случаев` : "",
-      changeType: null,
+      sub: top2Trend !== null
+        ? `${top2Trend > 0 ? "\u2191" : "\u2193"} ${Math.abs(Math.round(top2Trend))}% · ${top2!.total.toLocaleString("ru-RU")} случаев`
+        : top2 ? `${top2.total.toLocaleString("ru-RU")} случаев` : "",
+      changeType: top2Trend !== null ? (top2Trend > 0 ? "up" : "down") : null,
     },
     ...(selectedCity && cityRank > 0 ? [{
       label: "Рейтинг города",

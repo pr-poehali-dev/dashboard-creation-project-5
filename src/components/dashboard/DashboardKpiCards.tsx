@@ -48,11 +48,16 @@ export default function DashboardKpiCards({ cards, loading, kpiKey }: Props) {
               style={{ boxShadow: `0 8px 24px ${card.glow}` }}>
               <Icon name={card.icon} size={18} className="text-white" />
             </div>
-            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 ${
               card.changeType === 'up' ? 'bg-red-500/15 text-red-400' :
               card.changeType === 'down' ? 'bg-emerald-500/15 text-emerald-400' :
               'bg-white/8 text-white/40'
-            }`}>{card.sub}</span>
+            }`}>
+              {card.changeType && (
+                <Icon name={card.changeType === 'up' ? 'TrendingUp' : 'TrendingDown'} size={12} />
+              )}
+              {card.sub}
+            </span>
           </div>
           <p className="text-white/50 text-xs mb-1">{card.label}</p>
           {loading ? (
