@@ -662,13 +662,13 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
           {loading ? (
             <div className="h-[180px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
           ) : (
-            <div className={selectedCity ? "flex flex-col lg:flex-row gap-6 items-start" : ""}>
-              <div className={selectedCity ? "flex-shrink-0 w-full lg:w-auto" : ""}>
-                <ResponsiveContainer width={selectedCity ? 220 : "100%"} height={selectedCity ? 220 : 180}>
+            <div className={selectedCity ? "flex flex-col lg:flex-row gap-6 items-start" : "flex flex-col items-center"}>
+              <div className={`relative ${selectedCity ? "flex-shrink-0 w-full lg:w-auto" : ""}`}>
+                <ResponsiveContainer width={selectedCity ? 220 : 200} height={selectedCity ? 220 : 200}>
                   <PieChart>
                     <Pie data={colTotals.filter(c => c.total > 0)}
                       cx="50%" cy="50%"
-                      innerRadius={selectedCity ? 60 : 50} outerRadius={selectedCity ? 95 : 80}
+                      innerRadius={selectedCity ? 60 : 55} outerRadius={selectedCity ? 95 : 85}
                       paddingAngle={3} dataKey="total" nameKey="label" strokeWidth={0}>
                       {colTotals.filter(c => c.total > 0).map((entry, i) => (
                         <Cell key={i} fill={entry.color} />
@@ -679,8 +679,16 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                       itemStyle={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.7)" }} />
                   </PieChart>
                 </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-bold font-mono" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                    {grandTotal.toLocaleString("ru-RU")}
+                  </span>
+                  <span className="text-[10px] mt-0.5" style={{ color: isLight ? "rgba(20,10,40,0.35)" : "rgba(255,255,255,0.3)" }}>
+                    всего
+                  </span>
+                </div>
               </div>
-              <div className={`flex-1 ${selectedCity ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "grid grid-cols-1 gap-1.5 mt-1 max-h-[120px] overflow-y-auto"}`}>
+              <div className={`flex-1 w-full ${selectedCity ? "grid grid-cols-1 sm:grid-cols-2 gap-2.5" : "flex flex-col gap-2 mt-2"}`}>
                 {sorted.filter(c => c.total > 0).map(item => {
                   const pct = grandTotal > 0 ? (item.total / grandTotal) * 100 : 0;
                   return selectedCity ? (
@@ -704,11 +712,14 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                       </div>
                     </div>
                   ) : (
-                    <div key={item.key} className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
-                      <span className="text-white/50 text-xs truncate flex-1">{item.label}</span>
-                      <span className="text-white/30 text-[10px]">{pct.toFixed(0)}%</span>
-                      <span className="text-white text-xs font-bold ml-auto">{item.total.toLocaleString("ru-RU")}</span>
+                    <div key={item.key} className="flex items-center gap-2.5">
+                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color, boxShadow: `0 0 6px ${item.color}40` }} />
+                      <span className="text-xs truncate flex-1" style={{ color: isLight ? "rgba(20,10,40,0.6)" : "rgba(255,255,255,0.5)" }}>{item.label}</span>
+                      <div className="w-16 h-1.5 rounded-full overflow-hidden flex-shrink-0" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
+                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: item.color }} />
+                      </div>
+                      <span className="text-[11px] font-semibold w-9 text-right flex-shrink-0" style={{ color: item.color }}>{pct.toFixed(0)}%</span>
+                      <span className="text-xs font-bold w-10 text-right flex-shrink-0 font-mono" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>{item.total.toLocaleString("ru-RU")}</span>
                     </div>
                   );
                 })}
