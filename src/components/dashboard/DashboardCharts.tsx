@@ -100,7 +100,7 @@ export default function DashboardCharts({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 ${selectedCity ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-4`}>
         {!selectedCity && (
           <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
             <div className="flex items-center justify-between mb-6">
@@ -135,7 +135,7 @@ export default function DashboardCharts({
           </div>
         )}
 
-        <div className={`${selectedCity ? "lg:col-span-3" : ""} glass rounded-2xl p-6 animate-fade-in-up`}>
+        <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="mb-5">
             <h3 className="font-display font-bold text-white text-lg">Распределение</h3>
             <p className="text-white/40 text-xs mt-0.5">По типам причин{grandTotal > 0 ? ` · всего ${grandTotal.toLocaleString("ru-RU")}` : ""}</p>
@@ -197,6 +197,52 @@ export default function DashboardCharts({
             );
           })()}
         </div>
+
+        {selectedCity && hasMonths && reasonsByMonth.length > 1 && (
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
+                <p className="text-white/40 text-xs mt-0.5">
+                  {selectedCity} · каждая причина отдельно
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
+                {columns.map((c, i) => (
+                  <span key={c.key} className="flex items-center gap-1.5 text-[11px] text-white/50">
+                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    {c.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={420}>
+              <AreaChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+                <defs>
+                  {columns.map((col, i) => (
+                    <linearGradient key={col.key} id={`gradReasonCity-${col.key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+                <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }}
+                  axisLine={false} tickLine={false} interval={0} height={40} />
+                <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false}
+                  tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
+                <Tooltip content={<CustomTooltip />} />
+                {columns.map((col, i) => (
+                  <Area key={col.key} type="monotone" dataKey={col.key} name={col.label}
+                    stroke={PIE_COLORS[i % PIE_COLORS.length]} strokeWidth={2.5}
+                    fill={`url(#gradReasonCity-${col.key})`}
+                    dot={{ r: 3, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 1 }}
+                    activeDot={{ r: 5, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 2 }} />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       {hasMonths && monthlyTrendData.length > 1 && (
@@ -222,13 +268,13 @@ export default function DashboardCharts({
         </div>
       )}
 
-      {hasMonths && reasonsByMonth.length > 1 && (
+      {!selectedCity && hasMonths && reasonsByMonth.length > 1 && (
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
               <p className="text-white/40 text-xs mt-0.5">
-                {selectedCity ? selectedCity : "Все города"} · каждая причина отдельно
+                Все города · каждая причина отдельно
               </p>
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
