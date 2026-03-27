@@ -255,30 +255,47 @@ export default function DashboardAnalytics({
                   }} />
               </RadarChart>
             </ResponsiveContainer>
-            <div className="space-y-2 flex flex-col justify-center">
-              {cityProfileData.map((d, i) => {
-                const diff = d.cityRaw - d.avgRaw;
-                const pct = d.avgRaw > 0 ? ((diff / d.avgRaw) * 100) : 0;
-                return (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.color }} />
-                    <span className="text-xs text-white/60 flex-1 truncate" title={d.fullLabel}>{d.fullLabel}</span>
-                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{d.cityRaw}</span>
-                    <span className="text-xs text-white/30">/ {d.avgRaw} ср.</span>
-                    {diff !== 0 && (
-                      <span className={`text-xs font-semibold ${diff > 0 ? "text-red-400" : "text-emerald-400"}`}>
-                        {diff > 0 ? "+" : ""}{Math.round(pct)}%
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-white/8">
-                <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <span className="w-3 h-1 rounded-full bg-violet-500" /> {selectedCity}
+            <div className="flex flex-col justify-center gap-1.5">
+              {(() => {
+                const maxVal = Math.max(...cityProfileData.map(d => Math.max(d.cityRaw, d.avgRaw)), 1);
+                return cityProfileData
+                  .filter(d => d.cityRaw > 0 || d.avgRaw > 0)
+                  .sort((a, b) => b.cityRaw - a.cityRaw)
+                  .map((d, i) => {
+                    const cityW = Math.max((d.cityRaw / maxVal) * 100, 1);
+                    const avgW = Math.max((d.avgRaw / maxVal) * 100, 1);
+                    const diff = d.cityRaw - d.avgRaw;
+                    const pct = d.avgRaw > 0 ? Math.round((diff / d.avgRaw) * 100) : 0;
+                    return (
+                      <div key={i} className="group">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[11px] text-white/50 truncate max-w-[60%]" title={d.fullLabel}>{d.fullLabel}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-bold" style={{ color: d.color }}>{d.cityRaw}</span>
+                            <span className="text-[10px] text-white/25">vs {d.avgRaw}</span>
+                            {diff !== 0 && (
+                              <span className={`text-[10px] font-semibold ${diff > 0 ? "text-red-400" : "text-emerald-400"}`}>
+                                {diff > 0 ? "+" : ""}{pct}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="relative h-2 rounded-full overflow-hidden" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
+                          <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
+                            style={{ width: `${cityW}%`, background: d.color, opacity: 0.85 }} />
+                          <div className="absolute top-0 h-full w-0.5 rounded-full transition-all duration-500"
+                            style={{ left: `${avgW}%`, background: "#00BFFF", opacity: 0.6 }} />
+                        </div>
+                      </div>
+                    );
+                  });
+              })()}
+              <div className="flex items-center gap-4 mt-1 pt-1.5 border-t border-white/5">
+                <span className="flex items-center gap-1.5 text-[10px] text-white/35">
+                  <span className="w-4 h-1.5 rounded-full bg-violet-500 opacity-80" /> {selectedCity}
                 </span>
-                <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  <span className="w-3 h-1 rounded-full bg-cyan-400 opacity-50" style={{ borderBottom: "1px dashed" }} /> Среднее
+                <span className="flex items-center gap-1.5 text-[10px] text-white/35">
+                  <span className="w-0.5 h-2.5 rounded-full bg-cyan-400 opacity-60" /> Среднее
                 </span>
               </div>
             </div>
