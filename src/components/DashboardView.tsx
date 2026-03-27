@@ -6,7 +6,7 @@ import DashboardFilters from "@/components/dashboard/DashboardFilters";
 import DashboardKpiCards from "@/components/dashboard/DashboardKpiCards";
 import type { KpiCard } from "@/components/dashboard/DashboardKpiCards";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
-import DashboardAnalytics, { AnomaliesBlock } from "@/components/dashboard/DashboardAnalytics";
+import DashboardAnalytics, { AnomaliesBlock, ConcentrationBlock } from "@/components/dashboard/DashboardAnalytics";
 import DashboardDataTable from "@/components/dashboard/DashboardDataTable";
 import DashboardEfficiency from "@/components/dashboard/DashboardEfficiency";
 
@@ -399,6 +399,14 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         aggregatedByCityRows={aggregatedByCityRows}
         rowTotal={rowTotal}
         grandTotal={grandTotal}
+        isLight={isLight}
+      />
+
+      <ConcentrationBlock
+        top3Reasons={top3Reasons}
+        concentrationPct={concentrationPct}
+        grandTotal={grandTotal}
+        loading={loading}
         isLight={isLight}
       />
 

@@ -148,50 +148,55 @@ export function AnomaliesBlock({ anomalies, isLight, selectedCity }: { anomalies
   );
 }
 
+export function ConcentrationBlock({ top3Reasons, concentrationPct, grandTotal, loading, isLight }: {
+  top3Reasons: Top3Reason[]; concentrationPct: number; grandTotal: number; loading: boolean; isLight: boolean;
+}) {
+  if (loading || grandTotal <= 0) return null;
+  return (
+    <div className="glass rounded-2xl p-5 animate-fade-in-up">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="w-10 h-10 rounded-xl gradient-cyan flex items-center justify-center"
+          style={{ boxShadow: "0 8px 24px rgba(0,191,255,0.25)" }}>
+          <Icon name="Target" size={18} className="text-white" />
+        </div>
+        <div>
+          <p className="text-white/50 text-xs">Концентрация причин</p>
+          <p className="font-display text-xl font-bold text-gradient-cyan">
+            Топ-3 = {concentrationPct.toFixed(1)}%
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 h-4 rounded-full overflow-hidden flex" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
+        {top3Reasons.map((item) => (
+          <div key={item.key} className="h-full transition-all duration-700"
+            title={`${item.label}: ${item.pct.toFixed(1)}%`}
+            style={{ width: `${item.pct}%`, background: item.color }} />
+        ))}
+        {concentrationPct < 100 && (
+          <div className="h-full" style={{ width: `${100 - concentrationPct}%`, background: isLight ? "rgba(20,10,40,0.04)" : "rgba(255,255,255,0.04)" }} />
+        )}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+        {top3Reasons.map(item => (
+          <span key={item.key} className="flex items-center gap-1.5 text-xs text-white/50">
+            <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+            {item.label}: {item.pct.toFixed(1)}%
+          </span>
+        ))}
+        <span className="text-xs text-white/30">
+          Остальные: {(100 - concentrationPct).toFixed(1)}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardAnalytics({
   anomalies, top3Reasons, concentrationPct, grandTotal, loading, isLight,
   axisColor, selectedCity, selectedMonth, cityProfileData,
 }: Props) {
   return (
     <>
-      {!loading && grandTotal > 0 && (
-        <div className="glass rounded-2xl p-5 animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl gradient-cyan flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(0,191,255,0.25)" }}>
-              <Icon name="Target" size={18} className="text-white" />
-            </div>
-            <div>
-              <p className="text-white/50 text-xs">Концентрация причин</p>
-              <p className="font-display text-xl font-bold text-gradient-cyan">
-                Топ-3 = {concentrationPct.toFixed(1)}%
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 h-4 rounded-full overflow-hidden flex" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
-            {top3Reasons.map((item, i) => (
-              <div key={item.key} className="h-full transition-all duration-700"
-                title={`${item.label}: ${item.pct.toFixed(1)}%`}
-                style={{ width: `${item.pct}%`, background: item.color }} />
-            ))}
-            {concentrationPct < 100 && (
-              <div className="h-full" style={{ width: `${100 - concentrationPct}%`, background: isLight ? "rgba(20,10,40,0.04)" : "rgba(255,255,255,0.04)" }} />
-            )}
-          </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-            {top3Reasons.map(item => (
-              <span key={item.key} className="flex items-center gap-1.5 text-xs text-white/50">
-                <span className="w-2 h-2 rounded-full" style={{ background: item.color }} />
-                {item.label}: {item.pct.toFixed(1)}%
-              </span>
-            ))}
-            <span className="text-xs text-white/30">
-              Остальные: {(100 - concentrationPct).toFixed(1)}%
-            </span>
-          </div>
-        </div>
-      )}
-
       {selectedCity && cityProfileData.length > 0 && (
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="flex items-center gap-3 mb-5">
