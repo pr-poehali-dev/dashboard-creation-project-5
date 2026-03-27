@@ -198,41 +198,59 @@ export default function DashboardCharts({
           })()}
         </div>
 
-        {selectedCity && hasMonths && reasonsByMonth.length > 1 && (
-          <div className="glass rounded-2xl p-6 animate-fade-in-up">
-            <div className="flex items-center justify-between mb-6">
-              <div>
+        {selectedCity && hasMonths && reasonsByMonth.length > 1 && (() => {
+          const monthRows = reasonsByMonth.map(row => {
+            const total = columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
+            return { month: row.month as string, total, values: columns.map(c => Number(row[c.key]) || 0) };
+          });
+          const maxTotal = Math.max(...monthRows.map(r => r.total), 1);
+          return (
+            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+              <div className="mb-5">
                 <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
-                <p className="text-white/40 text-xs mt-0.5">
-                  {selectedCity} · по месяцам с накоплением
-                </p>
+                <p className="text-white/40 text-xs mt-0.5">{selectedCity} · структура обращений по месяцам</p>
               </div>
-              <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
+              <div className="space-y-2.5">
+                {monthRows.map(row => (
+                  <div key={row.month} className="group">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium w-16 flex-shrink-0 text-right" style={{ color: "var(--text-secondary)" }}>{row.month}</span>
+                      <div className="flex-1 h-7 rounded-lg bg-white/5 overflow-hidden flex">
+                        {row.values.map((val, ci) => {
+                          const pct = row.total > 0 ? (val / maxTotal) * 100 : 0;
+                          if (pct === 0) return null;
+                          return (
+                            <div key={columns[ci].key}
+                              className="h-full transition-all duration-500 relative group/seg"
+                              title={`${columns[ci].label}: ${val.toLocaleString("ru-RU")}`}
+                              style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }}>
+                              {pct > 8 && (
+                                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white/90">
+                                  {val.toLocaleString("ru-RU")}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <span className="text-xs font-bold font-mono w-14 text-right tabular-nums" style={{ color: "var(--text-primary)" }}>
+                        {row.total.toLocaleString("ru-RU")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-2 mt-5 pt-4 border-t border-white/6">
                 {columns.map((c, i) => (
-                  <span key={c.key} className="flex items-center gap-1.5 text-[11px] text-white/50">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                    <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                     {c.label}
                   </span>
                 ))}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={420}>
-              <BarChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
-                <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }}
-                  axisLine={false} tickLine={false} interval={0} height={40} />
-                <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
-                <Tooltip content={<CustomTooltip />} />
-                {columns.map((col, i) => (
-                  <Bar key={col.key} dataKey={col.key} name={col.label} stackId="reasons"
-                    fill={PIE_COLORS[i % PIE_COLORS.length]}
-                    radius={i === columns.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
-                ))}
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {hasMonths && monthlyTrendData.length > 1 && (
@@ -258,41 +276,59 @@ export default function DashboardCharts({
         </div>
       )}
 
-      {!selectedCity && hasMonths && reasonsByMonth.length > 1 && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="flex items-center justify-between mb-6">
-            <div>
+      {!selectedCity && hasMonths && reasonsByMonth.length > 1 && (() => {
+        const monthRows = reasonsByMonth.map(row => {
+          const total = columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
+          return { month: row.month as string, total, values: columns.map(c => Number(row[c.key]) || 0) };
+        });
+        const maxTotal = Math.max(...monthRows.map(r => r.total), 1);
+        return (
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="mb-5">
               <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
-              <p className="text-white/40 text-xs mt-0.5">
-                Все города · по месяцам с накоплением
-              </p>
+              <p className="text-white/40 text-xs mt-0.5">Все города · структура обращений по месяцам</p>
             </div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
+            <div className="space-y-2.5">
+              {monthRows.map(row => (
+                <div key={row.month} className="group">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium w-16 flex-shrink-0 text-right" style={{ color: "var(--text-secondary)" }}>{row.month}</span>
+                    <div className="flex-1 h-7 rounded-lg bg-white/5 overflow-hidden flex">
+                      {row.values.map((val, ci) => {
+                        const pct = row.total > 0 ? (val / maxTotal) * 100 : 0;
+                        if (pct === 0) return null;
+                        return (
+                          <div key={columns[ci].key}
+                            className="h-full transition-all duration-500 relative"
+                            title={`${columns[ci].label}: ${val.toLocaleString("ru-RU")}`}
+                            style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }}>
+                            {pct > 8 && (
+                              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white/90">
+                                {val.toLocaleString("ru-RU")}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <span className="text-xs font-bold font-mono w-14 text-right tabular-nums" style={{ color: "var(--text-primary)" }}>
+                      {row.total.toLocaleString("ru-RU")}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-5 pt-4 border-t border-white/6">
               {columns.map((c, i) => (
-                <span key={c.key} className="flex items-center gap-1.5 text-[11px] text-white/50">
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                  <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                   {c.label}
                 </span>
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={420}>
-            <BarChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }}
-                axisLine={false} tickLine={false} interval={0} height={40} />
-              <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false}
-                tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
-              <Tooltip content={<CustomTooltip />} />
-              {columns.map((col, i) => (
-                <Bar key={col.key} dataKey={col.key} name={col.label} stackId="reasons"
-                  fill={PIE_COLORS[i % PIE_COLORS.length]}
-                  radius={i === columns.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
