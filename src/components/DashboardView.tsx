@@ -557,7 +557,8 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                 <div key={i} className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.01]"
                   style={{
                     background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)"}`,
+                    border: `1px solid ${accentColor}20`,
+                    boxShadow: `0 0 20px ${accentColor}12, 0 0 40px ${accentColor}06`,
                   }}>
                   <svg className="absolute bottom-0 left-0 w-full pointer-events-none" height={sparkH}
                     viewBox={`0 0 100 ${sparkH}`} preserveAspectRatio="none">
