@@ -8,6 +8,7 @@ import type { KpiCard } from "@/components/dashboard/DashboardKpiCards";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import DashboardAnalytics, { AnomaliesBlock } from "@/components/dashboard/DashboardAnalytics";
 import DashboardDataTable from "@/components/dashboard/DashboardDataTable";
+import DashboardEfficiency from "@/components/dashboard/DashboardEfficiency";
 
 const PIE_COLORS = [
   "#8B5CF6", "#00BFFF", "#3F00FF", "#FFB800",
@@ -426,6 +427,16 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         selectedCity={selectedCity}
         selectedMonth={selectedMonth}
         cityProfileData={cityProfileData}
+      />
+
+      <DashboardEfficiency
+        selectedCity={selectedCity}
+        loading={loading}
+        columns={columns}
+        aggregatedByCityRows={aggregatedByCityRows}
+        rowTotal={rowTotal}
+        grandTotal={grandTotal}
+        isLight={isLight}
       />
 
       <DashboardDataTable
