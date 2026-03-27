@@ -225,12 +225,12 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-auto max-h-[60vh]" style={{ scrollbarGutter: "stable" }}>
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/8">
+          <thead className="sticky top-0 z-20">
+            <tr className="border-b border-white/8" style={{ background: "var(--sticky-cell-bg)" }}>
               <th
-                className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-30"
                 style={{ background: "var(--sticky-cell-bg)", minWidth: 140 }}
               >
                 Город / Причина
@@ -239,7 +239,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                 <th
                   key={col.key}
                   className="px-3 py-3 text-white/50 font-medium text-xs text-center leading-tight"
-                  style={{ minWidth: 90, maxWidth: 120 }}
+                  style={{ minWidth: 90, maxWidth: 120, background: "var(--sticky-cell-bg)" }}
                 >
                   {editable && editingColIdx === ci ? (
                     <input
@@ -260,7 +260,7 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
                   )}
                 </th>
               ))}
-              <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap">
+              <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap" style={{ background: "var(--sticky-cell-bg)" }}>
                 ИТОГО
               </th>
             </tr>
@@ -345,10 +345,10 @@ export default function GenericTable({ title, subtitle, apiUrl, columns: initial
               );
             })}
           </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-white/10">
+          <tfoot className="sticky bottom-0 z-20">
+            <tr className="border-t-2 border-white/10" style={{ background: "var(--sticky-cell-bg)" }}>
               <td
-                className="px-4 py-3 text-white/70 font-bold text-xs sticky left-0 z-10"
+                className="px-4 py-3 text-white/70 font-bold text-xs sticky left-0 z-30"
                 style={{ background: "var(--sticky-cell-bg)" }}
               >
                 ИТОГО
