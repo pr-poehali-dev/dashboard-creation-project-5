@@ -241,10 +241,10 @@ export default function DashboardAnalytics({
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart cx="50%" cy="50%" outerRadius="70%" data={cityProfileData}>
+            <ResponsiveContainer width="100%" height={420}>
+              <RadarChart cx="50%" cy="50%" outerRadius="75%" data={cityProfileData}>
                 <PolarGrid stroke={isLight ? "rgba(20,10,40,0.1)" : "rgba(255,255,255,0.1)"} />
-                <PolarAngleAxis dataKey="reason" tick={{ fill: axisColor, fontSize: 9 }} />
+                <PolarAngleAxis dataKey="reason" tick={{ fill: axisColor, fontSize: 11 }} />
                 <PolarRadiusAxis tick={false} axisLine={false} />
                 <Radar name={selectedCity} dataKey="city" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} strokeWidth={2} />
                 <Radar name="Среднее" dataKey="avg" stroke="#00BFFF" fill="#00BFFF" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
