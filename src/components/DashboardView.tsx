@@ -6,7 +6,7 @@ import DashboardFilters from "@/components/dashboard/DashboardFilters";
 import DashboardKpiCards from "@/components/dashboard/DashboardKpiCards";
 import type { KpiCard } from "@/components/dashboard/DashboardKpiCards";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
-import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
+import DashboardAnalytics, { AnomaliesBlock } from "@/components/dashboard/DashboardAnalytics";
 import DashboardDataTable from "@/components/dashboard/DashboardDataTable";
 
 const PIE_COLORS = [
@@ -412,6 +412,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         showAllCities={showAllCities}
         onShowAllCitiesToggle={() => setShowAllCities(v => !v)}
         PIE_COLORS={PIE_COLORS}
+        anomaliesSlot={<AnomaliesBlock anomalies={anomalies} isLight={isLight} selectedCity={selectedCity} />}
       />
 
       <DashboardAnalytics

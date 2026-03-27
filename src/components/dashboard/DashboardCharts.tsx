@@ -53,13 +53,14 @@ interface Props {
   showAllCities: boolean;
   onShowAllCitiesToggle: () => void;
   PIE_COLORS: string[];
+  anomaliesSlot?: React.ReactNode;
 }
 
 export default function DashboardCharts({
   selectedCity, selectedMonth, hasMonths, loading, isLight, axisColor, gradId,
   columns, aggregatedByMonthRows, cityBarData, colTotals, sorted, grandTotal,
   monthlyTrendData, reasonsByMonth, aggregatedByCityRows, rowTotal,
-  showAllCities, onShowAllCitiesToggle, PIE_COLORS,
+  showAllCities, onShowAllCitiesToggle, PIE_COLORS, anomaliesSlot,
 }: Props) {
   return (
     <>
@@ -99,6 +100,8 @@ export default function DashboardCharts({
           )}
         </div>
       )}
+
+      {anomaliesSlot}
 
       <div className={`grid grid-cols-1 ${selectedCity ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-4`}>
         {!selectedCity && (

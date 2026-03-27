@@ -46,111 +46,114 @@ interface Props {
   cityProfileData: CityProfileItem[];
 }
 
+export function AnomaliesBlock({ anomalies, isLight, selectedCity }: { anomalies: Anomaly[]; isLight: boolean; selectedCity: string | null }) {
+  if (anomalies.length === 0) return null;
+  return (
+    <div className="glass rounded-2xl p-6 animate-fade-in-up">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
+          style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
+          <Icon name="Zap" size={18} className="text-white" />
+        </div>
+        <div>
+          <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
+          <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {anomalies.map((a, i) => {
+          const isUp = a.pctChange > 0;
+          const absPct = Math.abs(a.pctChange);
+          const multiplier = a.prev > 0 ? a.cur / a.prev : 0;
+          const changeLabel = a.prev === 0
+            ? "с нуля"
+            : absPct > 300
+              ? `×${multiplier.toFixed(1)}`
+              : `${isUp ? "+" : ""}${Math.round(a.pctChange)}%`;
+          const accentColor = isUp ? "#EF4444" : "#10B981";
+          const spark = a.sparkline;
+          const sparkMin = Math.min(...spark);
+          const sparkMax = Math.max(...spark);
+          const sparkRange = sparkMax - sparkMin || 1;
+          const sparkH = 56;
+          const sparkPad = 4;
+
+          const pts = spark.map((v, si) => ({
+            x: (si / Math.max(spark.length - 1, 1)) * 100,
+            y: sparkPad + (sparkH - sparkPad) - ((v - sparkMin) / sparkRange) * (sparkH - sparkPad * 2),
+          }));
+          const smoothLine = pts.map((p, si) => {
+            if (si === 0) return `M${p.x},${p.y}`;
+            const p0 = pts[si - 1];
+            const tension = 0.3;
+            const dx = p.x - p0.x;
+            return `C${p0.x + dx * tension},${p0.y} ${p.x - dx * tension},${p.y} ${p.x},${p.y}`;
+          }).join(" ");
+          const smoothFill = `${smoothLine} L${pts[pts.length - 1].x},${sparkH} L${pts[0].x},${sparkH} Z`;
+
+          return (
+            <div key={i} className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.01]"
+              style={{
+                background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${accentColor}20`,
+                boxShadow: `0 0 20px ${accentColor}12, 0 0 40px ${accentColor}06`,
+              }}>
+              <svg className="absolute bottom-0 left-0 w-full pointer-events-none" height={sparkH}
+                viewBox={`0 0 100 ${sparkH}`} preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id={`anomalyFill-${i}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={accentColor} stopOpacity={0.2} />
+                    <stop offset="100%" stopColor={accentColor} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <path d={smoothFill} fill={`url(#anomalyFill-${i})`} />
+                <path d={smoothLine} fill="none" stroke={accentColor} strokeWidth={1.5}
+                  strokeLinecap="round" strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke" />
+              </svg>
+
+              <div className="relative flex items-start justify-between gap-3 mb-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                    {a.reason}
+                  </p>
+                  <p className="text-[11px] mt-0.5 truncate" style={{ color: isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)" }}>
+                    {!selectedCity ? `${a.city} · ` : ""}{a.month}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
+                  style={{ background: `${accentColor}15` }}>
+                  <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={12} style={{ color: accentColor }} />
+                  <span className="text-xs font-bold" style={{ color: accentColor }}>{changeLabel}</span>
+                </div>
+              </div>
+
+              <div className="relative flex items-end justify-between">
+                <div>
+                  <span className="text-2xl font-bold font-mono leading-none" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                    {a.cur.toLocaleString("ru-RU")}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs pb-0.5" style={{ color: isLight ? "rgba(20,10,40,0.3)" : "rgba(255,255,255,0.25)" }}>
+                  <span className="font-mono">{a.prev.toLocaleString("ru-RU")}</span>
+                  <Icon name="ArrowRight" size={10} />
+                  <span className="font-mono font-semibold" style={{ color: accentColor }}>{a.cur.toLocaleString("ru-RU")}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardAnalytics({
   anomalies, top3Reasons, concentrationPct, grandTotal, loading, isLight,
   axisColor, selectedCity, selectedMonth, cityProfileData,
 }: Props) {
   return (
     <>
-      {anomalies.length > 0 && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
-              <Icon name="Zap" size={18} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
-              <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {anomalies.map((a, i) => {
-              const isUp = a.pctChange > 0;
-              const absPct = Math.abs(a.pctChange);
-              const multiplier = a.prev > 0 ? a.cur / a.prev : 0;
-              const changeLabel = a.prev === 0
-                ? "с нуля"
-                : absPct > 300
-                  ? `×${multiplier.toFixed(1)}`
-                  : `${isUp ? "+" : ""}${Math.round(a.pctChange)}%`;
-              const accentColor = isUp ? "#EF4444" : "#10B981";
-              const spark = a.sparkline;
-              const sparkMin = Math.min(...spark);
-              const sparkMax = Math.max(...spark);
-              const sparkRange = sparkMax - sparkMin || 1;
-              const sparkH = 56;
-              const sparkPad = 4;
-
-              const pts = spark.map((v, si) => ({
-                x: (si / Math.max(spark.length - 1, 1)) * 100,
-                y: sparkPad + (sparkH - sparkPad) - ((v - sparkMin) / sparkRange) * (sparkH - sparkPad * 2),
-              }));
-              const smoothLine = pts.map((p, si) => {
-                if (si === 0) return `M${p.x},${p.y}`;
-                const p0 = pts[si - 1];
-                const tension = 0.3;
-                const dx = p.x - p0.x;
-                return `C${p0.x + dx * tension},${p0.y} ${p.x - dx * tension},${p.y} ${p.x},${p.y}`;
-              }).join(" ");
-              const smoothFill = `${smoothLine} L${pts[pts.length - 1].x},${sparkH} L${pts[0].x},${sparkH} Z`;
-
-              return (
-                <div key={i} className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.01]"
-                  style={{
-                    background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${accentColor}20`,
-                    boxShadow: `0 0 20px ${accentColor}12, 0 0 40px ${accentColor}06`,
-                  }}>
-                  <svg className="absolute bottom-0 left-0 w-full pointer-events-none" height={sparkH}
-                    viewBox={`0 0 100 ${sparkH}`} preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id={`anomalyFill-${i}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={accentColor} stopOpacity={0.2} />
-                        <stop offset="100%" stopColor={accentColor} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <path d={smoothFill} fill={`url(#anomalyFill-${i})`} />
-                    <path d={smoothLine} fill="none" stroke={accentColor} strokeWidth={1.5}
-                      strokeLinecap="round" strokeLinejoin="round"
-                      vectorEffect="non-scaling-stroke" />
-                  </svg>
-
-                  <div className="relative flex items-start justify-between gap-3 mb-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
-                        {a.reason}
-                      </p>
-                      <p className="text-[11px] mt-0.5 truncate" style={{ color: isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.35)" }}>
-                        {!selectedCity ? `${a.city} · ` : ""}{a.month}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
-                      style={{ background: `${accentColor}15` }}>
-                      <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={12} style={{ color: accentColor }} />
-                      <span className="text-xs font-bold" style={{ color: accentColor }}>{changeLabel}</span>
-                    </div>
-                  </div>
-
-                  <div className="relative flex items-end justify-between">
-                    <div>
-                      <span className="text-2xl font-bold font-mono leading-none" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
-                        {a.cur.toLocaleString("ru-RU")}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs pb-0.5" style={{ color: isLight ? "rgba(20,10,40,0.3)" : "rgba(255,255,255,0.25)" }}>
-                      <span className="font-mono">{a.prev.toLocaleString("ru-RU")}</span>
-                      <Icon name="ArrowRight" size={10} />
-                      <span className="font-mono font-semibold" style={{ color: accentColor }}>{a.cur.toLocaleString("ru-RU")}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {!loading && grandTotal > 0 && (
         <div className="glass rounded-2xl p-6 animate-fade-in-up">
           <div className="mb-5">
