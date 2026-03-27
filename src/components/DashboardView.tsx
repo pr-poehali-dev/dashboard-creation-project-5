@@ -535,7 +535,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
             </div>
           </div>
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-3">
             {anomalies.map((a, i) => {
               const isUp = a.pctChange > 0;
               const absPct = Math.abs(a.pctChange);
@@ -550,9 +550,9 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               const sparkMin = Math.min(...spark);
               const sparkMax = Math.max(...spark);
               const sparkRange = sparkMax - sparkMin || 1;
-              const sparkH = 28;
-              const sparkW = 72;
-              const sparkPad = 2;
+              const sparkH = 36;
+              const sparkW = 90;
+              const sparkPad = 3;
               const sparkPoints = spark.map((v, si) =>
                 `${(si / Math.max(spark.length - 1, 1)) * sparkW},${sparkPad + (sparkH - sparkPad * 2) - ((v - sparkMin) / sparkRange) * (sparkH - sparkPad * 2)}`
               ).join(" ");
@@ -560,34 +560,51 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
               const lastY = sparkPad + (sparkH - sparkPad * 2) - ((spark[spark.length - 1] - sparkMin) / sparkRange) * (sparkH - sparkPad * 2);
 
               return (
-                <div key={i} className="group relative rounded-2xl px-4 py-3.5 flex items-center gap-3 transition-all duration-200 cursor-default"
+                <div key={i} className="group relative overflow-hidden rounded-2xl px-5 py-4 flex items-center gap-4 transition-all duration-300 cursor-default"
                   style={{
-                    background: isLight ? "rgba(20,10,40,0.03)" : "rgba(255,255,255,0.035)",
-                    border: `1px solid ${isLight ? "rgba(20,10,40,0.05)" : "rgba(255,255,255,0.05)"}`,
+                    background: `linear-gradient(135deg, ${a.color}0A, ${accentColor}08)`,
+                    border: `1px solid ${a.color}20`,
+                    boxShadow: `0 2px 12px ${a.color}08`,
                   }}>
                   <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{ background: `linear-gradient(135deg, ${accentColor}06, ${a.color}08)`, border: `1px solid ${accentColor}18` }} />
+                    style={{
+                      background: `linear-gradient(135deg, ${a.color}15, ${accentColor}12)`,
+                      boxShadow: `inset 0 0 30px ${a.color}08`,
+                    }} />
+                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-[0.04] pointer-events-none -translate-y-1/2 translate-x-1/3"
+                    style={{ background: `radial-gradient(circle, ${a.color}, transparent 70%)` }} />
 
-                  <div className="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: `${a.color}14` }}>
-                    <span className="text-base">{isUp ? "📈" : "📉"}</span>
+                  <div className="relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: `linear-gradient(135deg, ${a.color}25, ${a.color}10)`,
+                      boxShadow: `0 4px 12px ${a.color}20`,
+                    }}>
+                    <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={18} style={{ color: a.color }} />
                   </div>
 
                   <div className="relative flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold truncate leading-tight" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                    <p className="text-[13px] font-bold truncate leading-tight" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
                       {a.reason}
                     </p>
-                    <p className="text-[11px] mt-0.5 truncate" style={{ color: isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.3)" }}>
-                      {!selectedCity ? `${a.city} · ` : ""}{a.month}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      {!selectedCity && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+                          style={{ background: `${a.color}15`, color: a.color }}>
+                          {a.city}
+                        </span>
+                      )}
+                      <span className="text-[11px]" style={{ color: isLight ? "rgba(20,10,40,0.35)" : "rgba(255,255,255,0.3)" }}>
+                        {a.month}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="relative flex-shrink-0 hidden sm:block">
                     <svg width={sparkW} height={sparkH} viewBox={`0 0 ${sparkW} ${sparkH}`}>
                       <defs>
                         <linearGradient id={`sparkFill-${i}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={accentColor} stopOpacity={0.18} />
-                          <stop offset="100%" stopColor={accentColor} stopOpacity={0} />
+                          <stop offset="0%" stopColor={accentColor} stopOpacity={0.35} />
+                          <stop offset="100%" stopColor={accentColor} stopOpacity={0.02} />
                         </linearGradient>
                       </defs>
                       <polygon
@@ -598,22 +615,25 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                         points={sparkPoints}
                         fill="none"
                         stroke={accentColor}
-                        strokeWidth={1.5}
+                        strokeWidth={2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
-                      <circle cx={lastX} cy={lastY} r={2.5} fill={accentColor} />
+                      <circle cx={lastX} cy={lastY} r={3} fill={accentColor} stroke={isLight ? "#fff" : "#1a1a2e"} strokeWidth={1.5} />
                     </svg>
                   </div>
 
-                  <div className="relative text-right flex-shrink-0 min-w-[76px]">
-                    <p className="text-sm font-bold font-mono leading-tight" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                  <div className="relative text-right flex-shrink-0 min-w-[80px]">
+                    <p className="text-[15px] font-bold font-mono leading-tight" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
                       {a.cur.toLocaleString("ru-RU")}
                     </p>
-                    <div className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded-md"
-                      style={{ background: `${accentColor}12` }}>
-                      <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={10} style={{ color: accentColor }} />
-                      <span className="text-[11px] font-bold" style={{ color: accentColor }}>{changeLabel}</span>
+                    <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-lg"
+                      style={{
+                        background: `${accentColor}18`,
+                        boxShadow: `0 2px 8px ${accentColor}15`,
+                      }}>
+                      <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={11} style={{ color: accentColor }} />
+                      <span className="text-[11px] font-extrabold" style={{ color: accentColor }}>{changeLabel}</span>
                     </div>
                   </div>
                 </div>
