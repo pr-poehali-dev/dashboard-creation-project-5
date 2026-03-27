@@ -204,7 +204,7 @@ export default function DashboardCharts({
               <div>
                 <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
                 <p className="text-white/40 text-xs mt-0.5">
-                  {selectedCity} · каждая причина отдельно
+                  {selectedCity} · по месяцам с накоплением
                 </p>
               </div>
               <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
@@ -217,29 +217,19 @@ export default function DashboardCharts({
               </div>
             </div>
             <ResponsiveContainer width="100%" height={420}>
-              <AreaChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-                <defs>
-                  {columns.map((col, i) => (
-                    <linearGradient key={col.key} id={`gradReasonCity-${col.key}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0.25} />
-                      <stop offset="100%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0} />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+              <BarChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
                 <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }}
                   axisLine={false} tickLine={false} interval={0} height={40} />
                 <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false}
                   tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
                 <Tooltip content={<CustomTooltip />} />
                 {columns.map((col, i) => (
-                  <Area key={col.key} type="monotone" dataKey={col.key} name={col.label}
-                    stroke={PIE_COLORS[i % PIE_COLORS.length]} strokeWidth={2.5}
-                    fill={`url(#gradReasonCity-${col.key})`}
-                    dot={{ r: 3, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 1 }}
-                    activeDot={{ r: 5, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 2 }} />
+                  <Bar key={col.key} dataKey={col.key} name={col.label} stackId="reasons"
+                    fill={PIE_COLORS[i % PIE_COLORS.length]}
+                    radius={i === columns.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
                 ))}
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
@@ -274,7 +264,7 @@ export default function DashboardCharts({
             <div>
               <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
               <p className="text-white/40 text-xs mt-0.5">
-                Все города · каждая причина отдельно
+                Все города · по месяцам с накоплением
               </p>
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 justify-end">
@@ -287,29 +277,19 @@ export default function DashboardCharts({
             </div>
           </div>
           <ResponsiveContainer width="100%" height={420}>
-            <AreaChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
-              <defs>
-                {columns.map((col, i) => (
-                  <linearGradient key={col.key} id={`gradReason-${col.key}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={PIE_COLORS[i % PIE_COLORS.length]} stopOpacity={0} />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
+            <BarChart data={reasonsByMonth} margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
               <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 12 }}
                 axisLine={false} tickLine={false} interval={0} height={40} />
               <YAxis tick={{ fill: axisColor, fontSize: 12 }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
               <Tooltip content={<CustomTooltip />} />
               {columns.map((col, i) => (
-                <Area key={col.key} type="monotone" dataKey={col.key} name={col.label}
-                  stroke={PIE_COLORS[i % PIE_COLORS.length]} strokeWidth={2.5}
-                  fill={`url(#gradReason-${col.key})`}
-                  dot={{ r: 3, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 1 }}
-                  activeDot={{ r: 5, fill: PIE_COLORS[i % PIE_COLORS.length], stroke: "white", strokeWidth: 2 }} />
+                <Bar key={col.key} dataKey={col.key} name={col.label} stackId="reasons"
+                  fill={PIE_COLORS[i % PIE_COLORS.length]}
+                  radius={i === columns.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
               ))}
-            </AreaChart>
+            </BarChart>
           </ResponsiveContainer>
         </div>
       )}
