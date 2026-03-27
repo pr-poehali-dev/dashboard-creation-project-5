@@ -10,8 +10,8 @@ import DashboardAnalytics from "@/components/dashboard/DashboardAnalytics";
 import DashboardDataTable from "@/components/dashboard/DashboardDataTable";
 
 const PIE_COLORS = [
-  "#8B5CF6", "#00BFFF", "#FF6B8A", "#FFB800",
-  "#00CC44", "#3B82F6", "#F59E0B", "#EC4899",
+  "#8B5CF6", "#00BFFF", "#3F00FF", "#FFB800",
+  "#00CC44", "#3B82F6", "#F59E0B", "#4400CC",
   "#A855F7", "#06B6D4", "#EF4444", "#10B981",
 ];
 
