@@ -129,10 +129,12 @@ export default function DashboardEfficiency({
 
   const cityTotal = currentCity?.total ?? 0;
 
-  const score = maxTotal > 0 ? Math.max(0, 100 - (cityTotal / maxTotal) * 100) : 100;
+  const rank = selectedCity ? cityTotals.findIndex(c => c.city === selectedCity) + 1 : 0;
+  const totalCities = cityTotals.length;
+  const score = totalCities > 1 ? ((totalCities - rank) / (totalCities - 1)) * 100 : 100;
 
-  const scoreColor = score >= 70 ? "#10B981" : score >= 40 ? "#F59E0B" : "#EF4444";
-  const scoreLabel = score >= 70 ? "Хорошо" : score >= 40 ? "Средне" : "Плохо";
+  const scoreColor = score >= 66 ? "#10B981" : score >= 33 ? "#F59E0B" : "#EF4444";
+  const scoreLabel = score >= 66 ? "Лучше большинства" : score >= 33 ? "В середине" : "Хуже большинства";
 
   const topReasons = columns
     .map(c => ({
@@ -145,9 +147,6 @@ export default function DashboardEfficiency({
     .filter(r => r.value > 0);
 
   const reasonColors = ["#EF4444", "#F59E0B", "#8B5CF6", "#3B82F6", "#06B6D4", "#10B981", "#EC4899", "#6366F1", "#14B8A6"];
-
-  const rank = cityTotals.findIndex(c => c.city === selectedCity) + 1;
-  const totalCities = cityTotals.length;
 
   if (!selectedCity) {
     const best3 = cityTotals.slice(0, 3);
