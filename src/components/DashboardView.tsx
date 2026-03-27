@@ -5,6 +5,7 @@ import {
   Tooltip, ResponsiveContainer,
   LineChart, Line,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ScatterChart, Scatter, ZAxis,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import { useTheme } from "@/context/ThemeContext";
@@ -522,62 +523,120 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         </div>
       )}
 
-      {anomalies.length > 0 && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
-              style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
-              <Icon name="Zap" size={18} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
-              <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин (±80% к предыдущему месяцу)</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-            {anomalies.map((a, i) => {
-              const isUp = a.pctChange > 0;
-              const absPct = Math.abs(a.pctChange);
-              const multiplier = a.prev > 0 ? a.cur / a.prev : 0;
-              const changeLabel = a.prev === 0
-                ? `${a.cur.toLocaleString("ru-RU")} (с нуля)`
-                : absPct > 300
-                  ? `×${multiplier.toFixed(1)}`
-                  : `${isUp ? "+" : ""}${Math.round(a.pctChange)}%`;
-              const accentColor = isUp ? "#EF4444" : "#10B981";
-              const barWidth = Math.min(absPct / 5, 100);
+      {anomalies.length > 0 && (() => {
+        const bubbleData = anomalies.map((a, i) => {
+          const absPct = Math.abs(a.pctChange);
+          const isUp = a.pctChange > 0;
+          const multiplier = a.prev > 0 ? a.cur / a.prev : 0;
+          const changeLabel = a.prev === 0
+            ? `${a.cur.toLocaleString("ru-RU")} (с нуля)`
+            : absPct > 300
+              ? `×${multiplier.toFixed(1)}`
+              : `${isUp ? "+" : ""}${Math.round(a.pctChange)}%`;
+          return {
+            ...a, x: i, y: a.cur, z: Math.max(absPct, 30),
+            isUp, absPct, changeLabel,
+            fillColor: isUp ? "#EF4444" : "#10B981",
+          };
+        });
+        const maxZ = Math.max(...bubbleData.map(d => d.z));
 
-              return (
-                <div key={i} className="relative rounded-xl p-4 overflow-hidden transition-all hover:scale-[1.02]"
-                  style={{ background: isLight ? "rgba(20,10,40,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${accentColor}15` }}>
-                  <div className="absolute bottom-0 left-0 h-1 rounded-full transition-all duration-700"
-                    style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, ${accentColor}60, ${accentColor})` }} />
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <span className="text-xs px-2 py-1 rounded-lg font-medium" style={{ background: `${a.color}15`, color: a.color }}>
-                      {a.reason}
+        const BubbleTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: typeof bubbleData[0] }> }) => {
+          if (!active || !payload?.[0]) return null;
+          const d = payload[0].payload;
+          return (
+            <div className="rounded-xl px-4 py-3 text-xs shadow-2xl border"
+              style={{ background: isLight ? "rgba(255,255,255,0.97)" : "rgba(20,10,40,0.95)",
+                borderColor: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)",
+                backdropFilter: "blur(16px)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ background: d.fillColor }} />
+                <span className="font-bold" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>{d.reason}</span>
+              </div>
+              {!selectedCity && <p className="text-white/50 mb-1">{d.city}</p>}
+              <p className="text-white/40 mb-2">{d.month}</p>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-white/50">{d.prev.toLocaleString("ru-RU")}</span>
+                <Icon name="ArrowRight" size={10} className="text-white/25" />
+                <span className="font-mono font-bold" style={{ color: d.fillColor }}>{d.cur.toLocaleString("ru-RU")}</span>
+                <span className="font-bold ml-1" style={{ color: d.fillColor }}>{d.changeLabel}</span>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl gradient-pink flex items-center justify-center"
+                style={{ boxShadow: "0 8px 24px rgba(255,60,172,0.25)" }}>
+                <Icon name="Zap" size={18} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-white text-lg">Аномалии</h3>
+                <p className="text-white/40 text-xs mt-0.5">Резкие скачки причин · размер = масштаб изменения</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <ResponsiveContainer width="100%" height={320}>
+                <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+                  <XAxis dataKey="x" type="number" hide domain={[-0.5, anomalies.length - 0.5]} />
+                  <YAxis dataKey="y" type="number" hide />
+                  <ZAxis dataKey="z" type="number" range={[400, 3000]} domain={[0, maxZ]} />
+                  <Tooltip content={<BubbleTooltip />} cursor={false} />
+                  <Scatter data={bubbleData.filter(d => d.isUp)} fill="#EF4444" fillOpacity={0.6} stroke="#EF4444" strokeWidth={2}>
+                    {bubbleData.filter(d => d.isUp).map((_, idx) => (
+                      <Cell key={idx} style={{ filter: "drop-shadow(0 4px 16px rgba(239,68,68,0.4))" }} />
+                    ))}
+                  </Scatter>
+                  <Scatter data={bubbleData.filter(d => !d.isUp)} fill="#10B981" fillOpacity={0.6} stroke="#10B981" strokeWidth={2}>
+                    {bubbleData.filter(d => !d.isUp).map((_, idx) => (
+                      <Cell key={idx} style={{ filter: "drop-shadow(0 4px 16px rgba(16,185,129,0.4))" }} />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+
+              <div className="absolute inset-0 pointer-events-none flex items-end justify-center pb-2">
+                <div className="flex items-center gap-4">
+                  {bubbleData.map((d, i) => (
+                    <span key={i} className="text-[10px] font-medium text-center truncate max-w-[80px]"
+                      style={{ color: isLight ? "rgba(20,10,40,0.4)" : "rgba(255,255,255,0.3)" }}>
+                      {d.reason}
                     </span>
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-lg flex-shrink-0"
-                      style={{ background: `${accentColor}15` }}>
-                      <Icon name={isUp ? "TrendingUp" : "TrendingDown"} size={12} style={{ color: accentColor }} />
-                      <span className="text-xs font-bold" style={{ color: accentColor }}>{changeLabel}</span>
-                    </div>
-                  </div>
-                  {!selectedCity && (
-                    <p className="text-sm font-medium mb-1" style={{ color: "var(--text-primary)" }}>{a.city}</p>
-                  )}
-                  <div className="flex items-center gap-2 text-xs text-white/40">
-                    <span>{a.month}</span>
-                    <span className="text-white/20">·</span>
-                    <span className="font-mono">{a.prev.toLocaleString("ru-RU")}</span>
-                    <Icon name="ArrowRight" size={10} className="text-white/25" />
-                    <span className="font-mono font-semibold" style={{ color: accentColor }}>{a.cur.toLocaleString("ru-RU")}</span>
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 mt-4">
+              {bubbleData.map((d, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
+                  style={{ background: `${d.fillColor}10`, border: `1px solid ${d.fillColor}20` }}>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.fillColor }} />
+                  <span style={{ color: isLight ? "#1a1a2e" : "rgba(255,255,255,0.7)" }}>
+                    {d.reason}{!selectedCity ? ` · ${d.city}` : ""}
+                  </span>
+                  <span className="font-bold" style={{ color: d.fillColor }}>{d.changeLabel}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-5 mt-4 text-[11px]" style={{ color: isLight ? "rgba(20,10,40,0.35)" : "rgba(255,255,255,0.25)" }}>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-red-500/60 border border-red-500" />
+                Рост
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-emerald-500/60 border border-emerald-500" />
+                Снижение
+              </span>
+              <span>Больше круг = сильнее скачок</span>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {!selectedCity && (
