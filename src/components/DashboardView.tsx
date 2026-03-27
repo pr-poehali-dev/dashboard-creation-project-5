@@ -664,14 +664,17 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
           ) : (() => {
             const topItem = sorted.find(c => c.total > 0);
             const topPct = topItem && grandTotal > 0 ? ((topItem.total / grandTotal) * 100).toFixed(1) : "0";
+            const chartSize = selectedCity ? 220 : 180;
+            const innerR = selectedCity ? 65 : 52;
+            const outerR = selectedCity ? 100 : 82;
             return (
-              <div className={selectedCity ? "flex flex-col lg:flex-row gap-6 items-center" : "flex flex-col items-center"}>
-                <div className={`relative flex-shrink-0 ${selectedCity ? "" : "mb-1"}`}>
-                  <ResponsiveContainer width={selectedCity ? 240 : 200} height={selectedCity ? 240 : 200}>
+              <div className="flex flex-row gap-6 items-center">
+                <div className="relative flex-shrink-0" style={{ width: chartSize, height: chartSize }}>
+                  <ResponsiveContainer width={chartSize} height={chartSize}>
                     <PieChart>
                       <Pie data={colTotals.filter(c => c.total > 0)}
                         cx="50%" cy="50%"
-                        innerRadius={selectedCity ? 70 : 58} outerRadius={selectedCity ? 105 : 88}
+                        innerRadius={innerR} outerRadius={outerR}
                         paddingAngle={2} dataKey="total" nameKey="label" strokeWidth={0}
                         cornerRadius={4}>
                         {colTotals.filter(c => c.total > 0).map((entry, i) => (
@@ -683,30 +686,28 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
                         itemStyle={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.7)" }} />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
                     {topItem && (
                       <>
-                        <span className="text-[10px] font-medium mb-0.5" style={{ color: topItem.color }}>{topItem.label}</span>
-                        <span className="text-[28px] font-bold font-mono leading-none" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                        <span className="text-[9px] font-medium mb-0.5 text-center leading-tight max-w-[80px] truncate" style={{ color: topItem.color }}>{topItem.label}</span>
+                        <span className="text-[26px] font-bold font-mono leading-none" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
                           {topPct}%
                         </span>
                       </>
                     )}
                   </div>
                 </div>
-                <div className={`flex-1 w-full ${selectedCity ? "flex flex-col gap-3" : "flex flex-col gap-2.5 mt-1"}`}>
-                  {sorted.filter(c => c.total > 0).map(item => {
-                    const pct = grandTotal > 0 ? (item.total / grandTotal) * 100 : 0;
-                    return (
-                      <div key={item.key} className="flex items-center gap-3">
-                        <span className="w-3 h-3 rounded flex-shrink-0" style={{ background: item.color, borderRadius: 4 }} />
-                        <span className="text-sm truncate flex-1" style={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.6)" }}>{item.label}</span>
-                        <span className="text-sm font-bold font-mono flex-shrink-0" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
-                          {item.total.toLocaleString("ru-RU")}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="flex-1 flex flex-col justify-center gap-3 min-w-0">
+                  {sorted.filter(c => c.total > 0).map((item, idx) => (
+                    <div key={item.key} className="flex items-center gap-3 min-w-0"
+                      style={{ borderBottom: idx < sorted.filter(c => c.total > 0).length - 1 ? `1px solid ${isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)"}` : "none", paddingBottom: idx < sorted.filter(c => c.total > 0).length - 1 ? 10 : 0 }}>
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: item.color }} />
+                      <span className="text-[13px] truncate flex-1 min-w-0" style={{ color: isLight ? "rgba(20,10,40,0.7)" : "rgba(255,255,255,0.6)" }}>{item.label}</span>
+                      <span className="text-[13px] font-bold font-mono flex-shrink-0 tabular-nums" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
+                        {item.total.toLocaleString("ru-RU")}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
