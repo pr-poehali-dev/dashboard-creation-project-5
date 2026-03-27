@@ -171,7 +171,7 @@ export default function DashboardCharts({
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     {topItem && (
                       <>
-                        <span className="text-[11px] font-medium mb-1 text-center leading-tight" style={{ color: topItem.color }}>{topItem.label}</span>
+                        <span className="text-[11px] font-medium mb-1 text-center leading-tight text-white">{topItem.label}</span>
                         <span className="text-[32px] font-bold font-mono leading-none" style={{ color: isLight ? "#1a1a2e" : "#fff" }}>
                           {topPct}%
                         </span>
