@@ -333,8 +333,9 @@ export default function DashboardCharts({
                               <stop offset="100%" stopColor={color} stopOpacity={0.05} />
                             </linearGradient>
                           </defs>
-                          <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2}
-                            fill={`url(#${gradientId})`} dot={false}
+                          <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2.5}
+                            fill={`url(#${gradientId})`}
+                            dot={{ r: 3, fill: color, stroke: "rgba(15,10,30,0.6)", strokeWidth: 1.5 }}
                             baseValue={0} />
                           <YAxis domain={[0, globalMax]} hide />
                         </AreaChart>
