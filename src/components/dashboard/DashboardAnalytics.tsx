@@ -155,48 +155,6 @@ export default function DashboardAnalytics({
   return (
     <>
       {!loading && grandTotal > 0 && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-5">
-            <h3 className="font-display font-bold text-white text-lg">Топ причины</h3>
-            <p className="text-white/40 text-xs mt-0.5">
-              {selectedCity ? selectedCity : "Все города"}
-              {selectedMonth ? ` · ${selectedMonth}` : ""} · доля от общего
-            </p>
-          </div>
-          <div className="space-y-4">
-            {top3Reasons.map((item, i) => (
-              <div key={item.key}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white"
-                      style={{ background: item.color }}>
-                      {i + 1}
-                    </span>
-                    <span className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
-                      {item.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                      {item.total.toLocaleString("ru-RU")}
-                    </span>
-                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: `${item.color}20`, color: item.color }}>
-                      {item.pct.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="h-3 rounded-full overflow-hidden" style={{ background: isLight ? "rgba(20,10,40,0.06)" : "rgba(255,255,255,0.06)" }}>
-                  <div className="h-full rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${item.pct}%`, background: `linear-gradient(90deg, ${item.color}, ${item.color}CC)` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!loading && grandTotal > 0 && (
         <div className="glass rounded-2xl p-5 animate-fade-in-up">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-10 h-10 rounded-xl gradient-cyan flex items-center justify-center"

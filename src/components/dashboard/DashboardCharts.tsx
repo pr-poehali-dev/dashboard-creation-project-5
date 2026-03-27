@@ -357,34 +357,6 @@ export default function DashboardCharts({
       })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <h3 className="font-display font-bold text-white text-lg mb-1">Причины — сравнение</h3>
-          <p className="text-white/40 text-xs mb-6">
-            {selectedCity ? `${selectedCity}` : "Суммарно по всем городам"}
-            {selectedMonth ? ` · ${selectedMonth}` : ""}
-          </p>
-          {loading ? (
-            <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={340}>
-              <BarChart data={sorted.map(c => ({ name: c.label, value: c.total, color: c.color }))}
-                margin={{ top: 5, right: 5, left: 10, bottom: 70 }} barSize={22}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
-                  axisLine={false} tickLine={false} angle={-40} textAnchor="end" interval={0} />
-                <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                  tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="Кол-во" radius={[8, 8, 0, 0]}>
-                  {sorted.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
         {hasMonths ? (
           <div className="glass rounded-2xl p-6 animate-fade-in-up">
             <h3 className="font-display font-bold text-white text-lg mb-1">Динамика по месяцам</h3>
