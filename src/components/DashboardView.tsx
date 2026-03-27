@@ -110,6 +110,25 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
     return Object.values(map);
   })();
 
+  const allCitiesAggregated2 = (() => {
+    const monthFilter = selectedMonth
+      ? allRows.filter(r => !hasMonths || r.month === selectedMonth)
+      : allRows;
+    const map: Record<string, Row> = {};
+    monthFilter.forEach(r => {
+      const city = r.city as string;
+      if (!map[city]) {
+        map[city] = { id: r.id, city };
+        columns.forEach(c => { map[city][c.key] = 0; });
+      }
+      columns.forEach(c => {
+        (map[city][c.key] as number) += Number(r[c.key]) || 0;
+      });
+    });
+    return Object.values(map);
+  })();
+  const allCitiesGrandTotal = allCitiesAggregated2.reduce((s, r) => s + rowTotal(r), 0);
+
   const aggregatedByMonthRows = (() => {
     if (!hasMonths) return [];
     const map: Record<string, Record<string, number>> = {};
@@ -396,9 +415,9 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         selectedCity={selectedCity}
         loading={loading}
         columns={columns}
-        aggregatedByCityRows={aggregatedByCityRows}
+        aggregatedByCityRows={allCitiesAggregated2}
         rowTotal={rowTotal}
-        grandTotal={grandTotal}
+        grandTotal={allCitiesGrandTotal}
         isLight={isLight}
       />
 
