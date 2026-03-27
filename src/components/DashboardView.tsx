@@ -392,6 +392,16 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
 
       <DashboardKpiCards cards={kpiCards} loading={loading} kpiKey={kpiKey} />
 
+      <DashboardEfficiency
+        selectedCity={selectedCity}
+        loading={loading}
+        columns={columns}
+        aggregatedByCityRows={aggregatedByCityRows}
+        rowTotal={rowTotal}
+        grandTotal={grandTotal}
+        isLight={isLight}
+      />
+
       <DashboardCharts
         selectedCity={selectedCity}
         selectedMonth={selectedMonth}
@@ -427,16 +437,6 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         selectedCity={selectedCity}
         selectedMonth={selectedMonth}
         cityProfileData={cityProfileData}
-      />
-
-      <DashboardEfficiency
-        selectedCity={selectedCity}
-        loading={loading}
-        columns={columns}
-        aggregatedByCityRows={aggregatedByCityRows}
-        rowTotal={rowTotal}
-        grandTotal={grandTotal}
-        isLight={isLight}
       />
 
       <DashboardDataTable
