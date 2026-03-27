@@ -215,13 +215,26 @@ export default function DashboardCharts({
                   const data = reasonsByMonth.map(r => ({ month: r.month as string, value: Number(r[col.key]) || 0 }));
                   const total = data.reduce((s, d) => s + d.value, 0);
                   const gradientId = `smGrad-city-${col.key}`;
+                  const last = data.length >= 2 ? data[data.length - 1].value : 0;
+                  const prev = data.length >= 2 ? data[data.length - 2].value : 0;
+                  const diff = prev > 0 ? ((last - prev) / prev) * 100 : (last > 0 ? 100 : 0);
+                  const trendUp = diff > 0;
+                  const trendFlat = diff === 0;
                   return (
                     <div key={col.key} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
                         <span className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>{col.label}</span>
                       </div>
-                      <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
+                        {data.length >= 2 && !trendFlat && (
+                          <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: trendUp ? "#22c55e" : "#ef4444" }}>
+                            <Icon name={trendUp ? "TrendingUp" : "TrendingDown"} size={13} />
+                            {Math.abs(diff).toFixed(0)}%
+                          </span>
+                        )}
+                      </div>
                       <div className="mt-2" style={{ height: 60 }}>
                         <ResponsiveContainer width="100%" height={60}>
                           <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
@@ -291,13 +304,26 @@ export default function DashboardCharts({
                 const data = reasonsByMonth.map(r => ({ month: r.month as string, value: Number(r[col.key]) || 0 }));
                 const total = data.reduce((s, d) => s + d.value, 0);
                 const gradientId = `smGrad-all-${col.key}`;
+                const last = data.length >= 2 ? data[data.length - 1].value : 0;
+                const prev = data.length >= 2 ? data[data.length - 2].value : 0;
+                const diff = prev > 0 ? ((last - prev) / prev) * 100 : (last > 0 ? 100 : 0);
+                const trendUp = diff > 0;
+                const trendFlat = diff === 0;
                 return (
                   <div key={col.key} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
                       <span className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>{col.label}</span>
                     </div>
-                    <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
+                      {data.length >= 2 && !trendFlat && (
+                        <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: trendUp ? "#22c55e" : "#ef4444" }}>
+                          <Icon name={trendUp ? "TrendingUp" : "TrendingDown"} size={13} />
+                          {Math.abs(diff).toFixed(0)}%
+                        </span>
+                      )}
+                    </div>
                     <div className="mt-2" style={{ height: 60 }}>
                       <ResponsiveContainer width="100%" height={60}>
                         <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
