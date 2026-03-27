@@ -82,6 +82,19 @@ export default function DashboardAnalytics({
               const sparkH = 56;
               const sparkPad = 4;
 
+              const pts = spark.map((v, si) => ({
+                x: (si / Math.max(spark.length - 1, 1)) * 100,
+                y: sparkPad + (sparkH - sparkPad) - ((v - sparkMin) / sparkRange) * (sparkH - sparkPad * 2),
+              }));
+              const smoothLine = pts.map((p, si) => {
+                if (si === 0) return `M${p.x},${p.y}`;
+                const p0 = pts[si - 1];
+                const tension = 0.3;
+                const dx = p.x - p0.x;
+                return `C${p0.x + dx * tension},${p0.y} ${p.x - dx * tension},${p.y} ${p.x},${p.y}`;
+              }).join(" ");
+              const smoothFill = `${smoothLine} L${pts[pts.length - 1].x},${sparkH} L${pts[0].x},${sparkH} Z`;
+
               return (
                 <div key={i} className="relative overflow-hidden rounded-xl p-4 transition-all duration-200 hover:scale-[1.01]"
                   style={{
@@ -97,20 +110,10 @@ export default function DashboardAnalytics({
                         <stop offset="100%" stopColor={accentColor} stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <polygon
-                      points={`0,${sparkH} ${spark.map((v, si) =>
-                        `${(si / Math.max(spark.length - 1, 1)) * 100},${sparkPad + (sparkH - sparkPad) - ((v - sparkMin) / sparkRange) * (sparkH - sparkPad * 2)}`
-                      ).join(" ")} 100,${sparkH}`}
-                      fill={`url(#anomalyFill-${i})`}
-                    />
-                    <polyline
-                      points={spark.map((v, si) =>
-                        `${(si / Math.max(spark.length - 1, 1)) * 100},${sparkPad + (sparkH - sparkPad) - ((v - sparkMin) / sparkRange) * (sparkH - sparkPad * 2)}`
-                      ).join(" ")}
-                      fill="none" stroke={accentColor} strokeWidth={1.5}
+                    <path d={smoothFill} fill={`url(#anomalyFill-${i})`} />
+                    <path d={smoothLine} fill="none" stroke={accentColor} strokeWidth={1.5}
                       strokeLinecap="round" strokeLinejoin="round"
-                      vectorEffect="non-scaling-stroke"
-                    />
+                      vectorEffect="non-scaling-stroke" />
                   </svg>
 
                   <div className="relative flex items-start justify-between gap-3 mb-3">
