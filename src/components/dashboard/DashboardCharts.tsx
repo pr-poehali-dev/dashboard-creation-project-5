@@ -2,7 +2,6 @@ import {
   AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
-  LineChart, Line,
 } from "recharts";
 import Icon from "@/components/ui/icon";
 import type { ColumnDef } from "@/config/dashboards";
@@ -267,29 +266,6 @@ export default function DashboardCharts({
         })()}
       </div>
 
-      {hasMonths && monthlyTrendData.length > 1 && (
-        <div className="glass rounded-2xl p-6 animate-fade-in-up">
-          <div className="mb-6">
-            <h3 className="font-display font-bold text-white text-lg">Тренд по месяцам</h3>
-            <p className="text-white/40 text-xs mt-0.5">
-              {selectedCity ? selectedCity : "Все города"} · линия тренда
-            </p>
-          </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={monthlyTrendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
-              <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={50} />
-              <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="total" name="Итого" stroke="#8B5CF6" strokeWidth={3}
-                dot={{ r: 5, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }}
-                activeDot={{ r: 7, fill: "#8B5CF6", stroke: "white", strokeWidth: 2 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
       {!selectedCity && hasMonths && reasonsByMonth.length > 1 && (() => {
         const globalMax = Math.max(
           ...columns.map(col => Math.max(...reasonsByMonth.map(r => Number(r[col.key]) || 0))),
@@ -357,34 +333,7 @@ export default function DashboardCharts({
       })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {hasMonths ? (
-          <div className="glass rounded-2xl p-6 animate-fade-in-up">
-            <h3 className="font-display font-bold text-white text-lg mb-1">Динамика по месяцам</h3>
-            <p className="text-white/40 text-xs mb-6">
-              {selectedCity ? selectedCity : "Все города"}
-              {selectedMonth ? ` · ${selectedMonth}` : " · все месяцы"}
-            </p>
-            {loading ? (
-              <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
-            ) : (
-              <ResponsiveContainer width="100%" height={340}>
-                <BarChart data={aggregatedByMonthRows.filter(d => d.total > 0)}
-                  margin={{ top: 5, right: 5, left: 10, bottom: 5 }} barSize={28}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                    tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="total" name="Итого" fill="#8B5CF6" radius={[6, 6, 0, 0]}>
-                    {aggregatedByMonthRows.filter(d => d.total > 0).map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        ) : (
+        {!hasMonths && (
           <div className="glass rounded-2xl p-6 animate-fade-in-up">
             <div className="flex items-center justify-between mb-5">
               <div>
