@@ -199,54 +199,52 @@ export default function DashboardCharts({
         </div>
 
         {selectedCity && hasMonths && reasonsByMonth.length > 1 && (() => {
-          const monthRows = reasonsByMonth.map(row => {
-            const total = columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
-            return { month: row.month as string, total, values: columns.map(c => Number(row[c.key]) || 0) };
-          });
-          const maxTotal = Math.max(...monthRows.map(r => r.total), 1);
+          const globalMax = Math.max(
+            ...columns.map(col => Math.max(...reasonsByMonth.map(r => Number(r[col.key]) || 0))),
+            1
+          );
           return (
-            <div className="glass rounded-2xl p-6 animate-fade-in-up">
+            <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
               <div className="mb-5">
                 <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
-                <p className="text-white/40 text-xs mt-0.5">{selectedCity} · структура обращений по месяцам</p>
+                <p className="text-white/40 text-xs mt-0.5">{selectedCity} · каждая причина отдельно</p>
               </div>
-              <div className="space-y-2.5">
-                {monthRows.map(row => (
-                  <div key={row.month} className="group">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-medium w-16 flex-shrink-0 text-right" style={{ color: "var(--text-secondary)" }}>{row.month}</span>
-                      <div className="flex-1 h-7 rounded-lg bg-white/5 overflow-hidden flex">
-                        {row.values.map((val, ci) => {
-                          const pct = row.total > 0 ? (val / maxTotal) * 100 : 0;
-                          if (pct === 0) return null;
-                          return (
-                            <div key={columns[ci].key}
-                              className="h-full transition-all duration-500 relative group/seg"
-                              title={`${columns[ci].label}: ${val.toLocaleString("ru-RU")}`}
-                              style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }}>
-                              {pct > 8 && (
-                                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white/90">
-                                  {val.toLocaleString("ru-RU")}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {columns.map((col, ci) => {
+                  const color = PIE_COLORS[ci % PIE_COLORS.length];
+                  const data = reasonsByMonth.map(r => ({ month: r.month as string, value: Number(r[col.key]) || 0 }));
+                  const total = data.reduce((s, d) => s + d.value, 0);
+                  const gradientId = `smGrad-city-${col.key}`;
+                  return (
+                    <div key={col.key} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                        <span className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>{col.label}</span>
                       </div>
-                      <span className="text-xs font-bold font-mono w-14 text-right tabular-nums" style={{ color: "var(--text-primary)" }}>
-                        {row.total.toLocaleString("ru-RU")}
-                      </span>
+                      <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
+                      <div className="mt-2" style={{ height: 60 }}>
+                        <ResponsiveContainer width="100%" height={60}>
+                          <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                            <defs>
+                              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                                <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2}
+                              fill={`url(#${gradientId})`} dot={false}
+                              baseValue={0} />
+                            <YAxis domain={[0, globalMax]} hide />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{data[0]?.month}</span>
+                        <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{data[data.length - 1]?.month}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-2 mt-5 pt-4 border-t border-white/6">
-                {columns.map((c, i) => (
-                  <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-                    <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                    {c.label}
-                  </span>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
@@ -277,54 +275,52 @@ export default function DashboardCharts({
       )}
 
       {!selectedCity && hasMonths && reasonsByMonth.length > 1 && (() => {
-        const monthRows = reasonsByMonth.map(row => {
-          const total = columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
-          return { month: row.month as string, total, values: columns.map(c => Number(row[c.key]) || 0) };
-        });
-        const maxTotal = Math.max(...monthRows.map(r => r.total), 1);
+        const globalMax = Math.max(
+          ...columns.map(col => Math.max(...reasonsByMonth.map(r => Number(r[col.key]) || 0))),
+          1
+        );
         return (
           <div className="glass rounded-2xl p-6 animate-fade-in-up">
             <div className="mb-5">
               <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
-              <p className="text-white/40 text-xs mt-0.5">Все города · структура обращений по месяцам</p>
+              <p className="text-white/40 text-xs mt-0.5">Все города · каждая причина отдельно</p>
             </div>
-            <div className="space-y-2.5">
-              {monthRows.map(row => (
-                <div key={row.month} className="group">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium w-16 flex-shrink-0 text-right" style={{ color: "var(--text-secondary)" }}>{row.month}</span>
-                    <div className="flex-1 h-7 rounded-lg bg-white/5 overflow-hidden flex">
-                      {row.values.map((val, ci) => {
-                        const pct = row.total > 0 ? (val / maxTotal) * 100 : 0;
-                        if (pct === 0) return null;
-                        return (
-                          <div key={columns[ci].key}
-                            className="h-full transition-all duration-500 relative"
-                            title={`${columns[ci].label}: ${val.toLocaleString("ru-RU")}`}
-                            style={{ width: `${pct}%`, background: PIE_COLORS[ci % PIE_COLORS.length] }}>
-                            {pct > 8 && (
-                              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white/90">
-                                {val.toLocaleString("ru-RU")}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {columns.map((col, ci) => {
+                const color = PIE_COLORS[ci % PIE_COLORS.length];
+                const data = reasonsByMonth.map(r => ({ month: r.month as string, value: Number(r[col.key]) || 0 }));
+                const total = data.reduce((s, d) => s + d.value, 0);
+                const gradientId = `smGrad-all-${col.key}`;
+                return (
+                  <div key={col.key} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: color }} />
+                      <span className="text-xs font-medium truncate" style={{ color: "var(--text-primary)" }}>{col.label}</span>
                     </div>
-                    <span className="text-xs font-bold font-mono w-14 text-right tabular-nums" style={{ color: "var(--text-primary)" }}>
-                      {row.total.toLocaleString("ru-RU")}
-                    </span>
+                    <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
+                    <div className="mt-2" style={{ height: 60 }}>
+                      <ResponsiveContainer width="100%" height={60}>
+                        <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                          <defs>
+                            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                              <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2}
+                            fill={`url(#${gradientId})`} dot={false}
+                            baseValue={0} />
+                          <YAxis domain={[0, globalMax]} hide />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{data[0]?.month}</span>
+                      <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{data[data.length - 1]?.month}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-5 pt-4 border-t border-white/6">
-              {columns.map((c, i) => (
-                <span key={c.key} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-secondary)" }}>
-                  <span className="w-3 h-3 rounded-sm inline-block flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  {c.label}
-                </span>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
