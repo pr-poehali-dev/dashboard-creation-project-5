@@ -11,6 +11,7 @@ const MONTHS_ORDER = [
 
 interface Props {
   selectedCity: string | null;
+  selectedMonth: string | null;
   hasMonths: boolean;
   columns: ColumnDef[];
   reasonsByMonth: Array<Record<string, number | string>>;
@@ -18,9 +19,9 @@ interface Props {
 }
 
 export default function DashboardReasonsTrend({
-  selectedCity, hasMonths, columns, reasonsByMonth, PIE_COLORS,
+  selectedCity, selectedMonth, hasMonths, columns, reasonsByMonth, PIE_COLORS,
 }: Props) {
-  if (!selectedCity || !hasMonths || reasonsByMonth.length <= 1) return null;
+  if (!selectedCity || selectedMonth || !hasMonths || reasonsByMonth.length <= 1) return null;
 
   const globalMax = Math.max(
     ...columns.map(col => Math.max(...reasonsByMonth.map(r => Number(r[col.key]) || 0))),

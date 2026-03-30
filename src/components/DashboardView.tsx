@@ -471,6 +471,7 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
 
       <DashboardReasonsTrend
         selectedCity={selectedCity}
+        selectedMonth={selectedMonth}
         hasMonths={hasMonths}
         columns={columns}
         reasonsByMonth={reasonsByMonth}
