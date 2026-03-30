@@ -59,8 +59,8 @@ export default function DashboardDataTable({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                style={{ background: "var(--sticky-cell-bg)", minWidth: 140 }}>
+              <th className="text-left px-3 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                style={{ background: "var(--sticky-cell-bg)", minWidth: 110 }}>
                 {hasMonths && !selectedMonth ? "Город" : hasMonths ? "Город" : "Город / Причина"}
               </th>
               {hasMonths && !selectedMonth && (
@@ -69,8 +69,8 @@ export default function DashboardDataTable({
                 </th>
               )}
               {columns.map(col => (
-                <th key={col.key} className="px-3 py-3 text-white/50 font-medium text-xs text-center leading-tight"
-                  style={{ minWidth: 90, maxWidth: 120 }}>
+                <th key={col.key} className="px-1.5 py-3 text-white/50 font-medium text-[10px] text-center leading-tight"
+                  style={{ minWidth: 60 }}>
                   {col.label}
                 </th>
               ))}
@@ -87,13 +87,13 @@ export default function DashboardDataTable({
                   </td>
                   <td className="px-3 py-2.5 text-white/40 text-xs">Все</td>
                   {columns.map(col => (
-                    <td key={col.key} className="px-2 py-1.5 text-center">
+                    <td key={col.key} className="px-1 py-1.5 text-center">
                       <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
                         {(Number(row[col.key]) || 0).toLocaleString("ru-RU")}
                       </span>
                     </td>
                   ))}
-                  <td className="px-4 py-2.5 text-center">
+                  <td className="px-2 py-2.5 text-center">
                     <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
                       {rowTotal(row).toLocaleString("ru-RU")}
                     </span>
@@ -109,7 +109,7 @@ export default function DashboardDataTable({
                     {row.city}
                   </td>
                   {columns.map(col => (
-                    <td key={col.key} className="px-2 py-1.5 text-center">
+                    <td key={col.key} className="px-1 py-1.5 text-center">
                       {readonly ? (
                         <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
                           {(Number(row[col.key]) || 0).toLocaleString("ru-RU")}
@@ -122,7 +122,7 @@ export default function DashboardDataTable({
                           className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
                             bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
                             [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          style={{ minWidth: 52 }} />
+                          style={{ minWidth: 40 }} />
                       )}
                     </td>
                   ))}
@@ -141,13 +141,13 @@ export default function DashboardDataTable({
                 style={{ background: "var(--sticky-cell-bg)" }}>ИТОГО</td>
               {hasMonths && !selectedMonth && <td></td>}
               {columns.map(col => (
-                <td key={col.key} className="px-2 py-3 text-center">
+                <td key={col.key} className="px-1 py-3 text-center">
                   <span className={`text-xs font-bold ${colTotal(col.key) > 0 ? "text-gradient-cyan" : "text-white/30"}`}>
                     {colTotal(col.key).toLocaleString("ru-RU")}
                   </span>
                 </td>
               ))}
-              <td className="px-4 py-3 text-center">
+              <td className="px-2 py-3 text-center">
                 <span className="text-sm font-black text-gradient-pink">{grandTotal.toLocaleString("ru-RU")}</span>
               </td>
             </tr>
