@@ -1,0 +1,1 @@
+UPDATE dashboards SET title = 'Количество расторжений' WHERE slug = 'terminations';
