@@ -138,7 +138,7 @@ export default function useDashboardData(
       if (!map[city]) map[city] = 0;
       map[city] += columns.reduce((s, c) => s + (Number(r[c.key]) || 0), 0);
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+    return Object.entries(map).sort((a, b) => a[1] - b[1]);
   })();
   const cityRank = selectedCity
     ? allCitiesAggregated.findIndex(([c]) => c === selectedCity) + 1
