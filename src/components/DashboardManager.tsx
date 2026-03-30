@@ -48,6 +48,8 @@ export default function DashboardManager({ onClose }: Props) {
   const [extraSaving, setExtraSaving] = useState(false);
   const [extraDeleteId, setExtraDeleteId] = useState<number | null>(null);
   const [extraRows, setExtraRows] = useState<TableRow[]>([{ city: "" }]);
+  const [extraHasCityMonth, setExtraHasCityMonth] = useState(false);
+  const [mainCities, setMainCities] = useState<string[]>([]);
 
   const loadExtraTables = useCallback(async (dashboardId: number) => {
     setExtraTablesLoading(true);
@@ -66,10 +68,21 @@ export default function DashboardManager({ onClose }: Props) {
   useEffect(() => {
     if (mode === "edit" && editing) {
       loadExtraTables(editing.id);
+      fetch(`${editing.api_url}${editing.api_url.includes("?") ? "&" : "?"}dashboard_id=${editing.id}`)
+        .then(r => r.json())
+        .then(data => {
+          const parsed = typeof data === "string" ? JSON.parse(data) : data;
+          if (Array.isArray(parsed)) {
+            const cities = [...new Set(parsed.filter((r: { city?: string }) => r.city).map((r: { city: string }) => r.city))] as string[];
+            setMainCities(cities);
+          }
+        })
+        .catch(() => {});
     } else {
       setExtraTables([]);
       setShowExtraForm(false);
       setExtraDeleteId(null);
+      setMainCities([]);
     }
   }, [mode, editing?.id, loadExtraTables]);
 
@@ -77,12 +90,18 @@ export default function DashboardManager({ onClose }: Props) {
     if (!editing || !extraTitle.trim() || extraColumns.length === 0) return;
     setExtraSaving(true);
     try {
-      const payload = {
+      const validCols = extraColumns.filter(c => c.key && (c.label || "").trim());
+      const payload: Record<string, unknown> = {
         title: extraTitle.trim(),
         slug: slugify(extraTitle.trim()),
-        columns: extraColumns.filter(c => c.key && (c.label || "").trim()),
-        rows: extraRows,
+        columns: validCols,
+        has_city_month: extraHasCityMonth,
       };
+      if (extraHasCityMonth) {
+        payload.cities = mainCities;
+      } else {
+        payload.rows = extraRows;
+      }
       await fetch(`${EXTRA_TABLES_URL}?dashboard_id=${editing.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,6 +110,7 @@ export default function DashboardManager({ onClose }: Props) {
       setExtraTitle("");
       setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
       setExtraRows([{ col1: "" } as TableRow]);
+      setExtraHasCityMonth(false);
       setShowExtraForm(false);
       await loadExtraTables(editing.id);
     } finally {
@@ -358,6 +378,7 @@ export default function DashboardManager({ onClose }: Props) {
                         setExtraTitle("");
                         setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
                         setExtraRows([{ col1: "" } as TableRow]);
+                        setExtraHasCityMonth(false);
                         setShowExtraForm(true);
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
@@ -377,7 +398,21 @@ export default function DashboardManager({ onClose }: Props) {
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all placeholder:text-white/20"
                         />
                       </div>
-                      <div className="glass rounded-2xl overflow-hidden border border-white/10">
+                      {mainCities.length > 0 && (
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={extraHasCityMonth}
+                            onChange={e => setExtraHasCityMonth(e.target.checked)}
+                            className="w-4 h-4 rounded border-white/20 accent-violet-500"
+                          />
+                          <span className="text-white/70 text-xs">Разбивка по городам и месяцам (как в основной таблице)</span>
+                          {extraHasCityMonth && (
+                            <span className="text-white/30 text-xs">· {mainCities.length} городов × 12 месяцев</span>
+                          )}
+                        </label>
+                      )}
+                      {!extraHasCityMonth && <div className="glass rounded-2xl overflow-hidden border border-white/10">
                         <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
                           <span className="text-white/50 text-xs">Таблица данных</span>
                           <div className="flex items-center gap-2">
@@ -452,7 +487,46 @@ export default function DashboardManager({ onClose }: Props) {
                             </tbody>
                           </table>
                         </div>
-                      </div>
+                      </div>}
+                      {extraHasCityMonth && (
+                        <div className="glass rounded-2xl overflow-hidden border border-white/10">
+                          <div className="px-4 py-3 border-b border-white/8">
+                            <span className="text-white/50 text-xs">Столбцы таблицы</span>
+                          </div>
+                          <div className="px-4 py-3 flex flex-wrap items-center gap-2">
+                            {extraColumns.map((col, ci) => (
+                              <div key={col.key} className="flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1.5 group">
+                                {editingColIdx === ci ? (
+                                  <input
+                                    ref={colInputRef}
+                                    defaultValue={col.label}
+                                    placeholder="Название..."
+                                    onBlur={e => { updateExtraColumnLabel(ci, e.target.value); setEditingColIdx(null); }}
+                                    onKeyDown={e => { if (e.key === "Enter") { updateExtraColumnLabel(ci, e.currentTarget.value); setEditingColIdx(null); } }}
+                                    className="bg-white text-gray-800 text-xs outline-none rounded-lg px-2 py-0.5 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
+                                    style={{ width: 120 }}
+                                  />
+                                ) : (
+                                  <span
+                                    onClick={() => { setEditingColIdx(ci); setTimeout(() => colInputRef.current?.focus(), 30); }}
+                                    className="cursor-pointer text-white/60 hover:text-white text-xs transition-colors">
+                                    {col.label || <span className="text-white/20 italic">пусто</span>}
+                                  </span>
+                                )}
+                                {extraColumns.length > 1 && (
+                                  <button onClick={() => removeExtraColumn(ci)} className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all">
+                                    <Icon name="X" size={11} />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button onClick={addExtraColumn}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+                              <Icon name="Plus" size={12} /> Столбец
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <button
                           onClick={handleCreateExtraTable}
@@ -530,6 +604,7 @@ export default function DashboardManager({ onClose }: Props) {
                               apiUrl={`${EXTRA_TABLES_URL}?table_id=${et.id}&action=data`}
                               columns={et.columns}
                               editable
+                              hasCityMonth={et.has_city_month}
                               onColumnsChange={async (cols) => {
                                 await handleExtraColumnsChange(et.id, cols);
                               }}

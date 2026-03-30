@@ -17,6 +17,7 @@ export interface ExtraTableConfig {
   title: string;
   slug: string;
   columns: ColumnDef[];
+  has_city_month?: boolean;
 }
 
 export const MANAGE_DASHBOARDS_URL = "https://functions.poehali.dev/fdef226b-b22c-4ef6-9a1e-746956272ec5";

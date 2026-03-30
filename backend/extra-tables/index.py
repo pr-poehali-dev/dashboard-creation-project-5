@@ -11,6 +11,11 @@ CORS = {
     "Access-Control-Allow-Headers": "Content-Type",
 }
 
+MONTHS_ORDER = [
+    "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+    "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+]
+
 
 def get_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"])
@@ -38,7 +43,7 @@ def handler(event: dict, context) -> dict:
         if method == "GET":
             if table_id:
                 cur.execute(
-                    f"SELECT id, dashboard_id, title, slug, columns, created_at FROM {SCHEMA}.extra_tables WHERE id = %s",
+                    f"SELECT id, dashboard_id, title, slug, columns, created_at, has_city_month FROM {SCHEMA}.extra_tables WHERE id = %s",
                     (int(table_id),),
                 )
                 row = cur.fetchone()
@@ -51,7 +56,7 @@ def handler(event: dict, context) -> dict:
                 }
             elif dashboard_id:
                 cur.execute(
-                    f"SELECT id, dashboard_id, title, slug, columns, created_at FROM {SCHEMA}.extra_tables WHERE dashboard_id = %s ORDER BY id",
+                    f"SELECT id, dashboard_id, title, slug, columns, created_at, has_city_month FROM {SCHEMA}.extra_tables WHERE dashboard_id = %s ORDER BY id",
                     (int(dashboard_id),),
                 )
                 rows = cur.fetchall()
@@ -76,25 +81,37 @@ def handler(event: dict, context) -> dict:
             title = body["title"]
             slug = body["slug"]
             columns = body.get("columns", [])
+            has_city_month = body.get("has_city_month", False)
+            cities = body.get("cities", [])
 
             cur.execute(
-                f"INSERT INTO {SCHEMA}.extra_tables (dashboard_id, title, slug, columns) VALUES (%s, %s, %s, %s) RETURNING id, dashboard_id, title, slug, columns, created_at",
-                (int(dashboard_id), title, slug, json.dumps(columns)),
+                f"INSERT INTO {SCHEMA}.extra_tables (dashboard_id, title, slug, columns, has_city_month) VALUES (%s, %s, %s, %s, %s) RETURNING id, dashboard_id, title, slug, columns, created_at, has_city_month",
+                (int(dashboard_id), title, slug, json.dumps(columns), bool(has_city_month)),
             )
             row = cur.fetchone()
             new_id = row[0]
 
-            initial_rows = body.get("rows", [])
-            col_keys = [c["key"] for c in columns]
-            for r in initial_rows:
-                data = {}
-                for k in col_keys:
-                    val = r.get(k, "")
-                    data[k] = val
-                cur.execute(
-                    f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, data) VALUES (%s, %s, %s)",
-                    (new_id, "", json.dumps(data, ensure_ascii=False)),
-                )
+            if has_city_month and cities:
+                col_keys = [c["key"] for c in columns]
+                for city in cities:
+                    for month in MONTHS_ORDER:
+                        data = {k: "" for k in col_keys}
+                        cur.execute(
+                            f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, month, data) VALUES (%s, %s, %s, %s)",
+                            (new_id, city, month, json.dumps(data, ensure_ascii=False)),
+                        )
+            else:
+                initial_rows = body.get("rows", [])
+                col_keys = [c["key"] for c in columns]
+                for r in initial_rows:
+                    data = {}
+                    for k in col_keys:
+                        val = r.get(k, "")
+                        data[k] = val
+                    cur.execute(
+                        f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, data) VALUES (%s, %s, %s)",
+                        (new_id, r.get("city", ""), json.dumps(data, ensure_ascii=False)),
+                    )
 
             conn.commit()
             return {
@@ -117,7 +134,7 @@ def handler(event: dict, context) -> dict:
                         slug = COALESCE(%s, slug),
                         columns = COALESCE(%s, columns)
                     WHERE id = %s
-                    RETURNING id, dashboard_id, title, slug, columns, created_at""",
+                    RETURNING id, dashboard_id, title, slug, columns, created_at, has_city_month""",
                 (title, slug, json.dumps(columns) if columns is not None else None, int(table_id)),
             )
             row = cur.fetchone()
@@ -155,7 +172,7 @@ def _handle_data(method, params, event, cur, conn, table_id):
         return {"statusCode": 400, "headers": CORS, "body": json.dumps({"error": "table_id required"})}
 
     cur.execute(
-        f"SELECT id, columns FROM {SCHEMA}.extra_tables WHERE id = %s",
+        f"SELECT id, columns, has_city_month FROM {SCHEMA}.extra_tables WHERE id = %s",
         (int(table_id),),
     )
     tbl = cur.fetchone()
@@ -168,17 +185,18 @@ def _handle_data(method, params, event, cur, conn, table_id):
 
     columns = tbl[1] if isinstance(tbl[1], list) else json.loads(tbl[1])
     col_keys = [c["key"] for c in columns]
+    has_city_month = tbl[2]
 
     if method == "GET":
         cur.execute(
-            f"SELECT id, data FROM {SCHEMA}.extra_table_rows WHERE extra_table_id = %s ORDER BY id",
+            f"SELECT id, city, month, data FROM {SCHEMA}.extra_table_rows WHERE extra_table_id = %s ORDER BY id",
             (int(table_id),),
         )
         rows = cur.fetchall()
         result = []
         for r in rows:
-            row_data = r[1] if isinstance(r[1], dict) else json.loads(r[1])
-            item = {"id": r[0]}
+            row_data = r[3] if isinstance(r[3], dict) else json.loads(r[3])
+            item = {"id": r[0], "city": r[1], "month": r[2] or ""}
             for k in col_keys:
                 item[k] = row_data.get(k, "")
             result.append(item)
@@ -199,13 +217,13 @@ def _handle_data(method, params, event, cur, conn, table_id):
                 data[k] = val
             if row_id:
                 cur.execute(
-                    f"UPDATE {SCHEMA}.extra_table_rows SET data = %s, updated_at = NOW() WHERE id = %s AND extra_table_id = %s",
-                    (json.dumps(data, ensure_ascii=False), int(row_id), int(table_id)),
+                    f"UPDATE {SCHEMA}.extra_table_rows SET data = %s, city = %s, month = %s, updated_at = NOW() WHERE id = %s AND extra_table_id = %s",
+                    (json.dumps(data, ensure_ascii=False), row.get("city", ""), row.get("month", ""), int(row_id), int(table_id)),
                 )
             else:
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, data) VALUES (%s, %s, %s)",
-                    (int(table_id), "", json.dumps(data, ensure_ascii=False)),
+                    f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, month, data) VALUES (%s, %s, %s, %s)",
+                    (int(table_id), row.get("city", ""), row.get("month", ""), json.dumps(data, ensure_ascii=False)),
                 )
         conn.commit()
         return {
@@ -218,11 +236,13 @@ def _handle_data(method, params, event, cur, conn, table_id):
 
 
 def _table_to_dict(row):
+    cols = row[4] if isinstance(row[4], list) else json.loads(row[4])
     return {
         "id": row[0],
         "dashboard_id": row[1],
         "title": row[2],
         "slug": row[3],
-        "columns": row[4] if isinstance(row[4], list) else json.loads(row[4]),
-        "created_at": str(row[5]),
+        "columns": cols,
+        "created_at": str(row[5]) if row[5] else None,
+        "has_city_month": row[6] if len(row) > 6 else False,
     }
