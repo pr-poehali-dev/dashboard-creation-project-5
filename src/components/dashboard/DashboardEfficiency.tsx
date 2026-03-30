@@ -151,6 +151,12 @@ export default function DashboardEfficiency({
   if (!selectedCity) {
     const best3 = cityTotals.slice(0, 3);
     const worst3 = cityTotals.slice(-3).reverse();
+    const minVal = cityTotals[0]?.total ?? 0;
+    const maxVal2 = cityTotals[cityTotals.length - 1]?.total ?? 1;
+    const range = maxVal2 - minVal || 1;
+    const avgPct = ((avgTotal - minVal) / range) * 100;
+    const belowAvg = cityTotals.filter(c => c.total <= avgTotal).length;
+    const aboveAvg = cityTotals.filter(c => c.total > avgTotal).length;
 
     return (
       <div className="glass rounded-2xl p-6 animate-fade-in-up">
@@ -169,37 +175,68 @@ export default function DashboardEfficiency({
             <p className="text-xs text-emerald-400 font-semibold mb-3 flex items-center gap-1.5">
               <Icon name="ThumbsUp" size={14} /> Лучшие клиники
             </p>
-            <div className="space-y-2.5">
-              {best3.map((c, i) => (
-                <div key={c.city} className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-emerald-400"
-                    style={{ background: "rgba(16,185,129,0.15)" }}>{i + 1}</span>
-                  <span className="text-sm text-white/80 flex-1 truncate">{c.city}</span>
-                  <span className="text-sm font-mono font-semibold text-emerald-400">{c.total.toLocaleString("ru-RU")}</span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              {best3.map((c, i) => {
+                const pct = maxVal2 > 0 ? (c.total / maxVal2) * 100 : 0;
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <div key={c.city}>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-base flex-shrink-0">{medals[i]}</span>
+                      <span className="text-sm text-white/80 flex-1 truncate">{c.city}</span>
+                      <span className="text-sm font-mono font-semibold text-emerald-400">{c.total.toLocaleString("ru-RU")}</span>
+                    </div>
+                    <div className="ml-9 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${pct}%`, background: "linear-gradient(90deg, rgba(16,185,129,0.4), #10B981)" }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <div>
             <p className="text-xs text-red-400 font-semibold mb-3 flex items-center gap-1.5">
               <Icon name="AlertTriangle" size={14} /> Требуют внимания
             </p>
-            <div className="space-y-2.5">
-              {worst3.map((c, i) => (
-                <div key={c.city} className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-red-400"
-                    style={{ background: "rgba(239,68,68,0.15)" }}>{totalCities - i}</span>
-                  <span className="text-sm text-white/80 flex-1 truncate">{c.city}</span>
-                  <span className="text-sm font-mono font-semibold text-red-400">{c.total.toLocaleString("ru-RU")}</span>
-                </div>
-              ))}
+            <div className="space-y-3">
+              {worst3.map((c, i) => {
+                const pct = maxVal2 > 0 ? (c.total / maxVal2) * 100 : 0;
+                return (
+                  <div key={c.city}>
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold text-red-400"
+                        style={{ background: "rgba(239,68,68,0.15)" }}>{totalCities - i}</span>
+                      <span className="text-sm text-white/80 flex-1 truncate">{c.city}</span>
+                      <span className="text-sm font-mono font-semibold text-red-400">{c.total.toLocaleString("ru-RU")}</span>
+                    </div>
+                    <div className="ml-9 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${pct}%`, background: "linear-gradient(90deg, rgba(239,68,68,0.4), #EF4444)" }} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
-        <div className="mt-5 pt-4 border-t border-white/8">
-          <div className="flex items-center justify-between text-xs text-white/40">
+
+        <div className="mt-5 pt-4 border-t border-white/[0.08]">
+          <div className="flex items-center justify-between text-xs text-white/40 mb-3">
             <span>Среднее: <span className="font-semibold text-white/60">{Math.round(avgTotal).toLocaleString("ru-RU")}</span> обращений</span>
-            <span>Разброс: <span className="font-semibold text-white/60">{cityTotals[0]?.total.toLocaleString("ru-RU")} — {cityTotals[cityTotals.length - 1]?.total.toLocaleString("ru-RU")}</span></span>
+            <span>Разброс: <span className="font-semibold text-white/60">{minVal.toLocaleString("ru-RU")} — {maxVal2.toLocaleString("ru-RU")}</span></span>
+          </div>
+          <div className="relative h-3 rounded-full overflow-hidden" style={{ background: "linear-gradient(90deg, rgba(16,185,129,0.25), rgba(239,68,68,0.25))" }}>
+            <div className="absolute top-0 h-full w-0.5 bg-white/60 z-10"
+              style={{ left: `${Math.min(Math.max(avgPct, 2), 98)}%`, transition: "left 1s ease" }}>
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white/70 whitespace-nowrap">
+                avg
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mt-2 text-[11px]">
+            <span className="text-emerald-400/70"><span className="font-bold text-emerald-400">{belowAvg}</span> ниже среднего</span>
+            <span className="text-red-400/70"><span className="font-bold text-red-400">{aboveAvg}</span> выше среднего</span>
           </div>
         </div>
       </div>
