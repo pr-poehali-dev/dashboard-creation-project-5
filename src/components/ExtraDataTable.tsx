@@ -73,19 +73,6 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
     return map;
   }, [allRows, cities]);
 
-  const rowTotal = (row: Row) => columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
-
-  const cityColTotal = (cityRows: Row[], key: string) =>
-    cityRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
-
-  const cityGrandTotal = (cityRows: Row[]) =>
-    cityRows.reduce((s, r) => s + rowTotal(r), 0);
-
-  const globalColTotal = (key: string) =>
-    allRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
-
-  const globalGrandTotal = allRows.reduce((s, r) => s + rowTotal(r), 0);
-
   const handleChange = (rowId: number, col: string, val: string) => {
     setAllRows(prev => prev.map(r => r.id === rowId ? { ...r, [col]: val } : r));
     setDirty(true);
@@ -227,12 +214,7 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
                   )}
                 </th>
               ))}
-              {hasMonths && (
-                <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap"
-                  style={{ background: "var(--sticky-cell-bg)" }}>
-                  ИТОГО
-                </th>
-              )}
+
               {editable && !hasMonths && <th className="px-2 py-3 w-8" style={{ background: "var(--sticky-cell-bg)" }}></th>}
             </tr>
           </thead>
@@ -248,31 +230,11 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
                       rows={cityRows}
                       columns={columns}
                       editable={editable}
-                      rowTotal={rowTotal}
-                      cityColTotal={cityColTotal}
-                      cityGrandTotal={cityGrandTotal}
                       onChange={handleChange}
                     />
                   );
                 })}
-                {cities.length > 1 && (
-                  <tr className="border-t-2 border-white/15">
-                    <td className="px-4 py-3 text-white font-black text-xs uppercase tracking-wider sticky left-0 z-10"
-                      style={{ background: "var(--sticky-cell-bg)" }}>
-                      ИТОГО
-                    </td>
-                    {columns.map(col => (
-                      <td key={col.key} className="px-1 py-3 text-center">
-                        <span className={`text-xs font-bold ${globalColTotal(col.key) > 0 ? "text-cyan-400" : "text-white/30"}`}>
-                          {globalColTotal(col.key).toLocaleString("ru-RU")}
-                        </span>
-                      </td>
-                    ))}
-                    <td className="px-2 py-3 text-center">
-                      <span className="text-sm font-black text-cyan-400">{globalGrandTotal.toLocaleString("ru-RU")}</span>
-                    </td>
-                  </tr>
-                )}
+
               </>
             ) : (
               allRows.map((row, ri) => (
@@ -321,91 +283,54 @@ function CityGroup({
   rows,
   columns,
   editable,
-  rowTotal,
-  cityColTotal,
-  cityGrandTotal,
   onChange,
 }: {
   city: string;
   rows: Row[];
   columns: ColumnDef[];
   editable: boolean;
-  rowTotal: (row: Row) => number;
-  cityColTotal: (rows: Row[], key: string) => number;
-  cityGrandTotal: (rows: Row[]) => number;
   onChange: (rowId: number, col: string, val: string) => void;
 }) {
-  const total = cityGrandTotal(rows);
-
   return (
     <>
       <tr className="border-t border-white/10">
         <td
-          colSpan={1 + columns.length + 1}
+          colSpan={1 + columns.length}
           className="px-4 py-2.5 sticky left-0"
           style={{ background: "var(--sticky-cell-bg)" }}
         >
           <span className="text-white font-black text-xs uppercase tracking-wider">{city}</span>
         </td>
       </tr>
-      {rows.map(row => {
-        const rt = rowTotal(row);
-        return (
-          <tr key={row.id} className="border-b border-white/5 transition-colors hover:bg-white/3">
-            <td className="px-4 py-2 text-white/60 text-xs whitespace-nowrap sticky left-0 z-10"
-              style={{ background: "var(--sticky-cell-bg)" }}>
-              {row.month}
+      {rows.map(row => (
+        <tr key={row.id} className="border-b border-white/5 transition-colors hover:bg-white/3">
+          <td className="px-4 py-2 text-white/60 text-xs whitespace-nowrap sticky left-0 z-10"
+            style={{ background: "var(--sticky-cell-bg)" }}>
+            {row.month}
+          </td>
+          {columns.map(col => (
+            <td key={col.key} className="px-1 py-1.5 text-center">
+              {editable ? (
+                <input
+                  type="text"
+                  value={row[col.key] ?? ""}
+                  placeholder="0"
+                  onChange={e => onChange(row.id, col.key, e.target.value)}
+                  className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
+                    bg-transparent border border-transparent
+                    hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
+                    placeholder:text-white/15"
+                  style={{ minWidth: 60 }}
+                />
+              ) : (
+                <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
+                  {Number(row[col.key]) || 0}
+                </span>
+              )}
             </td>
-            {columns.map(col => (
-              <td key={col.key} className="px-1 py-1.5 text-center">
-                {editable ? (
-                  <input
-                    type="text"
-                    value={row[col.key] ?? ""}
-                    placeholder="0"
-                    onChange={e => onChange(row.id, col.key, e.target.value)}
-                    className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
-                      bg-transparent border border-transparent
-                      hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
-                      placeholder:text-white/15"
-                    style={{ minWidth: 60 }}
-                  />
-                ) : (
-                  <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
-                    {Number(row[col.key]) || 0}
-                  </span>
-                )}
-              </td>
-            ))}
-            <td className="px-2 py-2 text-center">
-              <span className={`text-xs font-bold ${rt > 0 ? "text-white/70" : "text-white/25"}`}>
-                {rt.toLocaleString("ru-RU")}
-              </span>
-            </td>
-          </tr>
-        );
-      })}
-      <tr className="border-b border-white/10">
-        <td className="px-4 py-2.5 text-white/70 font-bold text-xs sticky left-0 z-10"
-          style={{ background: "var(--sticky-cell-bg)" }}>
-          ИТОГО
-        </td>
-        {columns.map(col => {
-          const ct = cityColTotal(rows, col.key);
-          return (
-            <td key={col.key} className="px-1 py-2.5 text-center">
-              <span className={`text-xs font-bold ${ct > 0 ? "text-cyan-400" : "text-white/30"}`}>
-                {ct.toLocaleString("ru-RU")}
-              </span>
-            </td>
-          );
-        })}
-        <td className="px-2 py-2.5 text-center">
-          <span className={`text-xs font-black ${total > 0 ? "text-cyan-400" : "text-white/30"}`}>
-            {total.toLocaleString("ru-RU")}
-          </span>
-        </td>
-      </tr>
+          ))}
+        </tr>
+      ))}
     </>
   );
 }
