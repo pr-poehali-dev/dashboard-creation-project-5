@@ -367,7 +367,7 @@ export default function DashboardManager({ onClose }: Props) {
                   </div>
 
                   {showExtraForm && (
-                    <div className="glass rounded-2xl overflow-hidden border border-white/10 p-4 space-y-4">
+                    <div className="space-y-4">
                       <div>
                         <label className="text-white/50 text-xs mb-1.5 block">Название таблицы</label>
                         <input
@@ -377,61 +377,77 @@ export default function DashboardManager({ onClose }: Props) {
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all placeholder:text-white/20"
                         />
                       </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="text-white/50 text-xs">Столбцы</label>
-                          <button onClick={addExtraColumn} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors">
-                            <Icon name="Plus" size={11} /> Столбец
-                          </button>
+                      <div className="glass rounded-2xl overflow-hidden border border-white/10">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
+                          <span className="text-white/50 text-xs">Таблица данных</span>
+                          <div className="flex items-center gap-2">
+                            <button onClick={addExtraColumn}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+                              <Icon name="Plus" size={13} /> Столбец
+                            </button>
+                            <button onClick={addExtraRow}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+                              <Icon name="Plus" size={13} /> Строка
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                          {extraColumns.map((col, ci) => (
-                            <div key={ci} className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-1.5 border border-white/10">
-                              <input
-                                value={col.label}
-                                onChange={e => updateExtraColumnLabel(ci, e.target.value)}
-                                placeholder="Название..."
-                                className="bg-transparent text-white text-xs outline-none w-24 placeholder:text-white/20"
-                              />
-                              {extraColumns.length > 1 && (
-                                <button onClick={() => removeExtraColumn(ci)} className="text-white/20 hover:text-red-400 transition-colors">
-                                  <Icon name="X" size={11} />
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="text-white/50 text-xs">Строки (города)</label>
-                          <button onClick={addExtraRow} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors">
-                            <Icon name="Plus" size={11} /> Строка
-                          </button>
-                        </div>
-                        <div className="overflow-x-auto rounded-xl border border-white/10">
+                        <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="border-b border-white/8 bg-white/3">
-                                <th className="text-left text-white/50 text-xs font-medium px-3 py-2 min-w-[120px]">Город</th>
-                                {extraColumns.map(col => (
-                                  <th key={col.key} className="text-center text-white/50 text-xs font-medium px-2 py-2 min-w-[80px]">
-                                    {col.label || "—"}
+                                <th className="text-left text-white/50 text-xs font-medium px-4 py-3 min-w-[140px] sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
+                                  Город / Столбец
+                                </th>
+                                {extraColumns.map((col, ci) => (
+                                  <th key={col.key} className="text-center text-xs font-medium px-3 py-3 min-w-[110px] relative group" style={{ minWidth: 90 }}>
+                                    {editingColIdx === ci ? (
+                                      <input
+                                        ref={colInputRef}
+                                        defaultValue={col.label}
+                                        placeholder="Название..."
+                                        onBlur={e => { updateExtraColumnLabel(ci, e.target.value); setEditingColIdx(null); }}
+                                        onKeyDown={e => { if (e.key === "Enter") { updateExtraColumnLabel(ci, e.currentTarget.value); setEditingColIdx(null); } }}
+                                        className="w-full bg-white text-gray-800 text-xs text-center outline-none rounded-lg px-2 py-1 placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
+                                      />
+                                    ) : (
+                                      <div className="flex items-center justify-center gap-1">
+                                        <span
+                                          onClick={() => { setEditingColIdx(ci); setTimeout(() => colInputRef.current?.focus(), 30); }}
+                                          className="cursor-pointer hover:text-white transition-colors text-white/50">
+                                          {col.label || <span className="text-white/20 italic">пусто</span>}
+                                        </span>
+                                        {extraColumns.length > 1 && (
+                                          <button onClick={() => removeExtraColumn(ci)} className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition-all flex-shrink-0">
+                                            <Icon name="X" size={11} />
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
                                   </th>
                                 ))}
-                                <th className="px-2 py-2 w-8"></th>
+                                <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap">ИТОГО</th>
                               </tr>
                             </thead>
                             <tbody>
                               {extraRows.map((row, ri) => (
                                 <tr key={ri} className="border-b border-white/5 hover:bg-white/3">
-                                  <td className="px-3 py-1.5">
-                                    <input
-                                      value={row.city as string}
-                                      onChange={e => setExtraCellValue(ri, "city", e.target.value)}
-                                      placeholder="Город..."
-                                      className="w-full bg-transparent text-white text-xs outline-none placeholder:text-white/20"
-                                    />
+                                  <td className="px-4 py-2 sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
+                                    {editingRowIdx === ri ? (
+                                      <input
+                                        ref={rowInputRef}
+                                        defaultValue={row.city as string}
+                                        placeholder="Название города..."
+                                        onBlur={e => { setExtraCellValue(ri, "city", e.target.value); setEditingRowIdx(null); }}
+                                        onKeyDown={e => { if (e.key === "Enter") { setExtraCellValue(ri, "city", e.currentTarget.value); setEditingRowIdx(null); } }}
+                                        className="w-full bg-white text-gray-800 text-xs rounded-lg py-1 px-2 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
+                                      />
+                                    ) : (
+                                      <span
+                                        onClick={() => { setEditingRowIdx(ri); setTimeout(() => rowInputRef.current?.focus(), 30); }}
+                                        className="text-white/80 text-xs font-medium cursor-pointer hover:text-white transition-colors">
+                                        {row.city || <span className="text-white/20 italic">пусто</span>}
+                                      </span>
+                                    )}
                                   </td>
                                   {extraColumns.map(col => (
                                     <td key={col.key} className="px-2 py-1.5 text-center">
@@ -439,17 +455,22 @@ export default function DashboardManager({ onClose }: Props) {
                                         type="number" min={0}
                                         value={row[col.key] ?? 0}
                                         onChange={e => setExtraCellValue(ri, col.key, e.target.value)}
-                                        className="w-full text-center text-white/80 text-xs rounded-lg py-1 px-1 outline-none bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        style={{ minWidth: 48 }}
+                                        className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        style={{ minWidth: 52 }}
                                       />
                                     </td>
                                   ))}
-                                  <td className="px-2 py-1.5 text-center">
-                                    {extraRows.length > 1 && (
-                                      <button onClick={() => removeExtraRow(ri)} className="text-white/15 hover:text-red-400 transition-colors">
-                                        <Icon name="X" size={12} />
-                                      </button>
-                                    )}
+                                  <td className="px-4 py-2 text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      <span className="text-xs font-bold text-white/30">
+                                        {extraColumns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0).toLocaleString("ru-RU")}
+                                      </span>
+                                      {extraRows.length > 1 && (
+                                        <button onClick={() => removeExtraRow(ri)} className="text-white/15 hover:text-red-400 transition-colors ml-1">
+                                          <Icon name="X" size={12} />
+                                        </button>
+                                      )}
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -457,7 +478,7 @@ export default function DashboardManager({ onClose }: Props) {
                           </table>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 pt-1">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={handleCreateExtraTable}
                           disabled={extraSaving || !extraTitle.trim() || extraColumns.filter(c => c.label.trim()).length === 0}
