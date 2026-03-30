@@ -77,12 +77,11 @@ export default function DashboardManager({ onClose }: Props) {
     if (!editing || !extraTitle.trim() || extraColumns.length === 0) return;
     setExtraSaving(true);
     try {
-      const validExtraRows = extraRows.filter(r => (r.city as string).trim());
       const payload = {
         title: extraTitle.trim(),
         slug: slugify(extraTitle.trim()),
-        columns: extraColumns.filter(c => c.key && c.label),
-        rows: validExtraRows,
+        columns: extraColumns.filter(c => c.key && (c.label || "").trim()),
+        rows: extraRows,
       };
       await fetch(`${EXTRA_TABLES_URL}?dashboard_id=${editing.id}`, {
         method: "POST",
@@ -91,7 +90,7 @@ export default function DashboardManager({ onClose }: Props) {
       });
       setExtraTitle("");
       setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
-      setExtraRows([{ city: "" }]);
+      setExtraRows([{ col1: "" } as TableRow]);
       setShowExtraForm(false);
       await loadExtraTables(editing.id);
     } finally {
@@ -457,7 +456,7 @@ export default function DashboardManager({ onClose }: Props) {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={handleCreateExtraTable}
-                          disabled={extraSaving || !extraTitle.trim() || extraColumns.filter(c => c.label.trim()).length === 0}
+                          disabled={extraSaving || !extraTitle.trim() || extraColumns.filter(c => (c.label || "").trim()).length === 0}
                           className="gradient-violet text-white rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition-opacity disabled:opacity-40"
                           style={{ boxShadow: "0 4px 20px rgba(124,92,255,0.4)" }}
                         >
