@@ -6,6 +6,11 @@ import {
 import Icon from "@/components/ui/icon";
 import type { ColumnDef } from "@/config/dashboards";
 
+const MONTHS_ORDER_CHART = [
+  "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+  "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+];
+
 interface Row {
   id: number;
   city: string;
@@ -207,11 +212,18 @@ export default function DashboardCharts({
           ...columns.map(col => Math.max(...reasonsByMonth.map(r => Number(r[col.key]) || 0))),
           1
         );
+        const curMonthIdx = new Date().getMonth();
+        const curMonthName = MONTHS_ORDER_CHART[curMonthIdx];
+        const prevMonthName = curMonthIdx > 0 ? MONTHS_ORDER_CHART[curMonthIdx - 1] : MONTHS_ORDER_CHART[11];
+        const findVal = (arr: Array<{ month: string; value: number }>, m: string) => {
+          const e = arr.find(d => d.month === m);
+          return e ? e.value : 0;
+        };
         return (
           <div className="glass rounded-2xl p-6 animate-fade-in-up">
             <div className="mb-5">
               <h3 className="font-display font-bold text-white text-lg">Динамика причин</h3>
-              <p className="text-white/40 text-xs mt-0.5">Все города · каждая причина отдельно</p>
+              <p className="text-white/40 text-xs mt-0.5">Все города · {prevMonthName} → {curMonthName}</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {columns.map((col, ci) => {
@@ -219,9 +231,9 @@ export default function DashboardCharts({
                 const data = reasonsByMonth.map(r => ({ month: r.month as string, value: Number(r[col.key]) || 0 }));
                 const total = data.reduce((s, d) => s + d.value, 0);
                 const gradientId = `smGrad-all-${col.key}`;
-                const last = data.length >= 2 ? data[data.length - 1].value : 0;
-                const prev = data.length >= 2 ? data[data.length - 2].value : 0;
-                const diff = prev > 0 ? ((last - prev) / prev) * 100 : (last > 0 ? 100 : 0);
+                const cur = findVal(data, curMonthName);
+                const prev = findVal(data, prevMonthName);
+                const diff = prev > 0 ? ((cur - prev) / prev) * 100 : (cur > 0 ? 100 : 0);
                 const trendUp = diff > 0;
                 const trendFlat = diff === 0;
                 return (
@@ -232,10 +244,15 @@ export default function DashboardCharts({
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-lg font-bold font-mono" style={{ color }}>{total.toLocaleString("ru-RU")}</span>
-                      {data.length >= 2 && !trendFlat && (
+                      {!trendFlat && (
                         <span className="flex items-center gap-0.5 text-[11px] font-semibold" style={{ color: trendUp ? "#22c55e" : "#ef4444" }}>
                           <Icon name={trendUp ? "TrendingUp" : "TrendingDown"} size={13} />
                           {Math.abs(diff).toFixed(0)}%
+                        </span>
+                      )}
+                      {trendFlat && prev === 0 && cur === 0 && (
+                        <span className="text-[11px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                          нет данных
                         </span>
                       )}
                     </div>

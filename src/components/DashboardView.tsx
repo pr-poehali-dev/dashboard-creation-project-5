@@ -210,12 +210,14 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
 
   const reasonTrend = (colKey: string) => {
     if (!hasMonths || allMonths.length < 2) return null;
-    const lastTwo = allMonths.slice(-2);
+    const curMonthIdx = new Date().getMonth();
+    const curMonthName = MONTHS_ORDER[curMonthIdx];
+    const prevMonthName = curMonthIdx > 0 ? MONTHS_ORDER[curMonthIdx - 1] : MONTHS_ORDER[11];
     const calc = (m: string) => allRows
       .filter(r => (!selectedCity || r.city === selectedCity) && r.month === m)
       .reduce((s, r) => s + (Number(r[colKey]) || 0), 0);
-    const prev = calc(lastTwo[0]);
-    const cur = calc(lastTwo[1]);
+    const prev = calc(prevMonthName);
+    const cur = calc(curMonthName);
     if (prev === 0) return null;
     return ((cur - prev) / prev) * 100;
   };
