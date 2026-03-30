@@ -107,9 +107,9 @@ export default function DashboardCharts({
 
       {anomaliesSlot}
 
-      <div className={`grid grid-cols-1 ${selectedCity ? "" : "lg:grid-cols-3"} gap-4`}>
+      <div className="space-y-4">
         {!selectedCity && (
-          <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
+          <div className="glass rounded-2xl p-6 animate-fade-in-up">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="font-display font-bold text-white text-lg">По городам</h3>
@@ -156,7 +156,7 @@ export default function DashboardCharts({
             const innerR = 75;
             const outerR = 105;
             return (
-              <div className={`flex ${selectedCity ? "flex-row items-start gap-8" : "flex-col items-center"}`}>
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
                 <div className="relative flex-shrink-0" style={{ width: chartSize, height: chartSize }}>
                   <ResponsiveContainer width={chartSize} height={chartSize}>
                     <PieChart>
@@ -186,7 +186,7 @@ export default function DashboardCharts({
                     )}
                   </div>
                 </div>
-                <div className={`flex flex-col gap-0 ${selectedCity ? "flex-1 mt-0" : "w-full mt-4"}`}>
+                <div className="flex flex-col gap-0 flex-1 w-full sm:w-auto">
                   {sorted.filter(c => c.total > 0).map((item) => {
                     const itemPct = grandTotal > 0 ? ((item.total / grandTotal) * 100).toFixed(1) : "0";
                     return (
