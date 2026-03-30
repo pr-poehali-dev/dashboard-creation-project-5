@@ -46,6 +46,7 @@ export default function DashboardManager({ onClose }: Props) {
   const [extraColumns, setExtraColumns] = useState<ColumnDef[]>([{ key: "col1", label: "Колонка 1" }]);
   const [extraSaving, setExtraSaving] = useState(false);
   const [extraDeleteId, setExtraDeleteId] = useState<number | null>(null);
+  const [extraRows, setExtraRows] = useState<TableRow[]>([{ city: "" }]);
 
   const loadExtraTables = useCallback(async (dashboardId: number) => {
     setExtraTablesLoading(true);
@@ -75,10 +76,12 @@ export default function DashboardManager({ onClose }: Props) {
     if (!editing || !extraTitle.trim() || extraColumns.length === 0) return;
     setExtraSaving(true);
     try {
+      const validExtraRows = extraRows.filter(r => (r.city as string).trim());
       const payload = {
         title: extraTitle.trim(),
         slug: slugify(extraTitle.trim()),
         columns: extraColumns.filter(c => c.key && c.label),
+        rows: validExtraRows,
       };
       await fetch(`${EXTRA_TABLES_URL}?dashboard_id=${editing.id}`, {
         method: "POST",
@@ -87,6 +90,7 @@ export default function DashboardManager({ onClose }: Props) {
       });
       setExtraTitle("");
       setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
+      setExtraRows([{ city: "" }]);
       setShowExtraForm(false);
       await loadExtraTables(editing.id);
     } finally {
@@ -116,6 +120,7 @@ export default function DashboardManager({ onClose }: Props) {
   const addExtraColumn = () => {
     const key = `col${Date.now()}`;
     setExtraColumns(c => [...c, { key, label: "" }]);
+    setExtraRows(r => r.map(row => ({ ...row, [key]: 0 })));
   };
 
   const updateExtraColumnLabel = (idx: number, label: string) => {
@@ -125,7 +130,26 @@ export default function DashboardManager({ onClose }: Props) {
   };
 
   const removeExtraColumn = (idx: number) => {
+    const removed = extraColumns[idx]?.key;
     setExtraColumns(c => c.filter((_, i) => i !== idx));
+    if (removed) {
+      setExtraRows(r => r.map(row => {
+        const { [removed]: _, ...rest } = row as Record<string, string | number>;
+        return rest as TableRow;
+      }));
+    }
+  };
+
+  const addExtraRow = () => {
+    const newRow: TableRow = { city: "" };
+    extraColumns.forEach(c => { newRow[c.key] = 0; });
+    setExtraRows(r => [...r, newRow]);
+  };
+
+  const removeExtraRow = (idx: number) => setExtraRows(r => r.filter((_, i) => i !== idx));
+
+  const setExtraCellValue = (rowIdx: number, key: string, val: string) => {
+    setExtraRows(r => r.map((row, i) => i === rowIdx ? { ...row, [key]: key === "city" ? val : (val === "" ? 0 : parseInt(val, 10) || 0) } : row));
   };
 
   const openCreate = () => {
@@ -333,6 +357,7 @@ export default function DashboardManager({ onClose }: Props) {
                       onClick={() => {
                         setExtraTitle("");
                         setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
+                        setExtraRows([{ city: "", col1: 0 }]);
                         setShowExtraForm(true);
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
@@ -375,6 +400,61 @@ export default function DashboardManager({ onClose }: Props) {
                               )}
                             </div>
                           ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-white/50 text-xs">Строки (города)</label>
+                          <button onClick={addExtraRow} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors">
+                            <Icon name="Plus" size={11} /> Строка
+                          </button>
+                        </div>
+                        <div className="overflow-x-auto rounded-xl border border-white/10">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-white/8 bg-white/3">
+                                <th className="text-left text-white/50 text-xs font-medium px-3 py-2 min-w-[120px]">Город</th>
+                                {extraColumns.map(col => (
+                                  <th key={col.key} className="text-center text-white/50 text-xs font-medium px-2 py-2 min-w-[80px]">
+                                    {col.label || "—"}
+                                  </th>
+                                ))}
+                                <th className="px-2 py-2 w-8"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {extraRows.map((row, ri) => (
+                                <tr key={ri} className="border-b border-white/5 hover:bg-white/3">
+                                  <td className="px-3 py-1.5">
+                                    <input
+                                      value={row.city as string}
+                                      onChange={e => setExtraCellValue(ri, "city", e.target.value)}
+                                      placeholder="Город..."
+                                      className="w-full bg-transparent text-white text-xs outline-none placeholder:text-white/20"
+                                    />
+                                  </td>
+                                  {extraColumns.map(col => (
+                                    <td key={col.key} className="px-2 py-1.5 text-center">
+                                      <input
+                                        type="number" min={0}
+                                        value={row[col.key] ?? 0}
+                                        onChange={e => setExtraCellValue(ri, col.key, e.target.value)}
+                                        className="w-full text-center text-white/80 text-xs rounded-lg py-1 px-1 outline-none bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        style={{ minWidth: 48 }}
+                                      />
+                                    </td>
+                                  ))}
+                                  <td className="px-2 py-1.5 text-center">
+                                    {extraRows.length > 1 && (
+                                      <button onClick={() => removeExtraRow(ri)} className="text-white/15 hover:text-red-400 transition-colors">
+                                        <Icon name="X" size={12} />
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 pt-1">
