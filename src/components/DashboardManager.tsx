@@ -5,6 +5,7 @@ import { useDashboards } from "@/hooks/useDashboards";
 import { DASHBOARD_DATA_URL, EXTRA_TABLES_URL } from "@/config/dashboards";
 import type { DashboardConfig, ColumnDef, ExtraTableConfig } from "@/config/dashboards";
 import GenericTable from "@/components/GenericTable";
+import ExtraDataTable from "@/components/ExtraDataTable";
 
 interface Props {
   onClose: () => void;
@@ -120,7 +121,7 @@ export default function DashboardManager({ onClose }: Props) {
   const addExtraColumn = () => {
     const key = `col${Date.now()}`;
     setExtraColumns(c => [...c, { key, label: "" }]);
-    setExtraRows(r => r.map(row => ({ ...row, [key]: 0 })));
+    setExtraRows(r => r.map(row => ({ ...row, [key]: "" })));
   };
 
   const updateExtraColumnLabel = (idx: number, label: string) => {
@@ -141,15 +142,15 @@ export default function DashboardManager({ onClose }: Props) {
   };
 
   const addExtraRow = () => {
-    const newRow: TableRow = { city: "" };
-    extraColumns.forEach(c => { newRow[c.key] = 0; });
+    const newRow: TableRow = {} as TableRow;
+    extraColumns.forEach(c => { newRow[c.key] = ""; });
     setExtraRows(r => [...r, newRow]);
   };
 
   const removeExtraRow = (idx: number) => setExtraRows(r => r.filter((_, i) => i !== idx));
 
   const setExtraCellValue = (rowIdx: number, key: string, val: string) => {
-    setExtraRows(r => r.map((row, i) => i === rowIdx ? { ...row, [key]: key === "city" ? val : (val === "" ? 0 : parseInt(val, 10) || 0) } : row));
+    setExtraRows(r => r.map((row, i) => i === rowIdx ? { ...row, [key]: val } : row));
   };
 
   const openCreate = () => {
@@ -357,7 +358,7 @@ export default function DashboardManager({ onClose }: Props) {
                       onClick={() => {
                         setExtraTitle("");
                         setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
-                        setExtraRows([{ city: "", col1: 0 }]);
+                        setExtraRows([{ col1: "" } as TableRow]);
                         setShowExtraForm(true);
                       }}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
@@ -395,11 +396,8 @@ export default function DashboardManager({ onClose }: Props) {
                           <table className="w-full text-sm">
                             <thead>
                               <tr className="border-b border-white/8 bg-white/3">
-                                <th className="text-left text-white/50 text-xs font-medium px-4 py-3 min-w-[140px] sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
-                                  Город / Столбец
-                                </th>
                                 {extraColumns.map((col, ci) => (
-                                  <th key={col.key} className="text-center text-xs font-medium px-3 py-3 min-w-[110px] relative group" style={{ minWidth: 90 }}>
+                                  <th key={col.key} className="text-center text-xs font-medium px-3 py-3 min-w-[110px] relative group" style={{ minWidth: 100 }}>
                                     {editingColIdx === ci ? (
                                       <input
                                         ref={colInputRef}
@@ -425,52 +423,30 @@ export default function DashboardManager({ onClose }: Props) {
                                     )}
                                   </th>
                                 ))}
-                                <th className="px-4 py-3 text-white/70 font-bold text-xs text-center whitespace-nowrap">ИТОГО</th>
+                                <th className="px-2 py-3 w-8"></th>
                               </tr>
                             </thead>
                             <tbody>
                               {extraRows.map((row, ri) => (
                                 <tr key={ri} className="border-b border-white/5 hover:bg-white/3">
-                                  <td className="px-4 py-2 sticky left-0 z-10" style={{ background: "rgba(30,20,50,0.95)" }}>
-                                    {editingRowIdx === ri ? (
-                                      <input
-                                        ref={rowInputRef}
-                                        defaultValue={row.city as string}
-                                        placeholder="Название города..."
-                                        onBlur={e => { setExtraCellValue(ri, "city", e.target.value); setEditingRowIdx(null); }}
-                                        onKeyDown={e => { if (e.key === "Enter") { setExtraCellValue(ri, "city", e.currentTarget.value); setEditingRowIdx(null); } }}
-                                        className="w-full bg-white text-gray-800 text-xs rounded-lg py-1 px-2 outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-violet-500"
-                                      />
-                                    ) : (
-                                      <span
-                                        onClick={() => { setEditingRowIdx(ri); setTimeout(() => rowInputRef.current?.focus(), 30); }}
-                                        className="text-white/80 text-xs font-medium cursor-pointer hover:text-white transition-colors">
-                                        {row.city || <span className="text-white/20 italic">пусто</span>}
-                                      </span>
-                                    )}
-                                  </td>
                                   {extraColumns.map(col => (
                                     <td key={col.key} className="px-2 py-1.5 text-center">
                                       <input
-                                        type="number" min={0}
-                                        value={row[col.key] ?? 0}
+                                        type="text"
+                                        value={row[col.key] ?? ""}
+                                        placeholder="—"
                                         onChange={e => setExtraCellValue(ri, col.key, e.target.value)}
-                                        className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        style={{ minWidth: 52 }}
+                                        className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all bg-transparent border border-transparent hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8 placeholder:text-white/15"
+                                        style={{ minWidth: 60 }}
                                       />
                                     </td>
                                   ))}
-                                  <td className="px-4 py-2 text-center">
-                                    <div className="flex items-center justify-center gap-1">
-                                      <span className="text-xs font-bold text-white/30">
-                                        {extraColumns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0).toLocaleString("ru-RU")}
-                                      </span>
-                                      {extraRows.length > 1 && (
-                                        <button onClick={() => removeExtraRow(ri)} className="text-white/15 hover:text-red-400 transition-colors ml-1">
-                                          <Icon name="X" size={12} />
-                                        </button>
-                                      )}
-                                    </div>
+                                  <td className="px-2 py-1.5 text-center">
+                                    {extraRows.length > 1 && (
+                                      <button onClick={() => removeExtraRow(ri)} className="text-white/15 hover:text-red-400 transition-colors">
+                                        <Icon name="X" size={12} />
+                                      </button>
+                                    )}
                                   </td>
                                 </tr>
                               ))}
@@ -549,7 +525,7 @@ export default function DashboardManager({ onClose }: Props) {
                         </div>
                         {!extraCollapsed[et.id] && (
                           <div className="mt-2">
-                            <GenericTable
+                            <ExtraDataTable
                               title={et.title}
                               subtitle="Кликните на ячейку для редактирования"
                               apiUrl={`${EXTRA_TABLES_URL}?table_id=${et.id}&action=data`}

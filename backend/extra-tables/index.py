@@ -87,13 +87,13 @@ def handler(event: dict, context) -> dict:
             initial_rows = body.get("rows", [])
             col_keys = [c["key"] for c in columns]
             for r in initial_rows:
-                city = r.get("city", "")
-                if not city.strip():
-                    continue
-                data = {k: int(r.get(k, 0)) for k in col_keys}
+                data = {}
+                for k in col_keys:
+                    val = r.get(k, "")
+                    data[k] = val
                 cur.execute(
                     f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, data) VALUES (%s, %s, %s)",
-                    (new_id, city, json.dumps(data)),
+                    (new_id, "", json.dumps(data, ensure_ascii=False)),
                 )
 
             conn.commit()
@@ -171,16 +171,16 @@ def _handle_data(method, params, event, cur, conn, table_id):
 
     if method == "GET":
         cur.execute(
-            f"SELECT id, city, data FROM {SCHEMA}.extra_table_rows WHERE extra_table_id = %s ORDER BY id",
+            f"SELECT id, data FROM {SCHEMA}.extra_table_rows WHERE extra_table_id = %s ORDER BY id",
             (int(table_id),),
         )
         rows = cur.fetchall()
         result = []
         for r in rows:
-            row_data = r[2] if isinstance(r[2], dict) else json.loads(r[2])
-            item = {"id": r[0], "city": r[1]}
+            row_data = r[1] if isinstance(r[1], dict) else json.loads(r[1])
+            item = {"id": r[0]}
             for k in col_keys:
-                item[k] = row_data.get(k, 0)
+                item[k] = row_data.get(k, "")
             result.append(item)
         return {
             "statusCode": 200,
@@ -193,16 +193,19 @@ def _handle_data(method, params, event, cur, conn, table_id):
         rows = body.get("rows", [])
         for row in rows:
             row_id = row.get("id")
-            data = {k: int(row.get(k, 0)) for k in col_keys}
+            data = {}
+            for k in col_keys:
+                val = row.get(k, "")
+                data[k] = val
             if row_id:
                 cur.execute(
-                    f"UPDATE {SCHEMA}.extra_table_rows SET data = %s, city = %s, updated_at = NOW() WHERE id = %s AND extra_table_id = %s",
-                    (json.dumps(data), row.get("city", ""), int(row_id), int(table_id)),
+                    f"UPDATE {SCHEMA}.extra_table_rows SET data = %s, updated_at = NOW() WHERE id = %s AND extra_table_id = %s",
+                    (json.dumps(data, ensure_ascii=False), int(row_id), int(table_id)),
                 )
             else:
                 cur.execute(
                     f"INSERT INTO {SCHEMA}.extra_table_rows (extra_table_id, city, data) VALUES (%s, %s, %s)",
-                    (int(table_id), row.get("city", ""), json.dumps(data)),
+                    (int(table_id), "", json.dumps(data, ensure_ascii=False)),
                 )
         conn.commit()
         return {
