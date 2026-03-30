@@ -34,9 +34,6 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
   const [editingColIdx, setEditingColIdx] = useState<number | null>(null);
   const colInputRef = useRef<HTMLInputElement>(null);
 
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-
   useEffect(() => {
     setColumns(initialColumns);
   }, [initialColumns.map(c => c.key).join(",")]);
@@ -54,39 +51,40 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
   }, [apiUrl]);
 
   const hasMonths = hasCityMonth || allRows.some(r => r.month && r.month.length > 0);
-  const cities = useMemo(() => [...new Set(allRows.filter(r => r.city).map(r => r.city as string))], [allRows]);
-  const allMonths = useMemo(() =>
-    hasMonths ? MONTHS_ORDER.filter(m => allRows.some(r => r.month === m)) : [],
-    [allRows, hasMonths]
-  );
-
-  const filteredRows = useMemo(() => allRows.filter(r => {
-    if (selectedCity && r.city !== selectedCity) return false;
-    if (hasMonths && selectedMonth && r.month !== selectedMonth) return false;
-    return true;
-  }), [allRows, selectedCity, selectedMonth, hasMonths]);
-
-  const aggregatedByCityRows = useMemo(() => {
-    if (!hasMonths || selectedMonth) return [];
-    const map: Record<string, Row> = {};
-    filteredRows.forEach(r => {
-      const city = (r.city || "—") as string;
-      if (!map[city]) {
-        map[city] = { id: r.id, city };
-        columns.forEach(c => { map[city][c.key] = 0; });
-      }
-      columns.forEach(c => {
-        (map[city][c.key] as number) += Number(r[c.key]) || 0;
-      });
+  const cities = useMemo(() => {
+    const seen: string[] = [];
+    allRows.forEach(r => {
+      if (r.city && !seen.includes(r.city)) seen.push(r.city);
     });
-    return Object.values(map);
-  }, [filteredRows, columns, hasMonths, selectedMonth]);
+    return seen;
+  }, [allRows]);
+
+  const rowsByCity = useMemo(() => {
+    const map: Record<string, Row[]> = {};
+    cities.forEach(city => {
+      const cityRows = allRows.filter(r => r.city === city);
+      cityRows.sort((a, b) => {
+        const ai = MONTHS_ORDER.indexOf(a.month || "");
+        const bi = MONTHS_ORDER.indexOf(b.month || "");
+        return ai - bi;
+      });
+      map[city] = cityRows;
+    });
+    return map;
+  }, [allRows, cities]);
 
   const rowTotal = (row: Row) => columns.reduce((s, c) => s + (Number(row[c.key]) || 0), 0);
-  const colTotal = (key: string) => filteredRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
-  const grandTotal = filteredRows.reduce((s, r) => s + rowTotal(r), 0);
 
-  const displayRows = hasMonths && !selectedMonth ? aggregatedByCityRows : filteredRows;
+  const cityColTotal = (cityRows: Row[], key: string) =>
+    cityRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
+
+  const cityGrandTotal = (cityRows: Row[]) =>
+    cityRows.reduce((s, r) => s + rowTotal(r), 0);
+
+  const globalColTotal = (key: string) =>
+    allRows.reduce((s, r) => s + (Number(r[key]) || 0), 0);
+
+  const globalGrandTotal = allRows.reduce((s, r) => s + rowTotal(r), 0);
 
   const handleChange = (rowId: number, col: string, val: string) => {
     setAllRows(prev => prev.map(r => r.id === rowId ? { ...r, [col]: val } : r));
@@ -97,15 +95,10 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
   const handleSave = async () => {
     setSaving(true);
     try {
-      const rowsToSave = selectedMonth
-        ? allRows.filter(r => (!selectedCity || r.city === selectedCity) && r.month === selectedMonth)
-        : selectedCity
-          ? allRows.filter(r => r.city === selectedCity)
-          : allRows;
       await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: rowsToSave }),
+        body: JSON.stringify({ rows: allRows }),
       });
       setSaved(true);
       setDirty(false);
@@ -122,18 +115,8 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
     setSaved(false);
   };
 
-  const removeRow = (idx: number) => {
-    const targetRows = displayRows;
-    const targetId = targetRows[idx]?.id;
-    if (targetId) {
-      setAllRows(prev => prev.filter(r => r.id !== targetId));
-    } else {
-      setAllRows(prev => {
-        const displayIds = targetRows.map(r => r.id);
-        const removeId = displayIds[idx];
-        return prev.filter(r => r.id !== removeId);
-      });
-    }
+  const removeRow = (rowId: number) => {
+    setAllRows(prev => prev.filter(r => r.id !== rowId));
     setDirty(true);
     setSaved(false);
   };
@@ -166,34 +149,26 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
     );
   }
 
+  const totalColSpan = (hasMonths ? 1 : 0) + columns.length + (hasMonths ? 1 : 0) + (editable && !hasMonths ? 1 : 0);
+
   return (
     <div className="glass rounded-2xl overflow-hidden animate-fade-in-up" style={{ "--sticky-cell-bg": "rgba(30,20,50,0.97)" } as React.CSSProperties}>
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
         <div>
-          <h3 className="font-display font-bold text-white text-lg">
-            {title}
-            {selectedCity ? ` · ${selectedCity}` : ""}
-            {selectedMonth ? ` · ${selectedMonth}` : ""}
-          </h3>
+          <h3 className="font-display font-bold text-white text-lg">{title}</h3>
           {subtitle && <p className="text-white/40 text-xs mt-0.5">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-2">
-          {editable && !hasMonths && (
-            <>
-              <button onClick={addColumn}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
-                <Icon name="Plus" size={13} /> Столбец
-              </button>
-              <button onClick={addRow}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
-                <Icon name="Plus" size={13} /> Строка
-              </button>
-            </>
-          )}
-          {editable && hasMonths && (
+          {editable && (
             <button onClick={addColumn}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
               <Icon name="Plus" size={13} /> Столбец
+            </button>
+          )}
+          {editable && !hasMonths && (
+            <button onClick={addRow}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors">
+              <Icon name="Plus" size={13} /> Строка
             </button>
           )}
           <button
@@ -218,62 +193,13 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
         </div>
       </div>
 
-      {hasMonths && (
-        <div className="flex flex-wrap items-center gap-2 px-6 py-3 border-b border-white/8">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-white/40 text-xs mr-1">Город:</span>
-            <button
-              onClick={() => setSelectedCity(null)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${!selectedCity ? "gradient-violet text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
-            >
-              Все
-            </button>
-            {cities.map(city => (
-              <button
-                key={city}
-                onClick={() => setSelectedCity(selectedCity === city ? null : city)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${selectedCity === city ? "gradient-violet text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
-              >
-                {city}
-              </button>
-            ))}
-          </div>
-          <div className="w-px h-4 bg-white/10 mx-1" />
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-white/40 text-xs mr-1">Месяц:</span>
-            <button
-              onClick={() => setSelectedMonth(null)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${!selectedMonth ? "gradient-violet text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
-            >
-              Все
-            </button>
-            {allMonths.map(month => (
-              <button
-                key={month}
-                onClick={() => setSelectedMonth(selectedMonth === month ? null : month)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${selectedMonth === month ? "gradient-violet text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
-              >
-                {month}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="overflow-auto max-h-[60vh]" style={{ scrollbarGutter: "stable" }}>
+      <div className="overflow-auto max-h-[70vh]" style={{ scrollbarGutter: "stable" }}>
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-20">
             <tr className="border-b border-white/8" style={{ background: "var(--sticky-cell-bg)" }}>
               {hasMonths && (
-                <th className="text-left px-3 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                  style={{ background: "var(--sticky-cell-bg)", minWidth: 110 }}>
-                  Город
-                </th>
-              )}
-              {hasMonths && !selectedMonth && (
-                <th className="text-left px-3 py-3 text-white/50 font-medium text-xs whitespace-nowrap"
-                  style={{ background: "var(--sticky-cell-bg)" }}>
-                  Месяц
+                <th className="text-left px-4 py-3 text-white/50 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
+                  style={{ background: "var(--sticky-cell-bg)", minWidth: 120 }}>
                 </th>
               )}
               {columns.map((col, ci) => (
@@ -311,65 +237,45 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
             </tr>
           </thead>
           <tbody>
-            {hasMonths && !selectedMonth ? (
-              aggregatedByCityRows.map(row => (
-                <tr key={row.city} className="border-b border-white/5 transition-colors hover:bg-white/3">
-                  <td className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                    style={{ background: "var(--sticky-cell-bg)" }}>
-                    {row.city}
-                  </td>
-                  <td className="px-3 py-2.5 text-white/40 text-xs">Все</td>
-                  {columns.map(col => (
-                    <td key={col.key} className="px-1 py-1.5 text-center">
-                      <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
-                        {(Number(row[col.key]) || 0).toLocaleString("ru-RU")}
-                      </span>
+            {hasMonths ? (
+              <>
+                {cities.map(city => {
+                  const cityRows = rowsByCity[city] || [];
+                  return (
+                    <CityGroup
+                      key={city}
+                      city={city}
+                      rows={cityRows}
+                      columns={columns}
+                      editable={editable}
+                      rowTotal={rowTotal}
+                      cityColTotal={cityColTotal}
+                      cityGrandTotal={cityGrandTotal}
+                      onChange={handleChange}
+                    />
+                  );
+                })}
+                {cities.length > 1 && (
+                  <tr className="border-t-2 border-white/15">
+                    <td className="px-4 py-3 text-white font-black text-xs uppercase tracking-wider sticky left-0 z-10"
+                      style={{ background: "var(--sticky-cell-bg)" }}>
+                      ИТОГО
                     </td>
-                  ))}
-                  <td className="px-2 py-2.5 text-center">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
-                      {rowTotal(row).toLocaleString("ru-RU")}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            ) : hasMonths ? (
-              filteredRows.map(row => (
-                <tr key={row.id} className="border-b border-white/5 transition-colors hover:bg-white/3">
-                  <td className="px-4 py-2.5 text-white/80 font-medium text-xs whitespace-nowrap sticky left-0 z-10"
-                    style={{ background: "var(--sticky-cell-bg)" }}>
-                    {row.city}
-                  </td>
-                  {columns.map(col => (
-                    <td key={col.key} className="px-1 py-1.5 text-center">
-                      {editable ? (
-                        <input
-                          type="text"
-                          value={row[col.key] ?? ""}
-                          placeholder="—"
-                          onChange={e => handleChange(row.id, col.key, e.target.value)}
-                          className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
-                            bg-transparent border border-transparent
-                            hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
-                            placeholder:text-white/15"
-                          style={{ minWidth: 60 }}
-                        />
-                      ) : (
-                        <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
-                          {row[col.key] || "—"}
+                    {columns.map(col => (
+                      <td key={col.key} className="px-1 py-3 text-center">
+                        <span className={`text-xs font-bold ${globalColTotal(col.key) > 0 ? "text-cyan-400" : "text-white/30"}`}>
+                          {globalColTotal(col.key).toLocaleString("ru-RU")}
                         </span>
-                      )}
+                      </td>
+                    ))}
+                    <td className="px-2 py-3 text-center">
+                      <span className="text-sm font-black text-cyan-400">{globalGrandTotal.toLocaleString("ru-RU")}</span>
                     </td>
-                  ))}
-                  <td className="px-2 py-2.5 text-center">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-lg ${rowTotal(row) > 0 ? "text-gradient-violet" : "text-white/30"}`}>
-                      {rowTotal(row).toLocaleString("ru-RU")}
-                    </span>
-                  </td>
-                </tr>
-              ))
+                  </tr>
+                )}
+              </>
             ) : (
-              displayRows.map((row, ri) => (
+              allRows.map((row, ri) => (
                 <tr key={row.id || ri} className="border-b border-white/5 transition-colors hover:bg-white/3">
                   {columns.map(col => (
                     <td key={col.key} className="px-2 py-1.5 text-center">
@@ -388,43 +294,118 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
                   ))}
                   {editable && (
                     <td className="px-2 py-1.5 text-center">
-                      <button onClick={() => removeRow(ri)} className="text-white/15 hover:text-red-400 transition-colors">
-                        <Icon name="X" size={12} />
+                      <button onClick={() => removeRow(row.id)} className="text-white/15 hover:text-red-400 transition-colors">
+                        <Icon name="X" size={14} />
                       </button>
                     </td>
                   )}
                 </tr>
               ))
             )}
-            {displayRows.length === 0 && (
+            {allRows.length === 0 && (
               <tr>
-                <td colSpan={columns.length + (hasMonths ? 2 : 0) + (editable && !hasMonths ? 1 : 0)} className="text-center py-8 text-white/20 text-xs">
+                <td colSpan={totalColSpan} className="text-center py-8 text-white/20 text-xs">
                   Нет данных.
                 </td>
               </tr>
             )}
           </tbody>
-          {hasMonths && displayRows.length > 0 && (
-            <tfoot>
-              <tr className="border-t-2 border-white/10">
-                <td className="px-4 py-3 text-white/70 font-bold text-xs sticky left-0 z-10"
-                  style={{ background: "var(--sticky-cell-bg)" }}>ИТОГО</td>
-                {!selectedMonth && <td></td>}
-                {columns.map(col => (
-                  <td key={col.key} className="px-1 py-3 text-center">
-                    <span className={`text-xs font-bold ${colTotal(col.key) > 0 ? "text-gradient-cyan" : "text-white/30"}`}>
-                      {colTotal(col.key).toLocaleString("ru-RU")}
-                    </span>
-                  </td>
-                ))}
-                <td className="px-2 py-3 text-center">
-                  <span className="text-sm font-black text-gradient-pink">{grandTotal.toLocaleString("ru-RU")}</span>
-                </td>
-              </tr>
-            </tfoot>
-          )}
         </table>
       </div>
     </div>
+  );
+}
+
+function CityGroup({
+  city,
+  rows,
+  columns,
+  editable,
+  rowTotal,
+  cityColTotal,
+  cityGrandTotal,
+  onChange,
+}: {
+  city: string;
+  rows: Row[];
+  columns: ColumnDef[];
+  editable: boolean;
+  rowTotal: (row: Row) => number;
+  cityColTotal: (rows: Row[], key: string) => number;
+  cityGrandTotal: (rows: Row[]) => number;
+  onChange: (rowId: number, col: string, val: string) => void;
+}) {
+  const total = cityGrandTotal(rows);
+
+  return (
+    <>
+      <tr className="border-t border-white/10">
+        <td
+          colSpan={1 + columns.length + 1}
+          className="px-4 py-2.5 sticky left-0"
+          style={{ background: "var(--sticky-cell-bg)" }}
+        >
+          <span className="text-white font-black text-xs uppercase tracking-wider">{city}</span>
+        </td>
+      </tr>
+      {rows.map(row => {
+        const rt = rowTotal(row);
+        return (
+          <tr key={row.id} className="border-b border-white/5 transition-colors hover:bg-white/3">
+            <td className="px-4 py-2 text-white/60 text-xs whitespace-nowrap sticky left-0 z-10"
+              style={{ background: "var(--sticky-cell-bg)" }}>
+              {row.month}
+            </td>
+            {columns.map(col => (
+              <td key={col.key} className="px-1 py-1.5 text-center">
+                {editable ? (
+                  <input
+                    type="text"
+                    value={row[col.key] ?? ""}
+                    placeholder="0"
+                    onChange={e => onChange(row.id, col.key, e.target.value)}
+                    className="w-full text-center text-white/80 text-xs rounded-lg py-1.5 px-1 outline-none transition-all duration-150
+                      bg-transparent border border-transparent
+                      hover:border-white/15 focus:border-violet-500/60 focus:bg-violet-500/8
+                      placeholder:text-white/15"
+                    style={{ minWidth: 60 }}
+                  />
+                ) : (
+                  <span className={`text-xs ${Number(row[col.key]) > 0 ? "text-white/80" : "text-white/25"}`}>
+                    {Number(row[col.key]) || 0}
+                  </span>
+                )}
+              </td>
+            ))}
+            <td className="px-2 py-2 text-center">
+              <span className={`text-xs font-bold ${rt > 0 ? "text-white/70" : "text-white/25"}`}>
+                {rt.toLocaleString("ru-RU")}
+              </span>
+            </td>
+          </tr>
+        );
+      })}
+      <tr className="border-b border-white/10">
+        <td className="px-4 py-2.5 text-white/70 font-bold text-xs sticky left-0 z-10"
+          style={{ background: "var(--sticky-cell-bg)" }}>
+          ИТОГО
+        </td>
+        {columns.map(col => {
+          const ct = cityColTotal(rows, col.key);
+          return (
+            <td key={col.key} className="px-1 py-2.5 text-center">
+              <span className={`text-xs font-bold ${ct > 0 ? "text-cyan-400" : "text-white/30"}`}>
+                {ct.toLocaleString("ru-RU")}
+              </span>
+            </td>
+          );
+        })}
+        <td className="px-2 py-2.5 text-center">
+          <span className={`text-xs font-black ${total > 0 ? "text-cyan-400" : "text-white/30"}`}>
+            {total.toLocaleString("ru-RU")}
+          </span>
+        </td>
+      </tr>
+    </>
   );
 }
