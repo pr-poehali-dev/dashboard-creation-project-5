@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@/components/ui/icon";
 import { useDashboards } from "@/hooks/useDashboards";
-import { DASHBOARD_DATA_URL } from "@/config/dashboards";
-import type { DashboardConfig, ColumnDef } from "@/config/dashboards";
+import { DASHBOARD_DATA_URL, EXTRA_TABLES_URL } from "@/config/dashboards";
+import type { DashboardConfig, ColumnDef, ExtraTableConfig } from "@/config/dashboards";
 import GenericTable from "@/components/GenericTable";
 
 interface Props {
@@ -37,6 +37,96 @@ export default function DashboardManager({ onClose }: Props) {
   const [editingColIdx, setEditingColIdx] = useState<number | null>(null);
   const rowInputRef = useRef<HTMLInputElement>(null);
   const colInputRef = useRef<HTMLInputElement>(null);
+
+  const [extraTables, setExtraTables] = useState<ExtraTableConfig[]>([]);
+  const [extraTablesLoading, setExtraTablesLoading] = useState(false);
+  const [extraCollapsed, setExtraCollapsed] = useState<Record<number, boolean>>({});
+  const [showExtraForm, setShowExtraForm] = useState(false);
+  const [extraTitle, setExtraTitle] = useState("");
+  const [extraColumns, setExtraColumns] = useState<ColumnDef[]>([{ key: "col1", label: "Колонка 1" }]);
+  const [extraSaving, setExtraSaving] = useState(false);
+  const [extraDeleteId, setExtraDeleteId] = useState<number | null>(null);
+
+  const loadExtraTables = useCallback(async (dashboardId: number) => {
+    setExtraTablesLoading(true);
+    try {
+      const res = await fetch(`${EXTRA_TABLES_URL}?dashboard_id=${dashboardId}`);
+      const data = await res.json();
+      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+      setExtraTables(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setExtraTables([]);
+    } finally {
+      setExtraTablesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mode === "edit" && editing) {
+      loadExtraTables(editing.id);
+    } else {
+      setExtraTables([]);
+      setShowExtraForm(false);
+      setExtraDeleteId(null);
+    }
+  }, [mode, editing?.id, loadExtraTables]);
+
+  const handleCreateExtraTable = async () => {
+    if (!editing || !extraTitle.trim() || extraColumns.length === 0) return;
+    setExtraSaving(true);
+    try {
+      const payload = {
+        title: extraTitle.trim(),
+        slug: slugify(extraTitle.trim()),
+        columns: extraColumns.filter(c => c.key && c.label),
+      };
+      await fetch(`${EXTRA_TABLES_URL}?dashboard_id=${editing.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      setExtraTitle("");
+      setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
+      setShowExtraForm(false);
+      await loadExtraTables(editing.id);
+    } finally {
+      setExtraSaving(false);
+    }
+  };
+
+  const handleDeleteExtraTable = async (tableId: number) => {
+    await fetch(`${EXTRA_TABLES_URL}?table_id=${tableId}`, { method: "DELETE" });
+    setExtraDeleteId(null);
+    if (editing) await loadExtraTables(editing.id);
+  };
+
+  const handleExtraColumnsChange = async (tableId: number, cols: ColumnDef[]) => {
+    await fetch(`${EXTRA_TABLES_URL}?table_id=${tableId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ columns: cols }),
+    });
+    if (editing) await loadExtraTables(editing.id);
+  };
+
+  const toggleExtraCollapse = (id: number) => {
+    setExtraCollapsed(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const addExtraColumn = () => {
+    const key = `col${Date.now()}`;
+    setExtraColumns(c => [...c, { key, label: "" }]);
+  };
+
+  const updateExtraColumnLabel = (idx: number, label: string) => {
+    setExtraColumns(prev =>
+      prev.map((c, i) => i === idx ? { key: slugify(label) || c.key, label } : c)
+    );
+  };
+
+  const removeExtraColumn = (idx: number) => {
+    setExtraColumns(c => c.filter((_, i) => i !== idx));
+  };
 
   const openCreate = () => {
     setTitle("");
@@ -233,6 +323,147 @@ export default function DashboardManager({ onClose }: Props) {
                     await update(editing.id, { columns: cols });
                   }}
                 />
+              )}
+
+              {mode === "edit" && editing && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-bold text-white text-base">Дополнительные таблицы</h3>
+                    <button
+                      onClick={() => {
+                        setExtraTitle("");
+                        setExtraColumns([{ key: "col1", label: "Колонка 1" }]);
+                        setShowExtraForm(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-colors"
+                    >
+                      <Icon name="Plus" size={13} /> Доп. таблица
+                    </button>
+                  </div>
+
+                  {showExtraForm && (
+                    <div className="glass rounded-2xl overflow-hidden border border-white/10 p-4 space-y-4">
+                      <div>
+                        <label className="text-white/50 text-xs mb-1.5 block">Название таблицы</label>
+                        <input
+                          value={extraTitle}
+                          onChange={e => setExtraTitle(e.target.value)}
+                          placeholder="Например: Детали по регионам"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all placeholder:text-white/20"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-white/50 text-xs">Столбцы</label>
+                          <button onClick={addExtraColumn} className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors">
+                            <Icon name="Plus" size={11} /> Столбец
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {extraColumns.map((col, ci) => (
+                            <div key={ci} className="flex items-center gap-1.5 bg-white/5 rounded-lg px-2 py-1.5 border border-white/10">
+                              <input
+                                value={col.label}
+                                onChange={e => updateExtraColumnLabel(ci, e.target.value)}
+                                placeholder="Название..."
+                                className="bg-transparent text-white text-xs outline-none w-24 placeholder:text-white/20"
+                              />
+                              {extraColumns.length > 1 && (
+                                <button onClick={() => removeExtraColumn(ci)} className="text-white/20 hover:text-red-400 transition-colors">
+                                  <Icon name="X" size={11} />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={handleCreateExtraTable}
+                          disabled={extraSaving || !extraTitle.trim() || extraColumns.filter(c => c.label.trim()).length === 0}
+                          className="gradient-violet text-white rounded-xl px-4 py-2 text-xs font-semibold flex items-center gap-1.5 hover:opacity-90 transition-opacity disabled:opacity-40"
+                          style={{ boxShadow: "0 4px 20px rgba(124,92,255,0.4)" }}
+                        >
+                          {extraSaving ? (
+                            <div className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          ) : (
+                            <Icon name="Check" size={13} />
+                          )}
+                          Создать
+                        </button>
+                        <button
+                          onClick={() => setShowExtraForm(false)}
+                          className="text-white/40 hover:text-white/60 text-xs transition-colors"
+                        >
+                          Отмена
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {extraTablesLoading ? (
+                    <div className="flex items-center justify-center py-6 text-white/30 gap-2 text-sm">
+                      <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-violet-500 animate-spin" />
+                      Загрузка доп. таблиц...
+                    </div>
+                  ) : extraTables.length === 0 && !showExtraForm ? (
+                    <div className="text-center py-6 text-white/20 text-xs">Нет дополнительных таблиц</div>
+                  ) : (
+                    extraTables.map(et => (
+                      <div key={et.id} className="space-y-0">
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/8 transition-colors">
+                          <button
+                            onClick={() => toggleExtraCollapse(et.id)}
+                            className="flex items-center gap-2 text-white text-sm font-semibold"
+                          >
+                            <Icon name={extraCollapsed[et.id] ? "ChevronRight" : "ChevronDown"} size={14} />
+                            {et.title}
+                            <span className="text-white/30 text-xs font-normal">{et.columns.length} колонок</span>
+                          </button>
+                          <div className="flex items-center gap-2">
+                            {extraDeleteId === et.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleDeleteExtraTable(et.id)}
+                                  className="rounded-lg px-3 py-1.5 bg-red-500/20 text-red-400 text-xs font-semibold"
+                                >
+                                  Удалить
+                                </button>
+                                <button
+                                  onClick={() => setExtraDeleteId(null)}
+                                  className="glass glass-hover rounded-lg px-2 py-1.5 text-white/40 text-xs"
+                                >
+                                  Отмена
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setExtraDeleteId(et.id)}
+                                className="glass glass-hover rounded-lg p-1.5 text-white/30 hover:text-red-400 transition-colors"
+                              >
+                                <Icon name="Trash2" size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {!extraCollapsed[et.id] && (
+                          <div className="mt-2">
+                            <GenericTable
+                              title={et.title}
+                              subtitle="Кликните на ячейку для редактирования"
+                              apiUrl={`${EXTRA_TABLES_URL}?table_id=${et.id}&action=data`}
+                              columns={et.columns}
+                              editable
+                              onColumnsChange={async (cols) => {
+                                await handleExtraColumnsChange(et.id, cols);
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
               )}
 
               {mode === "create" && <div className="glass rounded-2xl overflow-hidden border border-white/10">

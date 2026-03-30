@@ -1,0 +1,18 @@
+{
+  "tests": [
+    {
+      "name": "Get extra tables for dashboard",
+      "method": "GET",
+      "path": "/?dashboard_id=1",
+      "expectedStatus": 200,
+      "expectedBody": [],
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing params returns 400",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400
+    }
+  ]
+}
