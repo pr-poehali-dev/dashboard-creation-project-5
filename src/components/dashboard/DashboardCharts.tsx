@@ -102,7 +102,7 @@ export default function DashboardCharts({
 
       {anomaliesSlot}
 
-      <div className={`grid grid-cols-1 ${selectedCity ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-4`}>
+      <div className={`grid grid-cols-1 ${selectedCity ? "" : "lg:grid-cols-3"} gap-4`}>
         {!selectedCity && (
           <div className="lg:col-span-2 glass rounded-2xl p-6 animate-fade-in-up">
             <div className="flex items-center justify-between mb-6">
@@ -151,8 +151,8 @@ export default function DashboardCharts({
             const innerR = 75;
             const outerR = 105;
             return (
-              <div className="flex flex-col items-center">
-                <div className="relative" style={{ width: chartSize, height: chartSize }}>
+              <div className={`flex ${selectedCity ? "flex-row items-start gap-8" : "flex-col items-center"}`}>
+                <div className="relative flex-shrink-0" style={{ width: chartSize, height: chartSize }}>
                   <ResponsiveContainer width={chartSize} height={chartSize}>
                     <PieChart>
                       <Pie data={colTotals.filter(c => c.total > 0)}
@@ -181,7 +181,7 @@ export default function DashboardCharts({
                     )}
                   </div>
                 </div>
-                <div className="w-full flex flex-col gap-0 mt-4">
+                <div className={`flex flex-col gap-0 ${selectedCity ? "flex-1 mt-0" : "w-full mt-4"}`}>
                   {sorted.filter(c => c.total > 0).map((item) => {
                     const itemPct = grandTotal > 0 ? ((item.total / grandTotal) * 100).toFixed(1) : "0";
                     return (
