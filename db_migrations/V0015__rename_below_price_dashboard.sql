@@ -1,0 +1,1 @@
+UPDATE dashboards SET title = 'Количество планов ниже прайса' WHERE slug = 'below-price';
