@@ -119,7 +119,7 @@ export default function DashboardCharts({
             {loading ? (
               <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
             ) : (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={240}>
                 <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -129,9 +129,9 @@ export default function DashboardCharts({
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(20,10,40,0.07)" : "rgba(255,255,255,0.05)"} />
                   <XAxis dataKey="name" tick={{ fill: axisColor, fontSize: 10 }}
-                    axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} height={60} />
+                    axisLine={false} tickLine={false} angle={-35} textAnchor="end" interval={0} height={50} />
                   <YAxis tick={{ fill: axisColor, fontSize: 11 }} axisLine={false} tickLine={false}
-                    tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={70} />
+                    tickFormatter={(v) => Number(v).toLocaleString("ru-RU")} width={50} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey="total" name="Итого"
                     stroke="#8B5CF6" strokeWidth={2.5} fill={`url(#${gradId})`}
