@@ -125,7 +125,7 @@ export default function DashboardManager({ onClose }: Props) {
 
   const updateExtraColumnLabel = (idx: number, label: string) => {
     setExtraColumns(prev =>
-      prev.map((c, i) => i === idx ? { key: slugify(label) || c.key, label } : c)
+      prev.map((c, i) => i === idx ? { ...c, label } : c)
     );
   };
 

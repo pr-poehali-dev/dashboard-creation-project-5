@@ -16,10 +16,6 @@ interface ExtraDataTableProps {
   onColumnsChange?: (cols: ColumnDef[]) => Promise<void>;
 }
 
-function slugify(s: string) {
-  return s.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-}
-
 export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initialColumns, editable = false, onColumnsChange }: ExtraDataTableProps) {
   const [rows, setRows] = useState<Row[]>([]);
   const [columns, setColumns] = useState<ColumnDef[]>(initialColumns);
@@ -94,16 +90,8 @@ export default function ExtraDataTable({ title, subtitle, apiUrl, columns: initi
 
   const commitColumn = async (idx: number, val: string) => {
     const label = val.trim();
-    const key = slugify(label) || columns[idx]?.key || `col${idx}`;
-    const oldKey = columns[idx]?.key;
-    const updatedCols = columns.map((c, i) => i === idx ? { key, label } : c);
+    const updatedCols = columns.map((c, i) => i === idx ? { ...c, label } : c);
     setColumns(updatedCols);
-    if (oldKey && oldKey !== key) {
-      setRows(prev => prev.map(r => {
-        const { [oldKey]: v, ...rest } = r as Record<string, string | number>;
-        return { ...rest, [key]: v ?? "" } as Row;
-      }));
-    }
     setEditingColIdx(null);
     if (onColumnsChange) await onColumnsChange(updatedCols);
   };
