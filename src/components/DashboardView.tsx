@@ -9,6 +9,7 @@ import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import DashboardAnalytics, { AnomaliesBlock, ConcentrationBlock } from "@/components/dashboard/DashboardAnalytics";
 import DashboardDataTable from "@/components/dashboard/DashboardDataTable";
 import DashboardEfficiency from "@/components/dashboard/DashboardEfficiency";
+import DashboardReasonsTrend from "@/components/dashboard/DashboardReasonsTrend";
 
 const PIE_COLORS = [
   "#8B5CF6", "#00BFFF", "#3F00FF", "#FFB800",
@@ -464,6 +465,14 @@ export default function DashboardView({ apiUrl, columns, title, dashboardId, rea
         selectedCity={selectedCity}
         selectedMonth={selectedMonth}
         cityProfileData={cityProfileData}
+      />
+
+      <DashboardReasonsTrend
+        selectedCity={selectedCity}
+        hasMonths={hasMonths}
+        columns={columns}
+        reasonsByMonth={reasonsByMonth}
+        PIE_COLORS={PIE_COLORS}
       />
 
       <DashboardDataTable
