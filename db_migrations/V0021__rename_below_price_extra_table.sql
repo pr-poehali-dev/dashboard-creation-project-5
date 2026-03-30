@@ -1,0 +1,1 @@
+UPDATE t_p56096254_dashboard_creation_p.extra_tables SET title = 'Итого' WHERE id = 2;
