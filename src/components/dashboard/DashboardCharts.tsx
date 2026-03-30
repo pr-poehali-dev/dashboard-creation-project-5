@@ -119,7 +119,7 @@ export default function DashboardCharts({
             {loading ? (
               <div className="h-[240px] flex items-center justify-center text-white/20 text-sm">Загрузка...</div>
             ) : (
-              <ResponsiveContainer width="100%" height={340}>
+              <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={cityBarData} margin={{ top: 5, right: 5, left: 10, bottom: 0 }}>
                   <defs>
                     <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
